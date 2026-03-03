@@ -1,0 +1,40 @@
+.jumbotron {
+    font-size: xx-large;
+    font-family: "Times New Roman", Times, serif;
+}
+
+#fondo {
+    background-image: url("https://i.pinimg.com/1200x/aa/c0/e3/aac0e3500191ef14e284fb5a0f37d4e3.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.row {
+    text-align: center;
+    color: rgb(254, 254, 254);
+    font-family: "Times New Roman", Times, serif;
+    font-size: large;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+
+.titulo {
+    text-align: left;
+    color: rgb(237, 234, 226);
+    font-size: 60px;
+    text-decoration-line: underline;
+    font-weight: bold;
+}
+
+
+body {
+    background-color: #367bac69;
+}
+
+.boton {
+    font-family: "Times New Roman", Times, serif;
+}
