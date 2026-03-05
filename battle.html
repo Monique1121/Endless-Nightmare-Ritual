@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Combate - Ritual TCG (Demo)</title>
+  <style>
+    :root{--bg:#0b0b0c;--panel:#191719;--accent:#d24444;--muted:#efe9e9}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#060406 0%, #030203 100%);color:var(--muted);font-family:system-ui,Segoe UI,Roboto,Arial}
+    .wrap{max-width:1100px;margin:24px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    header h1{color:#ffdede;margin:0;font-size:20px}
+    .board{background:linear-gradient(180deg, rgba(20,10,12,0.6), rgba(8,4,5,0.8));border:1px solid rgba(180,0,0,0.08);padding:14px;border-radius:10px}
+    .zones{display:grid;grid-template-columns:1fr 800px 1fr;gap:12px;align-items:start}
+    .side{min-height:320px}
+    .opponent, .player{background:rgba(0,0,0,0.15);padding:8px;border-radius:8px}
+    .center-area{display:flex;flex-direction:column;gap:12px}
+    .opp-hand, .player-hand{display:flex;gap:8px;justify-content:center;align-items:center}
+    .opp-hand .card-back, .player-hand .card-back{width:76px;height:110px;border-radius:8px;background:linear-gradient(180deg,#3a0b0b,#230606);box-shadow:0 6px 22px rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.06)}
+    .battle-area{display:flex;flex-direction:column;align-items:center;gap:10px}
+    .bench{display:grid;grid-template-columns:repeat(4,120px);gap:10px;justify-content:center}
+    .bench .slot{width:120px;height:92px;border-radius:8px;border:1px dashed rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.12));display:flex;align-items:center;justify-content:center;position:relative}
+    .active-row{display:flex;justify-content:center;align-items:center}
+    .active-slot{width:160px;height:120px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#241012,#17080a);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 8px 30px rgba(210,60,60,0.06)}
+    .slot.empty::after{content:'Vacío';position:absolute;top:8px;left:8px;font-size:11px;color:rgba(255,255,255,0.12)}
+    .hand{display:flex;gap:10px;align-items:center;justify-content:center;padding:12px;margin-top:12px}
+    .card{width:120px;background:linear-gradient(180deg,#1b0b0b,#100406);border-radius:10px;padding:8px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 6px 18px rgba(0,0,0,0.6);cursor:pointer;user-select:none;transition:transform .18s ease,box-shadow .18s ease,opacity .18s ease}
+    .card:hover{transform:translateY(-6px) scale(1.03);box-shadow:0 10px 28px rgba(200,40,40,0.18)}
+    .card h3{margin:0;font-size:14px;color:#fff}
+    .card .meta{font-size:12px;color:rgba(255,255,255,0.6);margin-top:6px}
+    .card.played{opacity:0.32;transform:scale(0.98);pointer-events:none}
+    .selected{outline:2px solid rgba(255,100,100,0.45);box-shadow:0 0 18px rgba(200,50,50,0.18)}
+    .card.playedAnim{animation:playPop .36s cubic-bezier(.2,.9,.2,1)}
+    @keyframes playPop{0%{transform:scale(.8) translateY(6px);opacity:0}50%{transform:scale(1.06) translateY(-6px);opacity:1}100%{transform:scale(1) translateY(0);opacity:1}}
+    .slot.highlight{box-shadow:0 0 20px rgba(255,120,120,0.22), inset 0 0 18px rgba(255,120,120,0.04);border-color:rgba(255,120,120,0.22)}
+    .slot.empty{cursor:pointer}
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{background:var(--accent);color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+    .info{font-size:13px;color:rgba(255,255,255,0.7)}
+    footer{margin-top:12px;text-align:center;font-size:13px;color:rgba(255,255,255,0.5)}
+    /* Foco iluminado sobre la zona de batalla */
+    .battle-area{position:relative}
+    .battle-area::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:780px;height:420px;border-radius:260px;background:radial-gradient(ellipse at center, rgba(255,240,220,0.12) 0%, rgba(255,240,220,0.06) 20%, rgba(0,0,0,0.0) 60%);pointer-events:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Ritual TCG — Combate Demo (5 cartas)</h1>
+      <div class="controls">
+        <button id="shuffleBtn" class="btn">Barajar mano</button>
+        <button id="resetBtn" class="btn" style="background:#444">Reiniciar</button>
+      </div>
+    </header>
+
+    <div class="board">
+      <div class="zones">
+        <div class="side opponent">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="info">Rival</div>
+            <div class="info">HP: <b>30</b></div>
+          </div>
+          <div style="font-size:13px;opacity:0.85">Banco y zona activa del rival visibles en el centro.</div>
+        </div>
+
+        <div class="center-area">
+          <div class="opp-hand" id="oppHand">
+            <!-- manos del enemigo (visuales) -->
+            <div class="card-back"></div><div class="card-back"></div><div class="card-back"></div><div class="card-back"></div><div class="card-back"></div>
+          </div>
+
+          <div class="battle-area">
+            <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+              <div class="info">Campo de batalla</div>
+              <div class="info">Turno: <span id="turn">Jugador</span></div>
+            </div>
+
+            <div class="bench" id="oppBench">
+              <div class="slot empty" data-slot="opp-bench-0"></div>
+              <div class="slot empty" data-slot="opp-bench-1"></div>
+              <div class="slot empty" data-slot="opp-bench-2"></div>
+              <div class="slot empty" data-slot="opp-bench-3"></div>
+            </div>
+
+            <div class="active-row"><div class="active-slot empty" id="oppActive" data-slot="opp-active"></div></div>
+
+            <div style="height:8px;width:100%"></div>
+
+            <div class="active-row"><div class="active-slot empty" id="playerActive" data-slot="player-active"></div></div>
+
+            <div class="bench" id="playerBench">
+              <div class="slot empty" data-slot="player-bench-0"></div>
+              <div class="slot empty" data-slot="player-bench-1"></div>
+              <div class="slot empty" data-slot="player-bench-2"></div>
+              <div class="slot empty" data-slot="player-bench-3"></div>
+            </div>
+          </div>
+
+          <div class="player-hand" id="hand"></div>
+        </div>
+
+        <div class="side player">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="info">Tú</div>
+            <div class="info">HP: <b>25</b></div>
+          </div>
+          <div style="font-size:12px;opacity:0.9">Coloca una carta: clic para seleccionar y luego clic en una casilla vacía para jugarla. También puedes arrastrar.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer eliminado por petición del usuario -->
+  </div>
+
+  <script>
+    // datos simples de cartas (solo demo)
+    const sampleCards = [
+      { id:1, name:'Sombra Del Voraz', cost:1, atk:3 },
+      { id:2, name:'Imán de Llamas', cost:2, atk:4 },
+      { id:3, name:'Látigo Umbral', cost:1, atk:2 },
+      { id:4, name:'Guardia Abisal', cost:3, atk:5 },
+      { id:5, name:'Bendición Oscura', cost:2, atk:1 },
+      { id:6, name:'Furia Carmesí', cost:4, atk:7 },
+      { id:7, name:'Eco del Vacío', cost:2, atk:3 }
+    ];
+
+    const handEl = document.getElementById('hand');
+    const playerBench = document.getElementById('playerBench');
+    const playerActive = document.getElementById('playerActive');
+    const oppBench = document.getElementById('oppBench');
+    const oppActive = document.getElementById('oppActive');
+    const turnEl = document.getElementById('turn');
+
+    let hand = [];
+    let selectedCard = null;
+
+    function shuffleArray(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+
+    function drawHand(){
+        handEl.innerHTML = '';
+        hand.forEach(c=>{
+          const d = document.createElement('div'); d.className='card'; d.draggable=true; d.dataset.id=c.id;
+          d.innerHTML = `<h3>${c.name}</h3><div class="meta">Cost: ${c.cost} · ATK: ${c.atk}</div>`;
+          if(c.played) d.classList.add('played');
+          d.addEventListener('click', (ev)=>{
+            if(c.played) return;
+            // seleccionar/deseleccionar
+            if(selectedCard && selectedCard.id === c.id){ selectedCard = null; document.querySelectorAll('.card').forEach(x=>x.classList.remove('selected')); updateSlotHighlights(); return; }
+            document.querySelectorAll('.card').forEach(x=>x.classList.remove('selected'));
+            d.classList.add('selected'); selectedCard = c; updateSlotHighlights();
+          });
+          // drag-n-drop
+          d.addEventListener('dragstart', (ev)=>{ ev.dataTransfer.setData('text/plain', c.id); setTimeout(()=>d.classList.add('played'),50); });
+          d.addEventListener('dragend', ()=>{ document.querySelectorAll('.card').forEach(x=>x.classList.remove('played')); });
+          handEl.appendChild(d);
+        });
+    }
+
+    function init(){
+      // tomar 5 cartas aleatorias
+      hand = sampleCards.slice(); shuffleArray(hand); hand = hand.slice(0,5).map(c=>Object.assign({},c));
+      drawHand();
+      // slot clicks
+      // enable player's bench slots and active slot as drop targets
+      playerBench.querySelectorAll('.slot').forEach(slot=>setupPlayerSlot(slot));
+      if(playerActive) setupPlayerActive(playerActive);
+      // click fuera para deseleccionar
+      document.addEventListener('click', (ev)=>{
+        const el = ev.target;
+        if(!el.closest || el.closest('.card') ) return; // clic en carta mantiene selección
+        selectedCard = null; document.querySelectorAll('.card').forEach(x=>x.classList.remove('selected'));
+        updateSlotHighlights();
+      });
+      // shuffle/reset handlers
+      document.getElementById('shuffleBtn').addEventListener('click', ()=>{ shuffleArray(hand); drawHand(); });
+      document.getElementById('resetBtn').addEventListener('click', ()=>{ init(); document.querySelectorAll('.slot, .active-slot').forEach(s=>{ s.innerHTML=''; s.classList.add('empty'); }); });
+    }
+
+    function setupPlayerSlot(slot){
+      slot.addEventListener('click', ()=>{
+        if(!selectedCard) return;
+        playCardToSlot(selectedCard, slot);
+      });
+      slot.addEventListener('dragover', (e)=>{ e.preventDefault(); slot.classList.add('hover'); });
+      slot.addEventListener('dragleave', ()=>{ slot.classList.remove('hover'); });
+      slot.addEventListener('drop', (e)=>{ e.preventDefault(); slot.classList.remove('hover'); const id = Number(e.dataTransfer.getData('text/plain')); const card = hand.find(h=>h.id===id); if(card) playCardToSlot(card, slot); });
+    }
+
+    function setupPlayerActive(slot){
+      slot.addEventListener('click', ()=>{ if(!selectedCard) return; playCardToSlot(selectedCard, slot); });
+      slot.addEventListener('dragover', (e)=>{ e.preventDefault(); slot.classList.add('hover'); });
+      slot.addEventListener('dragleave', ()=>{ slot.classList.remove('hover'); });
+      slot.addEventListener('drop', (e)=>{ e.preventDefault(); slot.classList.remove('hover'); const id = Number(e.dataTransfer.getData('text/plain')); const card = hand.find(h=>h.id===id); if(card) playCardToSlot(card, slot); });
+    }
+
+    function updateSlotHighlights(){
+      // highlight only player slots
+      if(playerBench) playerBench.querySelectorAll('.slot').forEach(s=>{ if(s.classList.contains('empty') && selectedCard) s.classList.add('highlight'); else s.classList.remove('highlight'); });
+      if(playerActive) { if(playerActive.classList.contains('empty') && selectedCard) playerActive.classList.add('highlight'); else playerActive.classList.remove('highlight'); }
+    }
+
+    function playCardToSlot(card, slot){
+      if(!slot.classList.contains('empty')) return; // ocupado
+      // crear vista de carta en campo
+      const node = document.createElement('div'); node.className='card playedAnim'; node.style.width='100%'; node.style.height='92%'; node.innerHTML = `<h3 style="font-size:13px">${card.name}</h3><div class="meta">ATK:${card.atk}</div>`;
+      slot.innerHTML=''; slot.appendChild(node); slot.classList.remove('empty');
+      // animación efímera (pulso)
+      const pulse = document.createElement('div'); pulse.style.position='absolute'; pulse.style.inset='6px'; pulse.style.borderRadius='8px'; pulse.style.pointerEvents='none'; pulse.style.boxShadow='0 0 26px rgba(255,140,120,0.14)'; pulse.style.opacity='0.9'; slot.appendChild(pulse);
+      setTimeout(()=>{ pulse.style.transition='opacity .5s ease'; pulse.style.opacity='0'; setTimeout(()=>pulse.remove(),600); },180);
+
+      // marcar carta como jugada
+      const hc = hand.find(h=>h.id===card.id); if(hc) hc.played = true;
+      selectedCard = null; document.querySelectorAll('.card').forEach(x=>x.classList.remove('selected'));
+      updateSlotHighlights();
+      drawHand();
+    }
+
+    init();
+  </script>
+</body>
+</html>

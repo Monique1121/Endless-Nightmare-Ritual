@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laberinto 2D Procedural</title>
+  <style>
+    html, body { margin:0; height:100%; background: radial-gradient(ellipse at center, #080608 0%, #050305 60%, #000 100%); color:#ddd; }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+    .stage { display:flex; align-items:center; justify-content:center; height:100vh; }
+    canvas { display:block; background: #070707; image-rendering: pixelated; box-shadow: 0 0 60px rgba(180,0,0,0.12), inset 0 0 120px rgba(0,0,0,0.5); border-radius:6px; }
+
+    /* HUD */
+    .hud {
+      position: fixed; left: 12px; top: 12px; color: #f0dede;
+      background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.35));
+      padding: 10px 14px; border-radius: 10px; line-height: 1.35; backdrop-filter: blur(4px);
+      border: 1px solid rgba(200,0,0,0.06);
+    }
+    .hud b { color:#ffdede; }
+    .controls { margin-top:8px; display:flex; gap:8px; align-items:center }
+    .btn { background: rgba(120,0,0,0.18); color:#ffdede; border:1px solid rgba(200,0,0,0.14); padding:6px 8px; border-radius:6px; cursor:pointer }
+    .btn:active { transform: translateY(1px); }
+
+    /* Vignette */
+    .vignette { pointer-events:none; position:fixed; inset:0; box-shadow: inset 0 0 200px rgba(0,0,0,0.6); }
+    .overlay {
+      position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:auto;
+    }
+    .gameover {
+      background: rgba(10,6,6,0.9); color:#ffdede; padding:28px 34px; border-radius:12px; text-align:center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7); border:1px solid rgba(200,0,0,0.12);
+    }
+    .gameover h1 { margin:0 0 8px 0; font-size:36px; letter-spacing:2px; }
+    .gameover p { margin:0 0 12px 0; opacity:0.95 }
+    .gameover .btn { padding:8px 12px; font-weight:600 }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div><b>WASD / Flechas</b> moverte · <b>R</b> regenerar</div>
+    <div style="margin-top:6px">Semilla: <span id="seed"></span> · Tiempo: <span id="timer">00:00</span></div>
+    <div class="controls">
+      <button id="regenBtn" class="btn">Regenerar</button>
+      <label style="font-size:12px;color:#f8dcdc">Tamaño:
+        <select id="sizeSel" style="margin-left:6px;background:transparent;color:#ffdede;border:1px solid rgba(255,0,0,0.08);padding:4px;border-radius:4px">
+          <option value="small">Pequeño</option>
+          <option value="medium">Medio</option>
+          <option value="large">Grande</option>
+        </select>
+      </label>
+      <label style="font-size:12px;color:#f8dcdc">Linterna:
+        <input id="flashlightRange" type="range" min="0" max="100" step="5" value="85" style="margin-left:8px" />
+      </label>
+      <button id="flashToggle" class="btn" style="margin-left:6px">Linterna: ON</button>
+    </div>
+  </div>
+  <div class="stage"><canvas id="c"></canvas></div>
+  <div class="vignette"></div>
+  <div id="overlay" class="overlay" style="display:none">
+    <div class="gameover">
+      <h1>GAME OVER</h1>
+      <p>No lograste salir a tiempo.</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
+        <button id="retryBtn" class="btn">Reintentar</button>
+        <button id="regenNow" class="btn">Nueva Semilla</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- Maze generation (1=wall, 0=floor) ---------- */
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t += 0x6D2B79F5;
+    let x = Math.imul(t ^ (t >>> 15), 1 | t);
+    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateMaze(width, height, seed) {
+  width  = (width  % 2 === 1) ? width  : width  + 1;
+  height = (height % 2 === 1) ? height : height + 1;
+
+  const rng = mulberry32(seed);
+  const maze = Array.from({ length: height }, () => Array(width).fill(1));
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function carve(x, y) {
+    const dirs = shuffle([[2,0],[-2,0],[0,2],[0,-2]]);
+    for (const [dx, dy] of dirs) {
+      const nx = x + dx, ny = y + dy;
+      if (nx > 0 && nx < width && ny > 0 && ny < height && maze[ny][nx] === 1) {
+        maze[ny][nx] = 0;
+        maze[y + dy/2][x + dx/2] = 0;
+        carve(nx, ny);
+      }
+    }
+  }
+
+  // start
+  maze[1][1] = 0;
+  carve(1, 1);
+
+  // entrance/exit
+  maze[1][0] = 0;
+  maze[height - 2][width - 1] = 0;
+
+  return maze;
+}
+
+/* ---------- Canvas + Game ---------- */
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const seedEl = document.getElementById("seed");
+
+let TILE = 28;           // tamaño de tile (ajustable)
+let GRID_W = 21;         // ancho en celdas (impar) - más pequeño por defecto
+let GRID_H = 15;         // alto en celdas (impar)
+
+let rng = null; // PRNG para decoraciones
+
+let seed = (Math.random() * 1e9) | 0;
+let maze = null;
+
+function resizeCanvas() {
+  canvas.width  = GRID_W * TILE;
+  canvas.height = GRID_H * TILE;
+}
+resizeCanvas();
+
+const player = {
+  x: 1 * TILE + TILE * 0.25,
+  y: 1 * TILE + TILE * 0.25,
+  w: TILE * 0.5,
+  h: TILE * 0.5,
+  speed: 220, // px/s
+};
+
+// Linterna / orientación
+let aimAngle = 0;            // radianes: hacia donde mira el jugador
+let mouseX = null, mouseY = null;
+let flashlightEnabled = true;
+let flashlightStrength = 0.85; // 0..1 (0 oscuro, 1 muy brillante)
+// Temporizador / Game Over
+const timeLimit = 60; // segundos
+let timeLeft = timeLimit;
+let gameOver = false;
+const timerEl = document.getElementById('timer');
+const overlayEl = document.getElementById('overlay');
+
+const keys = new Set();
+addEventListener("keydown", (e) => {
+  if (e.key === "r" || e.key === "R") regen();
+  keys.add(e.key);
+});
+addEventListener("keyup", (e) => keys.delete(e.key));
+
+// apuntar con ratón (o touch)
+canvas.addEventListener('mousemove', (ev) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = ev.clientX - rect.left;
+  mouseY = ev.clientY - rect.top;
+});
+canvas.addEventListener('touchmove', (ev) => {
+  const rect = canvas.getBoundingClientRect();
+  const t = ev.touches[0];
+  mouseX = t.clientX - rect.left;
+  mouseY = t.clientY - rect.top;
+  ev.preventDefault();
+}, { passive:false });
+
+// slider + toggle hooks (se colocan después de los elementos del DOM)
+function setupFlashlightUI(){
+  const range = document.getElementById('flashlightRange');
+  const toggle = document.getElementById('flashToggle');
+  if(!range || !toggle) return;
+  flashlightStrength = Number(range.value) / 100;
+  range.addEventListener('input', (e)=>{
+    flashlightStrength = Number(e.target.value)/100;
+  });
+  toggle.addEventListener('click', ()=>{
+    flashlightEnabled = !flashlightEnabled;
+    toggle.textContent = 'Linterna: ' + (flashlightEnabled? 'ON' : 'OFF');
+  });
+}
+setTimeout(setupFlashlightUI, 50);
+
+function regen() {
+  seed = (Math.random() * 1e9) | 0;
+  seedEl.textContent = seed;
+  rng = mulberry32(seed);
+  maze = generateMaze(GRID_W, GRID_H, seed);
+
+  // respawn player en (1,1)
+  player.x = 1 * TILE + TILE * 0.25;
+  player.y = 1 * TILE + TILE * 0.25;
+  // reset temporizador
+  timeLeft = timeLimit;
+  gameOver = false;
+  if (overlayEl) overlayEl.style.display = 'none';
+}
+regen();
+
+// UI hooks
+document.getElementById('regenBtn').addEventListener('click', regen);
+document.getElementById('sizeSel').addEventListener('change', (e) => {
+  const v = e.target.value;
+  if (v === 'small') { GRID_W = 21; GRID_H = 15; TILE = 32; }
+  else if (v === 'medium') { GRID_W = 31; GRID_H = 19; TILE = 28; }
+  else { GRID_W = 41; GRID_H = 25; TILE = 24; }
+  resizeCanvas();
+  regen();
+});
+
+// retry / regen handlers for overlay
+document.getElementById('retryBtn').addEventListener('click', ()=>{
+  if (overlayEl) overlayEl.style.display = 'none';
+  regen();
+});
+document.getElementById('regenNow').addEventListener('click', ()=>{
+  if (overlayEl) overlayEl.style.display = 'none';
+  regen();
+});
+
+function formatTime(s){
+  const sec = Math.max(0, Math.floor(s));
+  const mm = Math.floor(sec / 60);
+  const ss = sec % 60;
+  return `${mm}:${ss.toString().padStart(2,'0')}`;
+}
+
+function isWallCell(cx, cy) {
+  if (cy < 0 || cy >= maze.length || cx < 0 || cx >= maze[0].length) return true;
+  return maze[cy][cx] === 1;
+}
+
+function rectIntersects(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+
+function resolveCollisions(px, py) {
+  // Collide player rect with wall tiles (check nearby tiles only)
+  const left   = Math.floor(px / TILE) - 1;
+  const right  = Math.floor((px + player.w) / TILE) + 1;
+  const top    = Math.floor(py / TILE) - 1;
+  const bottom = Math.floor((py + player.h) / TILE) + 1;
+
+  let x = px, y = py;
+
+  // Separate axis: X then Y
+  // We'll handle by trying x then y with overlap checks.
+  return { x, y, left, right, top, bottom };
+}
+
+function moveAndCollide(dt) {
+  if (gameOver) return; // no moverse si game over
+  let vx = 0, vy = 0;
+  if (keys.has("ArrowLeft") || keys.has("a") || keys.has("A")) vx -= 1;
+  if (keys.has("ArrowRight")|| keys.has("d") || keys.has("D")) vx += 1;
+  if (keys.has("ArrowUp")   || keys.has("w") || keys.has("W")) vy -= 1;
+  if (keys.has("ArrowDown") || keys.has("s") || keys.has("S")) vy += 1;
+
+  // normalize diagonal
+  if (vx !== 0 && vy !== 0) {
+    const inv = 1 / Math.sqrt(2);
+    vx *= inv; vy *= inv;
+  }
+
+  const stepX = vx * player.speed * dt;
+  const stepY = vy * player.speed * dt;
+
+  // move X + collide
+  let nx = player.x + stepX;
+  let ny = player.y;
+
+  nx = collideAxis(nx, ny, "x");
+
+  // move Y + collide
+  ny = player.y + stepY;
+  ny = collideAxis(nx, ny, "y");
+
+  player.x = nx;
+  player.y = ny;
+
+  // Si no hay mouse, orientar según movimiento
+  if (mouseX === null || mouseY === null) {
+    if (vx !== 0 || vy !== 0) aimAngle = Math.atan2(vy, vx);
+  } else {
+    // calcular ángulo hacia mouse desde centro del jugador
+    const cx = player.x + player.w/2;
+    const cy = player.y + player.h/2;
+    aimAngle = Math.atan2(mouseY - cy, mouseX - cx);
+  }
+}
+
+function collideAxis(nx, ny, axis) {
+  const px = nx, py = ny;
+  const w = player.w, h = player.h;
+
+  const startX = Math.floor(px / TILE) - 1;
+  const endX   = Math.floor((px + w) / TILE) + 1;
+  const startY = Math.floor(py / TILE) - 1;
+  const endY   = Math.floor((py + h) / TILE) + 1;
+
+  for (let cy = startY; cy <= endY; cy++) {
+    for (let cx = startX; cx <= endX; cx++) {
+      if (!isWallCell(cx, cy)) continue;
+
+      const wx = cx * TILE, wy = cy * TILE;
+
+      if (rectIntersects(px, py, w, h, wx, wy, TILE, TILE)) {
+        if (axis === "x") {
+          if (nx > player.x) nx = wx - w;         // moving right
+          else nx = wx + TILE;                    // moving left
+        } else {
+          if (ny > player.y) ny = wy - h;         // moving down
+          else ny = wy + TILE;                    // moving up
+        }
+        // update px/py for subsequent checks
+        return (axis === "x") ? nx : ny;
+      }
+    }
+  }
+  return (axis === "x") ? nx : ny;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // draw maze
+  for (let y = 0; y < maze.length; y++) {
+    for (let x = 0; x < maze[0].length; x++) {
+      const px = x * TILE, py = y * TILE;
+      if (maze[y][x] === 1) {
+        // muro: menos oscuro para más visibilidad
+        ctx.fillStyle = '#1c1c1e'; ctx.fillRect(px, py, TILE, TILE);
+        ctx.fillStyle = 'rgba(255,0,0,0.03)'; ctx.fillRect(px+1, py+1, TILE-2, TILE-2);
+        // ocasional grieta sangrienta
+        if (rng && rng() < 0.04) {
+          ctx.fillStyle = 'rgba(200,10,10,0.6)';
+          const sx = px + Math.floor(rng()*TILE*0.7)+4, sy = py + Math.floor(rng()*TILE*0.7)+4;
+          ctx.fillRect(sx, sy, Math.max(1, Math.floor(rng()*3)), Math.max(1, Math.floor(rng()*3)));
+        }
+      } else {
+        // suelo (más iluminado)
+        ctx.fillStyle = '#1a1a1c'; ctx.fillRect(px, py, TILE, TILE);
+        if (rng && rng() < 0.02) {
+          ctx.fillStyle = 'rgba(255,255,255,0.02)';
+          ctx.fillRect(px + Math.floor(rng()*TILE), py + Math.floor(rng()*TILE), 1, 1);
+        }
+      }
+    }
+  }
+
+  // exit marker
+  // portal demoníaco (exit)
+  const ex = (maze[0].length - 1) * TILE;
+  const ey = (maze.length - 2) * TILE;
+  const cx = ex + TILE/2, cy = ey + TILE/2;
+  const grad = ctx.createRadialGradient(cx, cy, TILE*0.1, cx, cy, TILE*0.9);
+  grad.addColorStop(0, '#2b0000'); grad.addColorStop(0.4, '#5a0000'); grad.addColorStop(1, 'rgba(0,0,0,0.9)');
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, TILE*0.44, 0, Math.PI*2); ctx.fill();
+  // horns
+  ctx.fillStyle = '#220000';
+  ctx.beginPath(); ctx.moveTo(cx - TILE*0.5, cy - TILE*0.15); ctx.quadraticCurveTo(cx - TILE*0.25, cy - TILE*0.6, cx - TILE*0.05, cy - TILE*0.05); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx + TILE*0.5, cy - TILE*0.15); ctx.quadraticCurveTo(cx + TILE*0.25, cy - TILE*0.6, cx + TILE*0.05, cy - TILE*0.05); ctx.fill();
+
+  // player
+  // player (sombra y color demoníaco)
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(player.x+2, player.y+2, player.w, player.h);
+  ctx.fillStyle = '#ff6666'; ctx.fillRect(player.x, player.y, player.w, player.h);
+
+  // linterna: capa de oscuridad con recorte en forma de cono
+  if (flashlightEnabled) {
+    const W = canvas.width, H = canvas.height;
+    ctx.save();
+    // capa oscura (alpha depende de la fuerza) — menos opaca para más visibilidad
+    const darknessAlpha = Math.max(0.01, 0.35 * (1 - flashlightStrength * 0.95));
+    ctx.fillStyle = `rgba(0,0,0,${darknessAlpha})`;
+    ctx.fillRect(0,0,W,H);
+
+    // recortar cono usando destination-out
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    const cx = player.x + player.w/2;
+    const cy = player.y + player.h/2;
+    const coneLength = Math.max(TILE*4, TILE * (4 + 6 * flashlightStrength));
+    const coneAngle = Math.PI * Math.max(0.12, (0.34 - 0.14 * flashlightStrength));
+    const a1 = aimAngle - coneAngle/2;
+    const a2 = aimAngle + coneAngle/2;
+    const x1 = cx + Math.cos(a1) * coneLength;
+    const y1 = cy + Math.sin(a1) * coneLength;
+    const x2 = cx + Math.cos(a2) * coneLength;
+    const y2 = cy + Math.sin(a2) * coneLength;
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.closePath();
+    ctx.fill();
+
+    // círculo de luz alrededor del jugador para suavizar (más grande si más brillo)
+    const circleRadius = TILE * (1.6 + 2.0 * flashlightStrength);
+    const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, circleRadius);
+    grad.addColorStop(0, 'rgba(0,0,0,1)');
+    grad.addColorStop(0.35, 'rgba(0,0,0,0.6)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, circleRadius, 0, Math.PI*2); ctx.fill();
+
+    // restaurar modo de comp.
+    ctx.globalCompositeOperation = 'source-over';
+
+    // ligera iluminación con 'lighter' para dar color (intensidad según fuerza)
+    ctx.globalCompositeOperation = 'lighter';
+    const lightGrad = ctx.createLinearGradient(cx, cy, cx + Math.cos(aimAngle)*coneLength, cy + Math.sin(aimAngle)*coneLength);
+    const lightAlpha = 0.28 * Math.max(0.5, flashlightStrength);
+    lightGrad.addColorStop(0, `rgba(255,180,150,${lightAlpha})`);
+    lightGrad.addColorStop(1, 'rgba(80,0,0,0)');
+    ctx.fillStyle = lightGrad;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.closePath(); ctx.fill();
+
+    // luz radial adicional (hace más brillante la zona cercana al jugador)
+    const brightRadius = circleRadius * 2.0;
+    const bright = ctx.createRadialGradient(cx, cy, 2, cx, cy, brightRadius);
+    bright.addColorStop(0, `rgba(255,250,220,${0.28 * flashlightStrength})`);
+    bright.addColorStop(0.5, `rgba(255,160,130,${0.12 * flashlightStrength})`);
+    bright.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = bright;
+    ctx.beginPath(); ctx.arc(cx, cy, brightRadius, 0, Math.PI*2); ctx.fill();
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.restore();
+  }
+}
+
+let last = performance.now();
+function loop(t) {
+  const dt = Math.min(0.033, (t - last) / 1000);
+  last = t;
+  // actualizar temporizador si no hay game over
+  if (!gameOver) {
+    timeLeft -= dt;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      gameOver = true;
+      if (overlayEl) overlayEl.style.display = 'flex';
+    }
+    if (timerEl) timerEl.textContent = formatTime(timeLeft);
+  }
+
+  moveAndCollide(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
