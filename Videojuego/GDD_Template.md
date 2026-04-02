@@ -1,4 +1,4 @@
-99999# **Endless Nigthmare Ritual**
+**Endless Nigthmare Ritual**
 
 ## _Game Design Document_
 
@@ -48,9 +48,7 @@
 
 Sum up your game idea in 2 sentences. A kind of elevator pitch. Keep it simple!
 
-Este juego de suspenso tipo TCG y roguelite, consiste en la historia de un detective el cual debe enfrentarse a un culto para descubrir la verdad de una catatástrofe
-ocurrida hace años y el origen de esta misma. Deberá explorar laberintos antes de cada enfrentamiento donde podrá conseguir recursos que lo ayudarán a derrotar
-a sus enemigos, pero siempre procurando mantenerse vivo, ya que el uso de cartas exige como sacrificio su sangre.
+Este juego de suspenso tipo TCG y roguelite, consiste en la historia de un detective el cual debe enfrentarse a un culto para descubrir la verdad de una catatástrofe ocurrido hace años y el origen de esta misma. Deberá explorar laberintos antes de cada enfrentamiento donde podrá conseguir recursos que lo ayudarán a derrotar a sus enemigos, pero siempre procurando mantenerse vivo, ya que el uso de cartas exige como sacrificio su sangre.
 
 ### **Gameplay**
 
@@ -78,7 +76,7 @@ habrá perdido todo lo reunido en ese intento.
 Mecánicas y reglas del juego:
 - Exploración de laberintos dentro de un tiempo límite.
 - Sacrificio de sangre para el uso de cartas de demonios.
-- El jugador deberá vencer tres demonios del miembro del culto para poder ganar el nivel.
+- El jugador deberá vencer al jefe final de cada nivel para poder ganar el nivel. Vence al jefe final tras derrotar a 3 de sus demonios 
 
 ### **Mindset**
 
@@ -153,18 +151,48 @@ nuevamente.
 esto se utilizará una máscara para dar ese efecto donde el personaje está sin luz.
 - El jugador tendrá colisiones con las paredes del laberinto para impedir que atraviese los objetos del mapa.
 
+
 ![Ejemplo de mecánica de exploración](laberinto.jpeg)
 
-Mecánica TCG:
-- El juego tendrá un mazo total de 30 cartas con variedades de demonios y estos serán únicamente de ataque.
-- Al inicio del primer nivel, el jugador recibirá 5 cartas de demonio con las cuales podrá pelear contra el miembro del culto.
-- Si el jugador logra vencer tres demonios del enemigo habrá ganado el nivel y obtendrá una carta más fuerte.
-- El jugador debe tener presente que el uso de las cartas debe tener un sacrificio de sangre, y si esta llega a 0%, el jugador será enviado al inicio (bosque) y se
-restaurará su nivel de sangre al 100% pero conservará las cartas obtenidas y encontradas.
-- Si el enemigo mata a tres demonios del jugador, este será enviado el inicio (bosque).
-- Si el jugador gana el nivel, podrá avanzar al siguiente nivel pero con las consecuencias permanentes en la sangre.
-- Esto estará basado en pokemon TCG, donde va por turnos el modo juego y las cartas tienen gasto de energía (sangre) y la cantidad de daño que causan.
-- No se especificará ninguna religión en específico para el culto, simplemente se dejará como un grupo de personas.
+
+Mecanica de Combate: 
+
+El combate es por turnos entre el detective y un miembro del culto. Ambos utilizan cartas de demonios que invocan pagando sangre como recurso. 
+
+Estructura general 
+| Elemento | Jugador | Boss |
+|---|---|---|
+| Recurso | Sangre (máx 100) | Sangre (máx 100) |
+| Cartas en mano | 5 (elegidas del deck) | 5 cartas  |
+| Demonios activos en campo | 1 a la vez | 1 a la vez |
+| Cartas jugadas por turno | 1 | 1 |
+| Condición de victoria | Matar 3 demonios del boss | Matar 3 demonios del jugador |
+
+Al ganar el combate se le otorgaria al jugador 1 carta evolucionada. 
+
+Flujo del Combate: 
+
+- Ambos jugadores eligen una carta la cual sera usada para pelear, no saben que carta eligio el otro.
+- Las cartas se revelan al mismo tiempo. 
+- Cada carta tiene sus atributos (Costo de sangre, dano, HP) 
+- Si el HP de un demonio llega a 0, esa carta se descarta y cuenta como un demonio derrotado, ya no puede usarse en esta pelea.
+- Si ningun demonio fue derrotado se reinicia el proceso sin embargo, el dano inflijudo se queda en la carta. 
+
+Tipos de cartas: 
+
+Hay dos tipos de cartas, ataque y defensa; 
+- Las cartas de ataque tienen estadisticas mas altas en daño, menos HP. 
+- Las cartas de defensa contienen mas HP pero no muestran tanto daño al atacar. 
+
+Niveles de Cartas: 
+
+En nuestro juego va ver dos niveles de cartas, cartas base la cual van hacer la mayoria de cartas y cartas evolucionadas. Las cartas se consiguen en los cofres pero dependiendo del nivel es la probabilidad que te toque. La división del conjunto de cartas sería 80% normales y 20% evolucionadas para tener un juego mas balanceado. 
+
+Reglas adicionales:
+
+- Si la sangre del jugador llega a 0 durante el combate, pierde y regresa al bosque con sangre restaurada al 100%, conservando las cartas con las cuales entro al nivel.
+- Si el boss gana (mata 3 demonios del jugador), el resultado es el mismo: regreso al bosque.
+- Si el jugador gana, avanza al siguiente nivel con la pérdida de sangre acumulada de forma permanente hasta encontrar sangre en el siguiente laberinto.
 
 ![Ejemplo de mecánica TCG](cartas.jpeg)
 
@@ -271,7 +299,7 @@ _(example)_
 6. El jugador recorre un laberinto y recoge premios (sangre, cartas o secretos).
 7. Llega al final y se encuentra con el miembro del culto.
 8. Pelea por turnos contra el enemigo y sacrifica sangre.
-9. Vence tres cartas demonio del enemigo y gana el nivel.
+9. Vence al enemigo final del nivel y gana el nivel.
 10. Recibe una carta más fuerte (pero con más sacrificio de sangre).
 11. Avanza al siguiente nivel (hospital abandonado).
 12. Si el jugador pierde, regresa al bosque.
@@ -370,8 +398,7 @@ _(example)_
 What kinds of colors will you be using? Do you have a limited palette to work with? A post-processed HSV map/image? Consistency is key for immersion.
 
 El juego utilizará una paleta de colores oscuros y desaturada para hacer sentir al jugador en una atmósfera de suspenso y misterio. La escuela y el hospital
-al ser lugares abandonados tendrán tonos grisáceos y azules. Lo que más destacará de la estética será la sangre para recuperar (color rojo), las cartas
-demonio (color morado/rojizo) y los secretos (color amarillo).
+al ser lugares abandonados tendrán tonos grisáceos y azules. Lo que más destacará de la estética será la sangre para recuperar (color rojo), las cartas demonio (color morado/rojizo) y los secretos (color amarillo).
 
 What kind of graphic style are you going for? Cartoony? Pixel-y? Cute? How, specifically? Solid, thick outlines with flat hues? Non-black outlines with limited tints/shades? Emphasize smooth curvatures over sharp angles? Describe a set of general rules depicting your style here.
 
