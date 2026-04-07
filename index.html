@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bosque Maldito - Endless Nightmare Ritual</title>
+  <style>
+    html, body { margin:0; height:100%; background: radial-gradient(ellipse at center, #080608 0%, #050305 60%, #000 100%); color:#ddd; }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+    .stage { display:flex; align-items:center; justify-content:center; height:100vh; }
+    canvas { display:block; background: #070707; image-rendering: pixelated; box-shadow: 0 0 60px rgba(180,0,0,0.12), inset 0 0 120px rgba(0,0,0,0.5); border-radius:6px; }
+
+    /* HUD */
+    .hud {
+      position: fixed; left: 12px; top: 12px; color: #f0dede;
+      background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.35));
+      padding: 10px 14px; border-radius: 10px; line-height: 1.35; backdrop-filter: blur(4px);
+      border: 1px solid rgba(200,0,0,0.06);
+    }
+    .hud b { color:#ffdede; }
+    .controls { margin-top:8px; display:flex; gap:8px; align-items:center }
+    .btn { background: rgba(120,0,0,0.18); color:#ffdede; border:1px solid rgba(200,0,0,0.14); padding:6px 8px; border-radius:6px; cursor:pointer }
+    .btn:active { transform: translateY(1px); }
+
+    /* Vignette */
+    .vignette { pointer-events:none; position:fixed; inset:0; box-shadow: inset 0 0 200px rgba(0,0,0,0.6); }
+    .overlay {
+      position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:auto;
+    }
+    .gameover {
+      background: rgba(10,6,6,0.9); color:#ffdede; padding:28px 34px; border-radius:12px; text-align:center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7); border:1px solid rgba(200,0,0,0.12);
+    }
+    .gameover h1 { margin:0 0 8px 0; font-size:36px; letter-spacing:2px; }
+    .gameover p { margin:0 0 12px 0; opacity:0.95 }
+    .gameover .btn { padding:8px 12px; font-weight:600 }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div><b>WASD / Flechas</b> moverte · <b>R</b> regenerar</div>
+    <div style="margin-top:6px">Semilla: <span id="seed"></span> · Tiempo: <span id="timer">00:00</span></div>
+    <div class="controls">
+      <button id="menuBtn" class="btn" style="background: rgba(0,80,120,0.18); border:1px solid rgba(0,100,200,0.14)">◄ Menú</button>
+      <button id="regenBtn" class="btn">Regenerar</button>
+      <label style="font-size:12px;color:#f8dcdc">Tamaño:
+        <select id="sizeSel" style="margin-left:6px;background:transparent;color:#ffdede;border:1px solid rgba(255,0,0,0.08);padding:4px;border-radius:4px">
+          <option value="small">Pequeño</option>
+          <option value="medium">Medio</option>
+          <option value="large">Grande</option>
+        </select>
+      </label>
+      <label style="font-size:12px;color:#f8dcdc">Linterna:
+        <input id="flashlightRange" type="range" min="0" max="100" step="5" value="85" style="margin-left:8px" />
+      </label>
+      <button id="flashToggle" class="btn" style="margin-left:6px">Linterna: ON</button>
+    </div>
+  </div>
+  <div class="stage"><canvas id="c"></canvas></div>
+  <div class="vignette"></div>
+  <div id="overlay" class="overlay" style="display:none">
+    <div class="gameover">
+      <h1>GAME OVER</h1>
+      <p>No lograste salir a tiempo.</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
+        <button id="retryBtn" class="btn">Reintentar</button>
+        <button id="regenNow" class="btn">Nueva Semilla</button>
+      </div>
+    </div>
+  </div>
+
+<script src="maze.js"></script>
+</body>
+</html>
