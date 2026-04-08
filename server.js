@@ -56,11 +56,23 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // If the path is a directory, look for index.html inside it
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
-        filePath = path.join(filePath, "index.html");
+    // Guard against path traversal (including via symlinks)
+    if (!path.resolve(filePath).startsWith(path.resolve(ROOT))) {
+        res.writeHead(403, { "Content-Type": "text/plain" });
+        res.end("403 Forbidden");
+        return;
     }
 
+    // If the path is a directory, look for index.html inside it
+    fs.stat(filePath, (statErr, stats) => {
+        if (!statErr && stats.isDirectory()) {
+            filePath = path.join(filePath, "index.html");
+        }
+        serveFile(filePath, res);
+    });
+});
+
+function serveFile(filePath, res) {
     fs.readFile(filePath, (err, data) => {
         if (err) {
             res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
@@ -83,7 +95,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { "Content-Type": contentType });
         res.end(data);
     });
-});
+}
 
 server.listen(PORT, () => {
     console.log("=========================================");
