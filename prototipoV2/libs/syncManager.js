@@ -166,22 +166,22 @@ class SyncManager {
     /**
      * Resolve a conflict by merging server-authoritative fields while keeping
      * in-flight local fields that the server does not yet know about.
+     * The server is the source of truth for all run statistics and player health;
+     * only the player's real-time position is kept from the local state.
      */
     _resolveConflict(serverState) {
         const local  = this._state._state;
         const server = serverState;
 
-        // Server wins for run statistics and player health
+        // Server wins for all run statistics and player health
         if (server.currentRun) {
-            local.currentRun.blood_recovered = Math.max(
-                local.currentRun.blood_recovered,
-                server.currentRun.blood_recovered
-            );
-            local.currentRun.cards_found   = Math.max(local.currentRun.cards_found,   server.currentRun.cards_found);
-            local.currentRun.secrets_found = Math.max(local.currentRun.secrets_found, server.currentRun.secrets_found);
+            local.currentRun.blood_recovered = server.currentRun.blood_recovered ?? local.currentRun.blood_recovered;
+            local.currentRun.cards_found     = server.currentRun.cards_found     ?? local.currentRun.cards_found;
+            local.currentRun.secrets_found   = server.currentRun.secrets_found   ?? local.currentRun.secrets_found;
+            local.currentRun.completed       = server.currentRun.completed       ?? local.currentRun.completed;
         }
         if (server.player) {
-            local.player.blood_current = server.player.blood_current;
+            local.player.blood_current = server.player.blood_current ?? local.player.blood_current;
         }
 
         // Mark dirty so the merged state is pushed on the next sync
@@ -216,5 +216,6 @@ class SyncManager {
     }
 }
 
-// Singleton instance – depends on the gameState singleton
+// Singleton instance – depends on the gameState singleton.
+// NOTE: this file must be loaded AFTER gameState.js in the HTML.
 const syncManager = new SyncManager(gameState);

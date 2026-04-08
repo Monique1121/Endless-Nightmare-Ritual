@@ -235,8 +235,12 @@ function main() {
 
     // Start a new run if there is no active one yet
     if (!gameState.currentRun.run_id) {
+        // Generate a robust temporary run ID until the server assigns a real one
+        const tempRunId = (typeof crypto !== "undefined" && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         gameState.startRun(
-            Date.now(),          // run_id (temporary; server should assign real id)
+            tempRunId,
             1,                   // labyrinth_id
             gameState.currentRun.level_id || 1
         );
