@@ -34,6 +34,15 @@ document.addEventListener("DOMContentLoaded", () => {
         menu.style.display = "block";
     });
 
+    // boton para ir a las estadísticas
+    const btnStats = document.getElementById("irEstadisticas");
+
+    if (btnStats) {
+        btnStats.addEventListener("click", () => {
+            window.location.href = "../../Statistics/html/statistics.html";
+        });
+    }
+
     // boton para ir a la lobby 
     const btnStart = document.getElementById("irLobby");
 

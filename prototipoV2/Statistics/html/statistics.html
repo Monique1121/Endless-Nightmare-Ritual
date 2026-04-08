@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Estadísticas - Endless Nightmare Ritual</title>
+        <link rel="stylesheet" href="../css/styles.css">
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    </head>
+
+    <body>
+
+        <div id="pageWrapper">
+
+            <!-- Header -->
+            <header id="statsHeader">
+                <h1 id="mainTitle">Endless Nightmare Ritual</h1>
+                <h2 id="sectionTitle">⚰ Estadísticas ⚰</h2>
+                <button class="button" id="btnBack">← Volver al Menú</button>
+            </header>
+
+            <!-- Filter / Category Tabs -->
+            <nav id="filterNav">
+                <button class="filterBtn active" data-category="general">General</button>
+                <button class="filterBtn" data-category="combate">Combate</button>
+                <button class="filterBtn" data-category="exploracion">Exploración</button>
+                <button class="filterBtn" data-category="cartas">Cartas</button>
+            </nav>
+
+            <!-- Main content area -->
+            <main id="statsContent">
+
+                <!-- ===== GENERAL ===== -->
+                <section class="statsSection" id="general">
+                    <h3 class="sectionHeading">📊 Estadísticas Generales</h3>
+                    <div class="statsGrid">
+
+                        <div class="statCard">
+                            <span class="statIcon">🏃</span>
+                            <span class="statLabel">Partidas Jugadas</span>
+                            <span class="statValue" id="totalRuns">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">✔</span>
+                            <span class="statLabel">Partidas Completadas</span>
+                            <span class="statValue" id="completedRuns">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">💀</span>
+                            <span class="statLabel">Partidas Fallidas</span>
+                            <span class="statValue" id="failedRuns">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">⏱</span>
+                            <span class="statLabel">Tiempo Total Jugado</span>
+                            <span class="statValue" id="totalTime">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🩸</span>
+                            <span class="statLabel">Sangre Recuperada (total)</span>
+                            <span class="statValue" id="totalBloodRecovered">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🔍</span>
+                            <span class="statLabel">Secretos Descubiertos</span>
+                            <span class="statValue" id="totalSecrets">—</span>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- ===== COMBATE ===== -->
+                <section class="statsSection hidden" id="combate">
+                    <h3 class="sectionHeading">⚔ Estadísticas de Combate</h3>
+                    <div class="statsGrid">
+
+                        <div class="statCard">
+                            <span class="statIcon">⚔</span>
+                            <span class="statLabel">Combates Totales</span>
+                            <span class="statValue" id="totalCombats">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🏆</span>
+                            <span class="statLabel">Victorias</span>
+                            <span class="statValue" id="combatWins">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">☠</span>
+                            <span class="statLabel">Derrotas</span>
+                            <span class="statValue" id="combatLosses">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🩸</span>
+                            <span class="statLabel">Sangre Usada en Combate</span>
+                            <span class="statValue" id="totalBloodUsed">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">💥</span>
+                            <span class="statLabel">Daño Total Infligido</span>
+                            <span class="statValue" id="totalDamage">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">👹</span>
+                            <span class="statLabel">Enemigo Más Derrotado</span>
+                            <span class="statValue" id="topEnemy">—</span>
+                        </div>
+
+                    </div>
+
+                    <h3 class="sectionHeading subHeading">Ranking de Enemigos</h3>
+                    <table class="statsTable" id="enemyTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Enemigo</th>
+                                <th>Derrotado</th>
+                                <th>Victorias del Enemigo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="enemyTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- ===== EXPLORACIÓN ===== -->
+                <section class="statsSection hidden" id="exploracion">
+                    <h3 class="sectionHeading">🗺 Estadísticas de Exploración</h3>
+                    <div class="statsGrid">
+
+                        <div class="statCard">
+                            <span class="statIcon">🏛</span>
+                            <span class="statLabel">Laberintos Explorados</span>
+                            <span class="statValue" id="labyrinthsExplored">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">📦</span>
+                            <span class="statLabel">Cofres Abiertos</span>
+                            <span class="statValue" id="chestsOpened">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🔍</span>
+                            <span class="statLabel">Secretos Encontrados</span>
+                            <span class="statValue" id="secretsFound">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🗝</span>
+                            <span class="statLabel">Nivel Más Alto Alcanzado</span>
+                            <span class="statValue" id="highestLevel">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">⚡</span>
+                            <span class="statLabel">Mejor Tiempo de Carrera</span>
+                            <span class="statValue" id="bestRunTime">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🌑</span>
+                            <span class="statLabel">Niveles Completados</span>
+                            <span class="statValue" id="levelsCompleted">—</span>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- ===== CARTAS ===== -->
+                <section class="statsSection hidden" id="cartas">
+                    <h3 class="sectionHeading">🃏 Estadísticas de Cartas</h3>
+                    <div class="statsGrid">
+
+                        <div class="statCard">
+                            <span class="statIcon">🃏</span>
+                            <span class="statLabel">Cartas Encontradas</span>
+                            <span class="statValue" id="cardsFound">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">✨</span>
+                            <span class="statLabel">Cartas Únicas Obtenidas</span>
+                            <span class="statValue" id="uniqueCards">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">🔥</span>
+                            <span class="statLabel">Carta Más Usada</span>
+                            <span class="statValue" id="topCard">—</span>
+                        </div>
+
+                        <div class="statCard">
+                            <span class="statIcon">💎</span>
+                            <span class="statLabel">Cartas Legendarias</span>
+                            <span class="statValue" id="legendaryCards">—</span>
+                        </div>
+
+                    </div>
+
+                    <h3 class="sectionHeading subHeading">Top 5 Cartas Más Usadas</h3>
+                    <table class="statsTable" id="cardsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Carta</th>
+                                <th>Tipo</th>
+                                <th>Tier</th>
+                                <th>Veces Usada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cardsTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </section>
+
+            </main>
+
+            <!-- Global Leaderboard -->
+            <aside id="leaderboard">
+                <h3 class="sectionHeading">🏆 Tabla de Clasificación</h3>
+                <table class="statsTable" id="leaderboardTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Jugador</th>
+                            <th>Partidas</th>
+                            <th>Victorias</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </aside>
+
+            <footer id="statsFooter">
+                <p>Las estadísticas se actualizan al finalizar cada sesión de juego.</p>
+            </footer>
+
+        </div>
+
+        <script src="../js/statistics.js"></script>
+    </body>
+</html>
