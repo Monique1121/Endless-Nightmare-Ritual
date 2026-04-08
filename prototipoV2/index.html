@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Endless Nightmare Ritual</title>
+
+        <link rel="stylesheet" href="css/main.css">
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+        <!-- Game library scripts (shared by all scenes) -->
+        <script src="libs/game_functions.js"></script>
+        <script src="libs/Rect.js"></script>
+        <script src="libs/Vector.js"></script>
+        <script src="libs/GameObject.js"></script>
+        <script src="libs/AnimatedObject.js"></script>
+        <script src="libs/AnimatedPlayer.js"></script>
+
+        <!-- Game scenes -->
+        <script src="js/lobbyScene.js"></script>
+
+        <!-- Navigation & interaction controller -->
+        <script src="js/main.js"></script>
+    </head>
+
+    <body>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             MENU SECTION  (visible on first load)
+        ════════════════════════════════════════════════════════════════════ -->
+        <div id="menuSection" class="section active">
+            <div id="gameContainer">
+
+                <!-- Background canvas -->
+                <canvas id="menuCanvas"></canvas>
+
+                <h1 id="title">Endless Nightmare Ritual</h1>
+
+                <div id="menu">
+                    <button class="button" id="irLobby">Nueva partida</button>
+                    <button class="button">Continuar</button>
+                    <button class="button" id="buttonConfig">Ajustes</button>
+                    <button class="button">Créditos</button>
+                    <button class="button">Salir</button>
+                </div>
+
+                <!-- Settings panel -->
+                <div id="config" class="settings">
+                    <h2>Ajustes</h2>
+
+                    <label>Música</label>
+                    <input type="range" min="0" max="100" id="musicVolume" />
+
+                    <label>Sonidos</label>
+                    <input type="range" min="0" max="100" id="sfxVolume" />
+
+                    <button id="backButton">Volver</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             GAME SECTION  (hidden until "Nueva partida" is clicked)
+        ════════════════════════════════════════════════════════════════════ -->
+        <div id="gameSection" class="section hidden">
+
+            <!-- HUD: shows live game data and a back-to-menu button -->
+            <div id="hud">
+                <div id="hudInfo">
+                    <span id="hudPosition">Posición: (0, 0)</span>
+                    <span id="hudArea">Área: Bosque Escuela</span>
+                </div>
+                <button id="returnToMenu">&#x1F3E0; Menú</button>
+            </div>
+
+            <!-- Game canvas (800×600, receives keyboard focus automatically) -->
+            <canvas id="canvas" width="800" height="600" tabindex="0"></canvas>
+
+            <!-- Controls hint -->
+            <div id="controlsHint">
+                WASD &nbsp;/&nbsp; ↑↓←→ &nbsp;para moverse
+            </div>
+
+        </div>
+
+    </body>
+</html>
