@@ -100,10 +100,9 @@ class Game {
 
         this.camera = new Camera(canvasWidth, canvasHeight, worldWidth, worldHeight);
 
-        
         this.tileSize = 100;
-        this.floorColor1 = "#4CAF50";
-        this.floorColor2 = "#66BB6A";
+        this.floorColor1 = "#1a0808";
+        this.floorColor2 = "#0d0404";
 
         this.createEventListeners();
         this.initObjects();
@@ -209,6 +208,8 @@ function main() {
     ctx = canvas.getContext("2d");
 
     game = new Game();
+
+    canvas.focus(); // para que detecte teclas
 
     requestAnimationFrame(drawScene);
 }
