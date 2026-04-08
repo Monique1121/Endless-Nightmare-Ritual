@@ -18,6 +18,9 @@ let oldTime = 0;
 
 let playerSpeed = 0.5;
 
+// How often (in ms) to persist the player's position to localStorage
+const POSITION_SAVE_INTERVAL_MS = 2000;
+
 
 const keyDirections = {
     w: "up",
@@ -105,13 +108,25 @@ class Game {
         this.floorColor1 = "#4CAF50";
         this.floorColor2 = "#66BB6A";
 
+        // Throttle for persisting position to localStorage
+        this._lastPositionSave = 0;
+
         this.createEventListeners();
         this.initObjects();
+
+        // Start background sync with the database
+        syncManager.start();
     }
 
     initObjects() {
+        // Restore saved player position when continuing a run,
+        // otherwise start at the centre of the world.
+        const savedPos = gameState.player.position;
+        const startX = (savedPos && savedPos.x) ? savedPos.x : this.world.width / 2;
+        const startY = (savedPos && savedPos.y) ? savedPos.y : this.world.height / 2;
+
         this.player = new AnimatedPlayer(
-            new Vector(this.world.width / 2, this.world.height / 2),
+            new Vector(startX, startY),
             60,
             60,
             "red",
@@ -138,6 +153,16 @@ class Game {
             if (actor.updateFrame) {
                 actor.updateFrame(deltaTime);
             }
+        }
+
+        // Throttled position persistence (localStorage only, not DB)
+        this._lastPositionSave += deltaTime;
+        if (this._lastPositionSave >= POSITION_SAVE_INTERVAL_MS) {
+            this._lastPositionSave = 0;
+            gameState.setPlayerPosition(
+                this.player.position.x,
+                this.player.position.y
+            );
         }
     }
 
@@ -207,6 +232,15 @@ function main() {
     canvas.height = canvasHeight;
 
     ctx = canvas.getContext("2d");
+
+    // Start a new run if there is no active one yet
+    if (!gameState.currentRun.run_id) {
+        gameState.startRun(
+            Date.now(),          // run_id (temporary; server should assign real id)
+            1,                   // labyrinth_id
+            gameState.currentRun.level_id || 1
+        );
+    }
 
     game = new Game();
 

@@ -34,11 +34,31 @@ document.addEventListener("DOMContentLoaded", () => {
         menu.style.display = "block";
     });
 
-    // boton para ir a la lobby 
+    // boton para ir a la lobby (nueva partida)
     const btnStart = document.getElementById("irLobby");
 
     btnStart.addEventListener("click", () => {
+        // Reset any saved state so the new run starts fresh
+        gameState.reset();
         window.location.href = "../../Lobby/html/lobbyV1.html";
+    });
+
+    // boton para continuar partida guardada
+    const btnContinue = document.getElementById("continuar");
+
+    if (gameState.hasSavedState()) {
+        btnContinue.disabled = false;
+        btnContinue.classList.remove("button-disabled");
+    } else {
+        btnContinue.disabled = true;
+        btnContinue.classList.add("button-disabled");
+    }
+
+    btnContinue.addEventListener("click", () => {
+        if (gameState.hasSavedState()) {
+            // Navigate directly to the Maze to resume the saved run
+            window.location.href = "../../Maze/html/lobbyV1.html";
+        }
     });
 
 });
