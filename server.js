@@ -99,10 +99,10 @@ function serveFile(filePath, res) {
 
 server.listen(PORT, () => {
     console.log("=========================================");
-    console.log("  🎮 Endless Nightmare Ritual - Servidor");
+    console.log("  🎮 Endless Nightmare Ritual - Server");
     console.log("=========================================");
     console.log(`  Local:   http://localhost:${PORT}`);
-    console.log(`  Menú:    http://localhost:${PORT}/PrototipoV1/menu.html`);
-    console.log("  Presiona Ctrl+C para detener el servidor");
+    console.log(`  Menu:    http://localhost:${PORT}/PrototipoV1/menu.html`);
+    console.log("  Press Ctrl+C to stop the server");
     console.log("=========================================");
 });
