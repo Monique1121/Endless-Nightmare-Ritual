@@ -100,8 +100,10 @@
         if (tryAdd(expensive[i])) expAdded++;
       }
 
-      // Completar hasta 'count' cartas mezclando las categorías restantes
-      var remaining = cheap.concat(medium).concat(expensive);
+      // Completar hasta 'count' cartas con las cartas aún dentro del límite de copias
+      var remaining = cheap.concat(medium).concat(expensive).filter(function(card) {
+        return (copiesCount[card.id] || 0) < 2;
+      });
       shuffleArray(remaining);
       for (var i = 0; i < remaining.length && selected.length < count; i++) {
         tryAdd(remaining[i]);
@@ -112,7 +114,7 @@
 
       // Clonar cada carta seleccionada para la instancia del juego
       var hand = [];
-      for (var i = 0; i < selected.length && i < count; i++) {
+      for (var i = 0; i < selected.length; i++) {
         hand.push(cloneCard(selected[i]));
       }
       return hand;
