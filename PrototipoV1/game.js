@@ -44,6 +44,80 @@
       } 
     }
 
+    // Genera una mano inicial balanceada para el jugador:
+    // - Mínimo de cartas baratas (costo 1) para jugadas tempranas
+    // - Mezcla de cartas medias y costosas
+    // - Máximo 2 copias de cualquier carta para garantizar variedad
+    // - Cada ejecución produce una combinación diferente
+    function generateBalancedPlayerHand(count) {
+      var cheap = [];   // costo 1
+      var medium = [];  // costo 2
+      var expensive = []; // costo 3-4
+
+      for (var i = 0; i < cardPool.length; i++) {
+        if (cardPool[i].cost === 1) {
+          cheap.push(cardPool[i]);
+        } else if (cardPool[i].cost === 2) {
+          medium.push(cardPool[i]);
+        } else {
+          expensive.push(cardPool[i]);
+        }
+      }
+
+      shuffleArray(cheap);
+      shuffleArray(medium);
+      shuffleArray(expensive);
+
+      var selected = [];
+      var copiesCount = {};
+
+      // Función auxiliar que intenta agregar una carta respetando el límite de 2 copias
+      function tryAdd(card) {
+        var copies = copiesCount[card.id] || 0;
+        if (copies < 2) {
+          selected.push(card);
+          copiesCount[card.id] = copies + 1;
+          return true;
+        }
+        return false;
+      }
+
+      // Garantizar al menos 3 cartas baratas (costo 1) para jugadas tempranas
+      var cheapAdded = 0;
+      for (var i = 0; i < cheap.length && cheapAdded < 3; i++) {
+        if (tryAdd(cheap[i])) cheapAdded++;
+      }
+
+      // Garantizar al menos 3 cartas de costo medio
+      var mediumAdded = 0;
+      for (var i = 0; i < medium.length && mediumAdded < 3; i++) {
+        if (tryAdd(medium[i])) mediumAdded++;
+      }
+
+      // Agregar 1-2 cartas costosas (costo 3-4) para opciones de alto impacto
+      var expAdded = 0;
+      for (var i = 0; i < expensive.length && expAdded < 2; i++) {
+        if (tryAdd(expensive[i])) expAdded++;
+      }
+
+      // Completar hasta 'count' cartas mezclando las categorías restantes
+      var remaining = cheap.concat(medium).concat(expensive);
+      shuffleArray(remaining);
+      for (var i = 0; i < remaining.length && selected.length < count; i++) {
+        tryAdd(remaining[i]);
+      }
+
+      // Mezclar la selección final para orden aleatorio en la mano
+      shuffleArray(selected);
+
+      // Clonar cada carta seleccionada para la instancia del juego
+      var hand = [];
+      for (var i = 0; i < selected.length && i < count; i++) {
+        hand.push(cloneCard(selected[i]));
+      }
+      return hand;
+    }
+
     function cloneCard(card) {
       var newCard = {};
       newCard.id = card.id;
@@ -866,14 +940,14 @@
 
     // ========== INICIALIZACIÓN DEL JUEGO ==========
     function init() {
-      // Dar 8 cartas iniciales al jugador (más cartas para aprovechar los 50 de sangre)
-      for (var i = 0; i < 8; i++) {
-        var randomIndex = Math.floor(Math.random() * cardPool.length);
-        var card = cloneCard(cardPool[randomIndex]);
-        gameState.playerHand.push(card);
+      // Dar 8 cartas iniciales al jugador usando selección balanceada:
+      // garantiza variedad de costos y evita combinaciones desbalanceadas
+      var playerStartingHand = generateBalancedPlayerHand(8);
+      for (var i = 0; i < playerStartingHand.length; i++) {
+        gameState.playerHand.push(playerStartingHand[i]);
       }
       
-      // Dar 8 cartas iniciales al rival
+      // Dar 8 cartas iniciales al rival (aleatoriedad simple para la IA)
       for (var i = 0; i < 8; i++) {
         var randomIndex = Math.floor(Math.random() * cardPool.length);
         var card = cloneCard(cardPool[randomIndex]);
