@@ -25,7 +25,10 @@ class AnimatedPlayer extends AnimatedObject {
         this.motion = motion;
     }
 
-    update(deltaTime, canvas) {
+    update(deltaTime, canvas, colliders = []) {
+        // guardar posicion anterior por si hay colisión
+        const oldX = this.position.x;
+        const oldY = this.position.y;
 
         this.velocity.x = 0;
         this.velocity.y = 0;
@@ -47,12 +50,30 @@ class AnimatedPlayer extends AnimatedObject {
         this.velocity = this.velocity.normalize().times(this.speed);
         this.position = this.position.plus(this.velocity.times(deltaTime));
 
+        // verificar colisiones y volver a la posicion anterior si hay colisión
+        if (this.checkCollision(colliders)) {
+            this.position.x = oldX;
+            this.position.y = oldY;
+        }
+
         this.clampWithinCanvas(canvas);
 
         this.updateFrame(deltaTime);
 
  
         this.updateCollider();
+    }
+
+    checkCollision(colliders) {
+        for (const collider of colliders) {
+            if (this.position.x - this.halfSize.x < collider.x + collider.width &&
+                this.position.x + this.halfSize.x > collider.x &&
+                this.position.y - this.halfSize.y < collider.y + collider.height &&
+                this.position.y + this.halfSize.y > collider.y) {
+                return true;
+            }
+        }
+        return false;
     }
 
     clampWithinCanvas(canvas) {
@@ -80,18 +101,22 @@ class AnimatedPlayer extends AnimatedObject {
 
 
     startMovement(direction) {
-
         const dirData = this.motion[direction];
-        if (!dirData.status) {
-            dirData.status = true;
-            this.setAnimation(...dirData.moveFrames, dirData.repeat, dirData.duration);
-        }
+        dirData.status = true;
+        this.setAnimation(...dirData.moveFrames, dirData.repeat, dirData.duration);
     }
 
     stopMovement(direction) {
         const dirData = this.motion[direction];
         dirData.status = false;
-        this.setAnimation(...dirData.idleFrames, dirData.repeat, dirData.duration);
+        // si todavia hay teclas presionadas, usar esa animacion
+        if (this.keys.length > 0) {
+            const lastKey = this.keys[this.keys.length - 1];
+            const lastDirData = this.motion[lastKey];
+            this.setAnimation(...lastDirData.moveFrames, lastDirData.repeat, lastDirData.duration);
+        } else {
+            this.setAnimation(...dirData.idleFrames, dirData.repeat, dirData.duration);
+        }
     }
 
 }

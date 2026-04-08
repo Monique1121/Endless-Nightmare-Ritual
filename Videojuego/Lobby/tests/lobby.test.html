@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lobby Tests</title>
+    <style>
+        body { font-family: Verdana, sans-serif; margin: 20px; background: #1a1a2e; color: #eee; }
+        h1 { color: #4fc3f7; }
+        .test { margin: 10px 0; padding: 10px; border-radius: 6px; }
+        .pass { background: #1b5e20; border-left: 4px solid #4caf50; }
+        .fail { background: #b71c1c; border-left: 4px solid #f44336; }
+        #summary { font-size: 1.2em; margin-top: 20px; padding: 10px; border-radius: 6px; background: #0d47a1; }
+    </style>
+</head>
+<body>
+    <h1>Lobby V2 - Tests</h1>
+    <div id="results"></div>
+    <div id="summary"></div>
+
+    <!--
+        Las pruebas usan versiones simplificadas de las clases del lobby
+        para que puedan correr sin Canvas real.
+    -->
+    <script>
+    "use strict";
+
+    // ── Stubs mínimos ──────────────────────────────────────────────────────────
+
+    class Vector {
+        constructor(x, y) { this.x = x; this.y = y; }
+        plus(o)  { return new Vector(this.x + o.x, this.y + o.y); }
+        minus(o) { return new Vector(this.x - o.x, this.y - o.y); }
+        times(s) { return new Vector(this.x * s, this.y * s); }
+        magnitude() { return Math.sqrt(this.x ** 2 + this.y ** 2); }
+        normalize() {
+            const m = this.magnitude();
+            return m === 0 ? new Vector(0, 0) : new Vector(this.x / m, this.y / m);
+        }
+    }
+
+    class Rect {
+        constructor(x, y, w, h) { this.x = x; this.y = y; this.width = w; this.height = h; }
+    }
+
+    // Stub de Door (copiado de lobbyV2.js sin referencias a ctx)
+    class Door {
+        constructor(x, y, width, height, label, color, levelUrl) {
+            this.position   = new Vector(x, y);
+            this.size       = new Vector(width, height);
+            this.halfSize   = new Vector(width / 2, height / 2);
+            this.label      = label;
+            this.color      = color;
+            this.levelUrl   = levelUrl;
+            this.isNear     = false;
+        }
+
+        checkPlayerProximity(player) {
+            const dx = Math.abs(player.position.x - this.position.x);
+            const dy = Math.abs(player.position.y - this.position.y);
+            this.isNear = dx < this.halfSize.x + 50 && dy < this.halfSize.y + 50;
+            return this.isNear;
+        }
+
+        enter() {
+            if (this.levelUrl && this.levelUrl !== "#") {
+                return this.levelUrl; // stub: devuelve la URL en lugar de navegar
+            }
+            return null;
+        }
+    }
+
+    // Stub de Tree
+    class Tree {
+        constructor(x, y, radius) {
+            this.position = new Vector(x, y);
+            this.radius   = radius;
+            this.collider = new Rect(
+                x - radius * 0.4,
+                y - radius * 0.4,
+                radius * 0.8,
+                radius * 0.8
+            );
+        }
+    }
+
+    // Stub de Camera
+    class Camera {
+        constructor(vw, vh, ww, wh) {
+            this.position   = new Vector(0, 0);
+            this.viewWidth  = vw;
+            this.viewHeight = vh;
+            this.worldWidth = ww;
+            this.worldHeight = wh;
+        }
+        follow(target) {
+            this.position.x = Math.max(0, Math.min(
+                target.position.x - this.viewWidth / 2,
+                this.worldWidth - this.viewWidth
+            ));
+            this.position.y = Math.max(0, Math.min(
+                target.position.y - this.viewHeight / 2,
+                this.worldHeight - this.viewHeight
+            ));
+        }
+    }
+
+    // ── Utilidad de test ──────────────────────────────────────────────────────
+
+    let passed = 0;
+    let failed = 0;
+    const resultsEl = document.getElementById("results");
+
+    function assert(description, condition) {
+        const div = document.createElement("div");
+        div.className = "test " + (condition ? "pass" : "fail");
+        div.textContent = (condition ? "✅ PASS" : "❌ FAIL") + " — " + description;
+        resultsEl.appendChild(div);
+        condition ? passed++ : failed++;
+    }
+
+    // ── Tests ─────────────────────────────────────────────────────────────────
+
+    // 1. Vector: operaciones básicas
+    {
+        const v1 = new Vector(3, 4);
+        assert("Vector.magnitude() de (3,4) es 5", v1.magnitude() === 5);
+
+        const v2 = new Vector(1, 0);
+        const n  = v2.normalize();
+        assert("Vector.normalize() de (1,0) da (1,0)", n.x === 1 && n.y === 0);
+
+        const zero = new Vector(0, 0).normalize();
+        assert("Vector.normalize() de (0,0) no falla", zero.x === 0 && zero.y === 0);
+
+        const sum = new Vector(1, 2).plus(new Vector(3, 4));
+        assert("Vector.plus() suma correctamente", sum.x === 4 && sum.y === 6);
+    }
+
+    // 2. Door: proximidad del jugador
+    {
+        const door = new Door(400, 200, 80, 120, "Test", "#fff", "level1.html");
+        const nearPlayer  = { position: new Vector(410, 210) };
+        const farPlayer   = { position: new Vector(900, 800) };
+
+        assert("Door detecta jugador cercano", door.checkPlayerProximity(nearPlayer) === true);
+        assert("Door no detecta jugador lejano", door.checkPlayerProximity(farPlayer) === false);
+    }
+
+    // 3. Door: enter() devuelve URL válida
+    {
+        const door1 = new Door(400, 200, 80, 120, "N1", "#fff", "level1.html");
+        const door2 = new Door(800, 200, 80, 120, "N2", "#00f", "#");
+
+        assert("Door.enter() devuelve la URL cuando está definida", door1.enter() === "level1.html");
+        assert("Door.enter() devuelve null cuando URL es '#'",      door2.enter() === null);
+    }
+
+    // 4. Door: isNear se actualiza correctamente
+    {
+        const door = new Door(500, 300, 80, 120, "N3", "#f00", "#");
+        const player = { position: new Vector(500, 300) };
+        door.checkPlayerProximity(player);
+        assert("Door.isNear es true tras jugador encima", door.isNear === true);
+
+        const farPlayer = { position: new Vector(0, 0) };
+        door.checkPlayerProximity(farPlayer);
+        assert("Door.isNear es false tras jugador lejos",  door.isNear === false);
+    }
+
+    // 5. Tree: collider bien calculado
+    {
+        const tree = new Tree(200, 300, 40);
+        assert("Tree.collider.x calculado correctamente",
+            Math.abs(tree.collider.x - (200 - 40 * 0.4)) < 0.001);
+        assert("Tree.collider.width calculado correctamente",
+            Math.abs(tree.collider.width - 40 * 0.8) < 0.001);
+    }
+
+    // 6. Camera: sigue al objetivo y respeta los bordes
+    {
+        const cam = new Camera(800, 600, 1600, 1200);
+
+        // Objetivo en el centro del mundo
+        cam.follow({ position: new Vector(800, 600) });
+        assert("Camera centra en el objetivo",
+            cam.position.x === 400 && cam.position.y === 300);
+
+        // Objetivo cerca del borde izquierdo/superior
+        cam.follow({ position: new Vector(0, 0) });
+        assert("Camera no pasa del borde izquierdo/superior",
+            cam.position.x === 0 && cam.position.y === 0);
+
+        // Objetivo cerca del borde derecho/inferior
+        cam.follow({ position: new Vector(1600, 1200) });
+        assert("Camera no pasa del borde derecho/inferior",
+            cam.position.x === 800 && cam.position.y === 600);
+    }
+
+    // 7. Tres puertas definidas en el lobby
+    {
+        const worldWidth  = 1600;
+        const worldHeight = 1200;
+        const doors = [
+            new Door(300,             200, 80, 120, "Nivel 1 - Bosque",    "#8B4513", "level1.html"),
+            new Door(worldWidth / 2,  160, 80, 120, "Nivel 2 - Laberinto", "#1565C0", "#"),
+            new Door(worldWidth - 300, 200, 80, 120, "Nivel 3 - Batalla",  "#B71C1C", "#"),
+        ];
+        assert("Se crean exactamente 3 puertas", doors.length === 3);
+        assert("Puerta 1 tiene label correcto", doors[0].label === "Nivel 1 - Bosque");
+        assert("Puerta 2 tiene label correcto", doors[1].label === "Nivel 2 - Laberinto");
+        assert("Puerta 3 tiene label correcto", doors[2].label === "Nivel 3 - Batalla");
+    }
+
+    // 8. Colision AABB simple (lógica de checkCollision)
+    {
+        function checkCollision(playerPos, halfSize, colliders) {
+            for (const c of colliders) {
+                if (playerPos.x - halfSize.x < c.x + c.width  &&
+                    playerPos.x + halfSize.x > c.x             &&
+                    playerPos.y - halfSize.y < c.y + c.height  &&
+                    playerPos.y + halfSize.y > c.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        const colliders   = [new Rect(100, 100, 50, 50)];
+        const halfSize    = new Vector(30, 30);
+
+        assert("Colision detectada cuando jugador toca el colider",
+            checkCollision(new Vector(120, 120), halfSize, colliders) === true);
+        assert("No colision cuando jugador esta lejos",
+            checkCollision(new Vector(300, 300), halfSize, colliders) === false);
+        assert("No colision justo fuera del borde",
+            checkCollision(new Vector(54, 125), halfSize, colliders) === false);
+    }
+
+    // ── Resumen ───────────────────────────────────────────────────────────────
+
+    const total = passed + failed;
+    const summaryEl = document.getElementById("summary");
+    summaryEl.textContent = `Resultado: ${passed}/${total} pruebas pasaron`;
+    summaryEl.style.background = failed === 0 ? "#1b5e20" : "#b71c1c";
+    </script>
+</body>
+</html>
