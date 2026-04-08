@@ -1,0 +1,12 @@
+{
+  "name": "endless-nightmare-ritual",
+  "version": "1.0.0",
+  "description": "Endless Nightmare Ritual - Horror web game",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
