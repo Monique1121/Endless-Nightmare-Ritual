@@ -1,23 +1,15 @@
 "use strict";
 
-
 const canvasWidth = 800;
 const canvasHeight = 600;
-
 
 const worldWidth = 3000;
 const worldHeight = 3000;
 
 let ctx;
-
-
 let game;
-
-
 let oldTime = 0;
-
 let playerSpeed = 0.5;
-
 
 const keyDirections = {
     w: "up",
@@ -29,7 +21,6 @@ const keyDirections = {
     ArrowDown: "down",
     ArrowRight: "right",
 };
-
 
 const playerMotion = {
     up: {
@@ -68,9 +59,7 @@ const playerMotion = {
         moveFrames: [3, 5],
         idleFrames: [4, 4],
     },
-
 };
-
 
 class Camera {
     constructor(viewWidth, viewHeight, worldWidth, worldHeight) {
@@ -90,7 +79,6 @@ class Camera {
     }
 }
 
-
 class Game {
     constructor() {
         this.world = {
@@ -100,13 +88,37 @@ class Game {
 
         this.camera = new Camera(canvasWidth, canvasHeight, worldWidth, worldHeight);
 
-        
         this.tileSize = 100;
         this.floorColor1 = "#4CAF50";
         this.floorColor2 = "#66BB6A";
 
+        this.inventoryOpen = false;
+
+        // aqui esta la data del inventario, la teoria mantener esto vacia y hacer el metodo de la API 
+        this.inventoryData = {
+            blood: 85,
+            cards: [
+                {name: "Messi", type: "Goat", cost: 1000, damage: '10^10', hp: 'infinito', description: "El mejor de todos los tiempos, inflige daño infinito y tiene HP infinito."},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "}
+                
+            ],
+        };
+
         this.createEventListeners();
         this.initObjects();
+        this.inventoryUI();
+        this.drawInventory();
+    }
+
+    inventoryUI() {
+        
+        this.inventoryHUB = document.getElementById("inventory");
+        this.inventoryBloodValue = document.getElementById("inventory_blood");
+        this.inventoryCards = document.getElementById("inventory_cards");
     }
 
     initObjects() {
@@ -119,20 +131,54 @@ class Game {
             playerMotion
         );
 
-        
         this.player.setSprite(
-    "../../assets/gracias.png",
-    new Rect(0, 0, 143, 145)
-);
+            "../../assets/gracias.png",
+            new Rect(0, 0, 143, 145)
+        );
 
         this.player.setSpeed(playerSpeed);
 
         this.actors = [];
     }
 
+    drawInventory() {
+        
+        this.inventoryBloodValue.textContent = this.inventoryData.blood;
+        this.inventoryCards.innerHTML = "";
+
+        for (const card of this.inventoryData.cards) {
+            const cardDiv = document.createElement("div");
+            cardDiv.className = "inventory-card";
+            cardDiv.innerHTML = `
+                <h4>${card.name}</h4>
+                <p>Tipo: ${card.type}</p>
+                <p>Costo de sangre: ${card.cost}</p>
+                <p>Daño: ${card.damage}</p> 
+                <p>HP: ${card.hp}</p>
+                <p>Descripción: ${card.description} </p>
+            `;
+            this.inventoryCards.append(cardDiv);
+        }
+    }
+
+    toggleInventory(forceValue = null) {
+        // Si forceValue es null, alterna el estado actual. De lo contrario, establece el estado según forceValue. Esto permite abrir o cerrar el inventario de forma controlada.
+        this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;
+
+        if (this.inventoryOpen) {
+            this.drawInventory();
+            this.inventoryHUB.classList.remove("hidden");
+            this.player.keys = [];
+        } else {
+            this.inventoryHUB.classList.add("hidden");
+        }
+    }
+
     update(deltaTime) {
-        this.player.update(deltaTime, this.world);
-        this.camera.follow(this.player);
+        if (!this.inventoryOpen) {
+            this.player.update(deltaTime, this.world);
+            this.camera.follow(this.player);
+        }
 
         for (let actor of this.actors) {
             if (actor.updateFrame) {
@@ -153,11 +199,8 @@ class Game {
 
     draw(ctx) {
         ctx.save();
-
-        
         ctx.translate(-this.camera.position.x, -this.camera.position.y);
 
-        
         this.drawBackground(ctx);
 
         for (let actor of this.actors) {
@@ -165,12 +208,18 @@ class Game {
         }
 
         this.player.draw(ctx);
-
         ctx.restore();
     }
 
     createEventListeners() {
         window.addEventListener("keydown", (event) => {
+            if (event.key === "e" || event.key === "E") {
+                this.toggleInventory();
+                return;
+            }
+
+            if (this.inventoryOpen) return;
+
             if (event.key in keyDirections) {
                 this.addKey(keyDirections[event.key]);
                 this.player.startMovement(keyDirections[event.key]);
@@ -199,7 +248,6 @@ class Game {
     }
 }
 
-
 function main() {
     const canvas = document.getElementById("canvas");
 
@@ -212,7 +260,6 @@ function main() {
 
     requestAnimationFrame(drawScene);
 }
-
 
 function drawScene(newTime) {
     if (!oldTime) oldTime = newTime;
