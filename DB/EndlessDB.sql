@@ -1,3 +1,4 @@
+CREATE DATABASE endless;
 USE endless;
 
 CREATE TABLE Player (

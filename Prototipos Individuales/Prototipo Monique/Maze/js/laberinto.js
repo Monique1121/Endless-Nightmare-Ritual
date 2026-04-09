@@ -8,14 +8,14 @@
 const worldWidth = 3000;
 const worldHeight = 3000;
 
-const rows = 30;
-const cols = 40;
-const cell_size = 50;
+const rows = 40;
+const cols = 50;
+const cell_size = 60;
 
 const canvasWidth = 800;
 const canvasHeight = 600;
-const wall = "black";
-const path = "white";
+const wall = "green";
+const path = "peru";
 
 let ctx;
 
@@ -94,14 +94,19 @@ class Wall {
 }
 
 class Exit {
-    constructor(x, y, size) {
+    constructor(x, y, size, imageSrc) {
         this.position = new Vector(x + size / 2, y + size / 2);
         this.halfSize = new Vector(size / 2, size / 2);
+
+        // Cargamos la imagen
+        this.image = new Image();
+        this.image.src = imageSrc;
     }
 
     draw(ctx) {
-        ctx.fillStyle = "red";
-        ctx.fillRect(
+        // Dibujamos la imagen centrada en la posición
+        ctx.drawImage(
+            this.image,
             this.position.x - this.halfSize.x,
             this.position.y - this.halfSize.y,
             this.halfSize.x * 2,
@@ -210,15 +215,14 @@ class Game {
 
         this.actors = [];
 
-        this.player = new AnimatedPlayer(new Vector(cell_size + cell_size / 2, cell_size + cell_size / 2), 40,
-            40, "red", 3, playerMotion);
+        this.player = new AnimatedPlayer(new Vector(cell_size + cell_size / 2, cell_size + cell_size / 2), cell_size,
+            cell_size, "red", 3, playerMotion);
         this.player.halfSize = new Vector(cell_size / 2, cell_size / 2);
         this.player.setSprite("../assets/gracias.png", new Rect(0, 0, 143, 145));
 
         this.player.setSpeed(playerSpeed);
 
-        //this.exit = new Exit((cols - 3) * cell_size, (rows - 2) * cell_size, cell_size, "../assets/puerta.png");
-        this.exit = new Exit((cols - 3) * cell_size, (rows - 2) * cell_size, cell_size, "../assets/puerta.png");
+        this.exit = new Exit((cols - 4) * cell_size, (rows - 3) * cell_size, cell_size, "../assets/puerta.png");
 
     }
 
@@ -265,7 +269,7 @@ class Game {
             actor.draw(ctx);
         }
 
-        this.exit.draw(ctx); // dibujamos la salida
+        this.exit.draw(ctx);
         this.player.draw(ctx);
 
 
