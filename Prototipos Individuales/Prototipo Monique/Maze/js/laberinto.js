@@ -25,7 +25,7 @@ let game;
 
 let oldTime = 0;
 
-let playerSpeed = 0.6;
+let playerSpeed = 0.4;
 
 
 const keyDirections = {
@@ -219,6 +219,7 @@ class Game {
             cell_size, "red", 3, playerMotion);
         this.player.halfSize = new Vector(cell_size / 2, cell_size / 2);
         this.player.setSprite("../assets/gracias.png", new Rect(0, 0, 143, 145));
+        this.player.setCollider(cell_size * 0.65, cell_size * 0.65);
 
         this.player.setSpeed(playerSpeed);
 
@@ -231,26 +232,29 @@ class Game {
     const oldY = this.player.position.y;
 
     this.player.update(deltaTime, this.world);
+    this.player.updateCollider();
 
-    let testX = { position: new Vector(this.player.position.x, oldY), halfSize: this.player.halfSize };
+    const Collider = new Vector(this.player.colliderWidth / 2, this.player.colliderHeight / 2);
+
+    let testX = { position: new Vector(this.player.position.x, oldY), halfSize: Collider };
     for (let wall of this.actors) {
         if (boxOverlap(testX, wall)) {
             if (this.player.position.x < wall.position.x) {
-                this.player.position.x = wall.position.x - wall.halfSize.x - this.player.halfSize.x;
+                this.player.position.x = wall.position.x - wall.halfSize.x - Collider.x;
             } else {
-                this.player.position.x = wall.position.x + wall.halfSize.x + this.player.halfSize.x;
+                this.player.position.x = wall.position.x + wall.halfSize.x + Collider.x;
             }
             break;
         }
     }
 
-    let testY = { position: new Vector(this.player.position.x, this.player.position.y), halfSize: this.player.halfSize };
+    let testY = { position: new Vector(this.player.position.x, this.player.position.y), halfSize: Collider };
     for (let wall of this.actors) {
         if (boxOverlap(testY, wall)) {
             if (this.player.position.y < wall.position.y) {
-                this.player.position.y = wall.position.y - wall.halfSize.y - this.player.halfSize.y;
+                this.player.position.y = wall.position.y - wall.halfSize.y - Collider.y;
             } else {
-                this.player.position.y = wall.position.y + wall.halfSize.y + this.player.halfSize.y;
+                this.player.position.y = wall.position.y + wall.halfSize.y + Collider.y;
             }
             break;
         }
