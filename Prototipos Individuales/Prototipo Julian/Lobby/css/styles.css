@@ -161,3 +161,27 @@ canvas {
 .hidden {
     display: none;
 }
+
+
+.secret-title {
+    margin: 0;
+    font-size: 13px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.secret-text {
+    margin: 0;
+    font-size: 13px;
+    color: #ccc;
+    line-height: 1.5;
+}
+
+.secrets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 500px;
+    overflow-y: auto;
+}

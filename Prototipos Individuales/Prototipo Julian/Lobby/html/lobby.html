@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Lobby Version 2  </title>
+        <title>Lobby Version 2</title>
         <link rel="stylesheet" href="../css/styles.css">
         <script src="../js/libs/game_functions.js"></script>
         <script src="../js/libs/Rect.js"></script>
@@ -9,47 +9,58 @@
         <script src="../js/libs/GameObject.js"></script>
         <script src="../js/libs/AnimatedObject.js"></script>
         <script src="../js/libs/AnimatedPlayer.js"></script>
-        <script src="../js/lobbyV2.js"></script>
+        <script src="../js/lobbyV3.js"></script>
     </head>
 
     <body>
         <div id="headerContainer">
-            <h1>Lobby Version 2 </h1>
+            <h1>Lobby Version 2</h1>
         </div>
         <canvas id="canvas"></canvas>
 
-    <div id="inventory" class="inventory-popup hidden">
-        <div class="inventory-panel">
+        <div id="inventory" class="inventory-popup hidden">
+            <div class="inventory-panel">
 
-            <div class="inventory-header">
-                <h2>Inventario</h2>
-                
+                <div class="inventory-header">
+                    <h2>Inventario</h2>
+                </div>
+
+                <div class="inventory-blood">
+                    Sangre: <span id="inventory_blood">100</span>
+                </div>
+
+                <div class="inventory-section">
+                    <h3>Cartas</h3>
+                    <h4>Presiona S para abrir secretos</h4>
+                    <div id="inventory_cards" class="inventory-cards-list"></div>
+                </div>
+
+                <p class="inventory-help">E para cerrar</p>
+
             </div>
-
-            
-            <div class="inventory-blood">
-                Sangre: <span id="inventory_blood">100</span>  
-            </div>
-
-            <div class="inventory-section">
-                <h3>Cartas</h3>
-                <div id="inventory_cards" class="inventory-cards-list"></div>
-            </div>
-
-            <p class="inventory-help">E para cerrar </p>
-
         </div>
-    </div>
 
+        <div id="secrets" class="inventory-popup hidden">
+            <div class="inventory-panel">
+
+                <div class="inventory-header">
+                    <h2>Secretos</h2>
+                </div>
+
+                <div class="inventory-section">
+                        
+                    
+                    <div id="secrets_cards" class="secrets-list"></div>
+                </div>
+
+                <p class="inventory-help">E para cerrar</p>
+
+            </div>
+        </div>
 
         <script> main(); </script>
         <footer>
-            <p>Version de lobby con inventario se abre con e </p>
+            <p>Version de lobby con inventario se abre con e</p>
         </footer>
-    </body>           
+    </body>
 </html>
-                                         
-
-
-
-

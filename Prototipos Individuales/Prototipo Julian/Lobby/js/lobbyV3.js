@@ -98,25 +98,24 @@ class Game {
         this.inventoryData = {
             blood: 85,
             cards: [
-                {name: "Messi", type: "Goat", cost: 1000, damage: '10^10', hp: 'infinito', description: "El mejor de todos los tiempos, inflige daño infinito y tiene HP infinito."},
-                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
-                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
-                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
-                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
-                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "}
-                
+             {image: "../../assets/cards/Blood_stalker.png"},
+             {image: "../../assets/cards/Grave_whisperer.png"},
+             {image: "../../assets/cards/JBcard.png"},
+             {image: "../../assets/cards/EmperadorJB.png"},
+             {image: "../../assets/cards/ReyJB.png"},
+             {image: "../../assets/cards/caballero_plaga.png"},
+             {image: "../../assets/cards/ReyJB.png"}
             ],
-
         };
-
+        // secretos data 
         this.secretsData = {
             secrets: [
-                {name: "Secreto 1", description: "Descripción del secreto 1"},
-                {name: "Secreto 2", description: "Descripción del secreto 2"},
-                {name: "Secreto 3", description: "Descripción del secreto 3"},
-            ],
-        }
-
+                {title: "Secreto 1", description: "Descripción del secreto 1", },
+                {title: "Secreto 2", description: "Descripción del secreto 2", },
+                {title: "Secreto 3", description: "Descripción del secreto 3", },
+            ]
+            
+        };
 
         this.createEventListeners();
         this.initObjects();
@@ -126,11 +125,14 @@ class Game {
     }
 
     inventoryUI() {
-        
         this.inventoryHUB = document.getElementById("inventory");
         this.inventoryBloodValue = document.getElementById("inventory_blood");
         this.inventoryCards = document.getElementById("inventory_cards");
+        // secrtetos HUB 
+        this.secretsHUB = document.getElementById("secrets");
+        this.secretsCards = document.getElementById("secrets_cards");
     }
+    
 
     initObjects() {
         this.player = new AnimatedPlayer(
@@ -153,42 +155,38 @@ class Game {
     }
 
     drawInventory() {
-        
         this.inventoryBloodValue.textContent = this.inventoryData.blood;
         this.inventoryCards.innerHTML = "";
 
         for (const card of this.inventoryData.cards) {
             const cardDiv = document.createElement("div");
             cardDiv.className = "inventory-card";
-            cardDiv.innerHTML = `
-                <h4>${card.name}</h4>
-                <p>Tipo: ${card.type}</p>
-                <p>Costo de sangre: ${card.cost}</p>
-                <p>Daño: ${card.damage}</p> 
-                <p>HP: ${card.hp}</p>
-                <p>Descripción: ${card.description} </p>
-            `;
+
+            const img = document.createElement("img");
+            img.src = card.image;
+            img.alt = card.name;
+            img.className = "inventory-card-png";
+            cardDiv.append(img);
+
             this.inventoryCards.append(cardDiv);
         }
     }
 
-        drawSecrets() {
-        
-        this.inventoryBloodValue.textContent = this.inventoryData.blood;
-        this.inventoryCards.innerHTML = "";
+    drawSecrets() {
+        this.secretsCards.innerHTML = "";
 
-        for (const card of this.inventoryData.cards) {
-            const cardDiv = document.createElement("div");
-            cardDiv.className = "inventory-card";
-            cardDiv.innerHTML = `
-                <h4>${card.name}</h4>
-                <p>Tipo: ${card.type}</p>
-                <p>Costo de sangre: ${card.cost}</p>
-                <p>Daño: ${card.damage}</p> 
-                <p>HP: ${card.hp}</p>
-                <p>Descripción: ${card.description} </p>
-            `;
-            this.inventoryCards.append(cardDiv);
+        for (const item of this.secretsData.secrets) {
+            const secretDiv = document.createElement("div");
+            const title = document.createElement("h4");
+            title.className = "secret-title";
+            title.textContent = item.title;
+
+            const text = document.createElement("p");
+            text.className = "secret-text";
+            text.textContent = item.description;
+
+            secretDiv.append(title, text);
+            this.secretsCards.append(secretDiv);
         }
     }
 
@@ -202,6 +200,18 @@ class Game {
             this.player.keys = [];
         } else {
             this.inventoryHUB.classList.add("hidden");
+        }
+    }
+
+    toggleInventorySecrets(forceValue = null) {
+        this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;
+
+        if (this.inventoryOpen) {
+            this.drawSecrets();
+            this.secretsHUB.classList.remove("hidden");
+            this.player.keys = [];
+        } else {
+            this.secretsHUB.classList.add("hidden");
         }
     }
 
@@ -245,10 +255,33 @@ class Game {
     createEventListeners() {
         window.addEventListener("keydown", (event) => {
             if (event.key === "e" || event.key === "E") {
-                this.toggleInventory();
+                if(this.inventoryOpen){
+                    this.inventoryHUB.classList.add("hidden");
+                    this.secretsHUB.classList.add("hidden");
+                    this.inventoryOpen = false;
+                }
+                else{
+                    this.toggleInventory();
+                }
                 return;
             }
 
+            if (this.inventoryOpen) return;
+
+            if (event.key in keyDirections) {
+                this.addKey(keyDirections[event.key]);
+                this.player.startMovement(keyDirections[event.key]);
+            }
+        });
+
+
+        window.addEventListener("keydown", (event) => {
+            if ((event.key === "s" || event.key === "S") && this.inventoryOpen) {
+                this.inventoryHUB.classList.add("hidden");
+                this.inventoryOpen = false;
+                this.toggleInventorySecrets();
+                return;
+        }   
             if (this.inventoryOpen) return;
 
             if (event.key in keyDirections) {
