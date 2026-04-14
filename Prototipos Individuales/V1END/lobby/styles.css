@@ -1,0 +1,94 @@
+*{
+    font-family: 'Press Start 2P', cursive;
+}
+
+body {
+    background-color: black;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    outline: none;
+}
+
+.lil-gui.autoPlace{
+    top: 15vh;
+    right: 5vw;
+}
+
+#backButton {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 180px;
+    height: 45px;
+    background: linear-gradient(135deg, rgb(99, 24, 24), rgb(80, 15, 15));
+    font-family: 'Press Start 2P', cursive;
+    color: white;
+    font-size: 12px;
+    padding: 10px 15px;
+    border: 2px solid rgba(150, 30, 30, 0.8);
+    border-radius: 12px;
+    cursor: pointer;
+    text-shadow: 
+        0 0 20px white,
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+    box-shadow: 
+        0 0 15px rgb(107, 24, 24),
+        inset 0 -2px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+#backButton:hover {
+    background: linear-gradient(135deg, rgb(255, 248, 248), rgb(240, 230, 230));
+    color: rgb(73, 12, 12);
+    border-color: rgba(200, 50, 50, 1);
+    box-shadow: 
+        0 0 25px rgb(241, 239, 239),
+        0 4px 15px rgba(255, 100, 100, 0.5),
+        inset 0 -2px 10px rgba(100, 0, 0, 0.3);
+    transform: translateY(-3px) scale(1.05);
+}
+
+#backButton:active {
+    transform: translateY(0) scale(1);
+    box-shadow: 
+        0 0 10px rgb(107, 24, 24),
+        inset 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+
+#examplesContainer{
+    margin: 1em;
+    display:flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.exampleGroup{
+    margin: 0.5em;
+    padding: 1em;
+    max-width: 40vw;
+    border: 3px solid black;
+    border-radius: 20px;
+    background-color: #FFFFFF;
+    filter: drop-shadow(gray 5px 5px 3px);
+}

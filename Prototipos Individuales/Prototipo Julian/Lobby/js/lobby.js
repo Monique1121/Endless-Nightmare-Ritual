@@ -106,6 +106,7 @@ class Game {
                 {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "}
                 
             ],
+<<<<<<< HEAD
 
         };
 
@@ -118,11 +119,18 @@ class Game {
         }
 
 
+=======
+        };
+
+>>>>>>> origin/main
         this.createEventListeners();
         this.initObjects();
         this.inventoryUI();
         this.drawInventory();
+<<<<<<< HEAD
         this.drawSecrets();
+=======
+>>>>>>> origin/main
     }
 
     inventoryUI() {
@@ -172,6 +180,7 @@ class Game {
         }
     }
 
+<<<<<<< HEAD
         drawSecrets() {
         
         this.inventoryBloodValue.textContent = this.inventoryData.blood;
@@ -192,6 +201,8 @@ class Game {
         }
     }
 
+=======
+>>>>>>> origin/main
     toggleInventory(forceValue = null) {
         // Si forceValue es null, alterna el estado actual. De lo contrario, establece el estado según forceValue. Esto permite abrir o cerrar el inventario de forma controlada.
         this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;
