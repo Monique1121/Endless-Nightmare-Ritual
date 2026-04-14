@@ -441,7 +441,7 @@ class Game {
 
             this.mouse.x = mouseX + this.camera.position.x;
             this.mouse.y = mouseY + this.camera.position.y;
-
+            
         });
     }
 
