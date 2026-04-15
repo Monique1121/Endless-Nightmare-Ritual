@@ -160,7 +160,7 @@ class Game {
         this.lightMask.src = "../assets/light.png";
 
         this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/ppppp.png";
+        this.darknessMask.src = "../assets/mascara_5.png";
 
         this.mouse = new Vector(0, 0);
 
@@ -295,7 +295,12 @@ class Game {
 
         ctx.save();
 
-        ctx.translate(this.player.position.x, this.player.position.y);
+        const offset = 20;
+
+        const px = this.player.position.x + Math.cos(angle) * offset;
+        const py = this.player.position.y + Math.sin(angle) * offset;
+
+        ctx.translate(px, py);
         ctx.rotate(angle - Math.PI / 2);
         ctx.drawImage(
             this.darknessMask, - size / 2 + 5, - size / 2 + 5, size, size);
@@ -361,6 +366,7 @@ class Game {
     update(deltaTime) {
         const oldX = this.player.position.x;
         const oldY = this.player.position.y;
+        
 
         this.player.update(deltaTime, this.world);
         this.player.updateCollider();
@@ -370,7 +376,7 @@ class Game {
         let testX = { position: new Vector(this.player.position.x, oldY), halfSize: Collider };
         for (let wall of this.actors) {
             if (boxOverlap(testX, wall)) {
-                if (this.player.position.x < wall.position.x) {
+                if (oldX < wall.position.x) {
                     this.player.position.x = wall.position.x - wall.halfSize.x - Collider.x;
                 } else {
                     this.player.position.x = wall.position.x + wall.halfSize.x + Collider.x;
@@ -382,7 +388,7 @@ class Game {
         let testY = { position: new Vector(this.player.position.x, this.player.position.y), halfSize: Collider };
         for (let wall of this.actors) {
             if (boxOverlap(testY, wall)) {
-                if (this.player.position.y < wall.position.y) {
+                if (oldY < wall.position.y) {
                     this.player.position.y = wall.position.y - wall.halfSize.y - Collider.y;
                 } else {
                     this.player.position.y = wall.position.y + wall.halfSize.y + Collider.y;
