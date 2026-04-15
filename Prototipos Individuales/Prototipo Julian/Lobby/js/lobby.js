@@ -106,12 +106,31 @@ class Game {
                 {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "}
                 
             ],
+<<<<<<< HEAD
+
         };
 
+        this.secretsData = {
+            secrets: [
+                {name: "Secreto 1", description: "Descripción del secreto 1"},
+                {name: "Secreto 2", description: "Descripción del secreto 2"},
+                {name: "Secreto 3", description: "Descripción del secreto 3"},
+            ],
+        }
+
+
+=======
+        };
+
+>>>>>>> origin/main
         this.createEventListeners();
         this.initObjects();
         this.inventoryUI();
         this.drawInventory();
+<<<<<<< HEAD
+        this.drawSecrets();
+=======
+>>>>>>> origin/main
     }
 
     inventoryUI() {
@@ -161,6 +180,29 @@ class Game {
         }
     }
 
+<<<<<<< HEAD
+        drawSecrets() {
+        
+        this.inventoryBloodValue.textContent = this.inventoryData.blood;
+        this.inventoryCards.innerHTML = "";
+
+        for (const card of this.inventoryData.cards) {
+            const cardDiv = document.createElement("div");
+            cardDiv.className = "inventory-card";
+            cardDiv.innerHTML = `
+                <h4>${card.name}</h4>
+                <p>Tipo: ${card.type}</p>
+                <p>Costo de sangre: ${card.cost}</p>
+                <p>Daño: ${card.damage}</p> 
+                <p>HP: ${card.hp}</p>
+                <p>Descripción: ${card.description} </p>
+            `;
+            this.inventoryCards.append(cardDiv);
+        }
+    }
+
+=======
+>>>>>>> origin/main
     toggleInventory(forceValue = null) {
         // Si forceValue es null, alterna el estado actual. De lo contrario, establece el estado según forceValue. Esto permite abrir o cerrar el inventario de forma controlada.
         this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;

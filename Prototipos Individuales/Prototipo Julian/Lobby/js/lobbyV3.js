@@ -107,18 +107,32 @@ class Game {
              {image: "../../assets/cards/ReyJB.png"}
             ],
         };
+        // secretos data 
+        this.secretsData = {
+            secrets: [
+                {title: "Secreto 1", description: "Descripción del secreto 1", },
+                {title: "Secreto 2", description: "Descripción del secreto 2", },
+                {title: "Secreto 3", description: "Descripción del secreto 3", },
+            ]
+            
+        };
 
         this.createEventListeners();
         this.initObjects();
         this.inventoryUI();
         this.drawInventory();
+        this.drawSecrets();
     }
 
     inventoryUI() {
         this.inventoryHUB = document.getElementById("inventory");
         this.inventoryBloodValue = document.getElementById("inventory_blood");
         this.inventoryCards = document.getElementById("inventory_cards");
+        // secrtetos HUB 
+        this.secretsHUB = document.getElementById("secrets");
+        this.secretsCards = document.getElementById("secrets_cards");
     }
+    
 
     initObjects() {
         this.player = new AnimatedPlayer(
@@ -158,6 +172,24 @@ class Game {
         }
     }
 
+    drawSecrets() {
+        this.secretsCards.innerHTML = "";
+
+        for (const item of this.secretsData.secrets) {
+            const secretDiv = document.createElement("div");
+            const title = document.createElement("h4");
+            title.className = "secret-title";
+            title.textContent = item.title;
+
+            const text = document.createElement("p");
+            text.className = "secret-text";
+            text.textContent = item.description;
+
+            secretDiv.append(title, text);
+            this.secretsCards.append(secretDiv);
+        }
+    }
+
     toggleInventory(forceValue = null) {
         // Si forceValue es null, alterna el estado actual. De lo contrario, establece el estado según forceValue. Esto permite abrir o cerrar el inventario de forma controlada.
         this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;
@@ -168,6 +200,18 @@ class Game {
             this.player.keys = [];
         } else {
             this.inventoryHUB.classList.add("hidden");
+        }
+    }
+
+    toggleInventorySecrets(forceValue = null) {
+        this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;
+
+        if (this.inventoryOpen) {
+            this.drawSecrets();
+            this.secretsHUB.classList.remove("hidden");
+            this.player.keys = [];
+        } else {
+            this.secretsHUB.classList.add("hidden");
         }
     }
 
@@ -211,10 +255,33 @@ class Game {
     createEventListeners() {
         window.addEventListener("keydown", (event) => {
             if (event.key === "e" || event.key === "E") {
-                this.toggleInventory();
+                if(this.inventoryOpen){
+                    this.inventoryHUB.classList.add("hidden");
+                    this.secretsHUB.classList.add("hidden");
+                    this.inventoryOpen = false;
+                }
+                else{
+                    this.toggleInventory();
+                }
                 return;
             }
 
+            if (this.inventoryOpen) return;
+
+            if (event.key in keyDirections) {
+                this.addKey(keyDirections[event.key]);
+                this.player.startMovement(keyDirections[event.key]);
+            }
+        });
+
+
+        window.addEventListener("keydown", (event) => {
+            if ((event.key === "s" || event.key === "S") && this.inventoryOpen) {
+                this.inventoryHUB.classList.add("hidden");
+                this.inventoryOpen = false;
+                this.toggleInventorySecrets();
+                return;
+        }   
             if (this.inventoryOpen) return;
 
             if (event.key in keyDirections) {

@@ -98,13 +98,13 @@ class Game {
         this.inventoryData = {
             blood: 85,
             cards: [
-             {image: "../../assets/cards/Blood_stalker.png"},
-             {image: "../../assets/cards/Grave_whisperer.png"},
-             {image: "../../assets/cards/JBcard.png"},
-             {image: "../../assets/cards/EmperadorJB.png"},
-             {image: "../../assets/cards/ReyJB.png"},
-             {image: "../../assets/cards/caballero_plaga.png"},
-             {image: "../../assets/cards/ReyJB.png"}
+                {name: "Messi", type: "Goat", cost: 1000, damage: '10^10', hp: 'infinito', description: "El mejor de todos los tiempos, inflige daño infinito y tiene HP infinito."},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "},
+                {name: "Vini", type: "malo", cost: 85, damage: 7, hp: -1, description: "Una basura que deje de llorar segundon eterno "}
+                
             ],
         };
 
@@ -115,6 +115,7 @@ class Game {
     }
 
     inventoryUI() {
+        
         this.inventoryHUB = document.getElementById("inventory");
         this.inventoryBloodValue = document.getElementById("inventory_blood");
         this.inventoryCards = document.getElementById("inventory_cards");
@@ -141,19 +142,21 @@ class Game {
     }
 
     drawInventory() {
+        
         this.inventoryBloodValue.textContent = this.inventoryData.blood;
         this.inventoryCards.innerHTML = "";
 
         for (const card of this.inventoryData.cards) {
             const cardDiv = document.createElement("div");
             cardDiv.className = "inventory-card";
-
-            const img = document.createElement("img");
-            img.src = card.image;
-            img.alt = card.name;
-            img.className = "inventory-card-png";
-            cardDiv.append(img);
-
+            cardDiv.innerHTML = `
+                <h4>${card.name}</h4>
+                <p>Tipo: ${card.type}</p>
+                <p>Costo de sangre: ${card.cost}</p>
+                <p>Daño: ${card.damage}</p> 
+                <p>HP: ${card.hp}</p>
+                <p>Descripción: ${card.description} </p>
+            `;
             this.inventoryCards.append(cardDiv);
         }
     }
