@@ -14,7 +14,7 @@ const cell_size = 60;
 
 const canvasWidth = 800;
 const canvasHeight = 600;
-const wall = "black";
+const wall = "white";
 const path = "white";
 
 let ctx;
@@ -113,6 +113,8 @@ class Door {
     }
 }
 
+
+
 class Camera {
     constructor(viewWidth, viewHeight, worldWidth, worldHeight) {
         this.position = new Vector(0, 0);
@@ -150,6 +152,19 @@ class Game {
         this.generateMaze();
         this.chestImage = new Image();
         this.chestImage.src = "../assets/cofre.png";
+
+        this.floorImage = new Image();
+        this.floorImage.src = "../assets/floor.png";
+
+        this.lightMask= new Image();
+        this.lightMask.src = "../assets/light.png";
+
+        this.darknessMask = new Image();
+        this.darknessMask.src = "../assets/mascara_5.png";
+
+        this.mouse = new Vector(0, 0);
+
+        
     }
 
     findDeadEnds() {
@@ -251,10 +266,17 @@ class Game {
 
                 if (this.maze[row][col] === 1) {
                     ctx.fillStyle = wall;
+                    ctx.fillRect(col * cell_size, row * cell_size, cell_size, cell_size);
                 } else {
-                    ctx.fillStyle = path;
+                    ctx.drawImage(
+                        this.floorImage,
+                        col * cell_size,
+                        row * cell_size,
+                        cell_size,
+                        cell_size
+                    );
+
                 }
-                ctx.fillRect(col * cell_size, row * cell_size, cell_size, cell_size);
                 
                 if (this.deadEnds[row][col]) {
                     ctx.drawImage(this.chestImage, col * cell_size, row * cell_size, cell_size, cell_size);
@@ -262,6 +284,43 @@ class Game {
             }
         }
 
+    }
+
+    drawDarkness(ctx) {
+
+        const size = 3000;
+        const dx = this.mouse.x - this.player.position.x;
+        const dy = this.mouse.y - this.player.position.y;
+        const angle = Math.atan2(dy, dx);
+
+        ctx.save();
+
+        const offset = 20;
+
+        const px = this.player.position.x + Math.cos(angle) * offset;
+        const py = this.player.position.y + Math.sin(angle) * offset;
+
+        ctx.translate(px, py);
+        ctx.rotate(angle - Math.PI / 2);
+        ctx.drawImage(
+            this.darknessMask, - size / 2 + 5, - size / 2 + 5, size, size);
+
+        ctx.restore();
+    }
+
+    drawLight(ctx) {
+        
+        const player = this.player;
+
+        const size = 3000;
+
+        ctx.drawImage(
+            this.lightMask,
+            player.position.x - size / 2,
+            player.position.y - size / 2,
+            size,
+            size
+        );
     }
 
     drawArrow(ctx) {
@@ -307,6 +366,7 @@ class Game {
     update(deltaTime) {
         const oldX = this.player.position.x;
         const oldY = this.player.position.y;
+        
 
         this.player.update(deltaTime, this.world);
         this.player.updateCollider();
@@ -316,7 +376,7 @@ class Game {
         let testX = { position: new Vector(this.player.position.x, oldY), halfSize: Collider };
         for (let wall of this.actors) {
             if (boxOverlap(testX, wall)) {
-                if (this.player.position.x < wall.position.x) {
+                if (oldX < wall.position.x) {
                     this.player.position.x = wall.position.x - wall.halfSize.x - Collider.x;
                 } else {
                     this.player.position.x = wall.position.x + wall.halfSize.x + Collider.x;
@@ -328,7 +388,7 @@ class Game {
         let testY = { position: new Vector(this.player.position.x, this.player.position.y), halfSize: Collider };
         for (let wall of this.actors) {
             if (boxOverlap(testY, wall)) {
-                if (this.player.position.y < wall.position.y) {
+                if (oldY < wall.position.y) {
                     this.player.position.y = wall.position.y - wall.halfSize.y - Collider.y;
                 } else {
                     this.player.position.y = wall.position.y + wall.halfSize.y + Collider.y;
@@ -353,7 +413,10 @@ class Game {
 
         this.entrance.draw(ctx);
         this.exit.draw(ctx);
+        this.drawLight(ctx);
+        this.drawDarkness(ctx);
         this.player.draw(ctx);
+
         this.drawArrow(ctx);
 
         ctx.restore();
@@ -373,6 +436,18 @@ class Game {
                 this.delKey(keyDirections[event.key]);
                 this.player.stopMovement(keyDirections[event.key]);
             }
+        });
+
+        canvas.addEventListener("mousemove", (event) => {
+
+            const rect = canvas.getBoundingClientRect();
+
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            this.mouse.x = mouseX + this.camera.position.x;
+            this.mouse.y = mouseY + this.camera.position.y;
+
         });
     }
 
