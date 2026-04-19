@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const mysql = require('mysql2');
+
 const app = express()
 const port = 3000
 
@@ -8,9 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors())
 
-
-// Create a connection to the database
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
     host: '127.0.0.1',
     user: 'root',
     password: 'nctdream123',
@@ -18,18 +17,20 @@ const connection = mysql.createConnection({
     port: '3305'
 });
 
-// Connect to the database
-connection.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to MySQL Database!');
+// Endpoint
+app.get('/consulta', (req, res) => {
+    console.log("Get");
 
+    pool.query('SELECT * FROM cards', (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error en la consulta");
+        }
 
-    // Close the connection
-    connection.end();
+        res.send(results);
+    });
 });
 
-
-
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+    console.log(`Server running on port ${port}`)
 });
