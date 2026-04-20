@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - Endless</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .success {
+            border-left-color: #28a745;
+        }
+
+        .error {
+            border-left-color: #dc3545;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Test API - Endless</h1>
+
+        <!-- Test de Conexión -->
+        <div class="section">
+            <h2>🔌 Test de Conexión</h2>
+            <button onclick="testConnection()">Probar Conexión</button>
+            <div id="testResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Registro -->
+        <div class="section">
+            <h2>📝 Registro de Usuario</h2>
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="regUsername" placeholder="Ingrese username">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="regPassword" placeholder="Ingrese password">
+            </div>
+            <button onclick="register()">Registrar</button>
+            <div id="registerResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Login -->
+        <div class="section">
+            <h2>🔐 Login</h2>
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="loginUsername" placeholder="Ingrese username">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="loginPassword" placeholder="Ingrese password">
+            </div>
+            <button onclick="login()">Login</button>
+            <div id="loginResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Crear Jugador -->
+        <div class="section">
+            <h2>👤 Crear Jugador</h2>
+            <div class="form-group">
+                <label>User ID:</label>
+                <input type="number" id="playerId" placeholder="ID del usuario">
+            </div>
+            <div class="form-group">
+                <label>Nombre del Jugador:</label>
+                <input type="text" id="playerName" placeholder="Nombre del personaje">
+            </div>
+            <button onclick="createPlayer()">Crear Jugador</button>
+            <div id="playerResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Consultas -->
+        <div class="section">
+            <h2>🔍 Consultas</h2>
+            <div class="btn-group">
+                <button onclick="getCards()">Ver Cartas</button>
+                <button onclick="getPlayerInfo()">Info Jugador (ID: 1)</button>
+                <button onclick="getPlayerStats()">Stats Jugador (ID: 1)</button>
+                <button onclick="getPlayerDeck()">Deck Jugador (ID: 1)</button>
+            </div>
+            <div id="queryResponse" class="response" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        function showResponse(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.style.display = 'block';
+            element.className = 'response ' + (isSuccess ? 'success' : 'error');
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_URL}/test`);
+                const data = await response.json();
+                showResponse('testResponse', data, response.ok);
+            } catch (error) {
+                showResponse('testResponse', { error: error.message }, false);
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                showResponse('registerResponse', data, response.ok);
+            } catch (error) {
+                showResponse('registerResponse', { error: error.message }, false);
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                showResponse('loginResponse', data, response.ok);
+            } catch (error) {
+                showResponse('loginResponse', { error: error.message }, false);
+            }
+        }
+
+        async function createPlayer() {
+            const userId = document.getElementById('playerId').value;
+            const playerName = document.getElementById('playerName').value;
+
+            try {
+                const response = await fetch(`${API_URL}/player/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, playerName })
+                });
+                const data = await response.json();
+                showResponse('playerResponse', data, response.ok);
+            } catch (error) {
+                showResponse('playerResponse', { error: error.message }, false);
+            }
+        }
+
+        async function getCards() {
+            try {
+                const response = await fetch(`${API_URL}/cards`);
+                const data = await response.json();
+                showResponse('queryResponse', data, response.ok);
+            } catch (error) {
+                showResponse('queryResponse', { error: error.message }, false);
+            }
+        }
+
+        async function getPlayerInfo() {
+            try {
+                const response = await fetch(`${API_URL}/player/1`);
+                const data = await response.json();
+                showResponse('queryResponse', data, response.ok);
+            } catch (error) {
+                showResponse('queryResponse', { error: error.message }, false);
+            }
+        }
+
+        async function getPlayerStats() {
+            try {
+                const response = await fetch(`${API_URL}/player/1/stats`);
+                const data = await response.json();
+                showResponse('queryResponse', data, response.ok);
+            } catch (error) {
+                showResponse('queryResponse', { error: error.message }, false);
+            }
+        }
+
+        async function getPlayerDeck() {
+            try {
+                const response = await fetch(`${API_URL}/player/1/deck`);
+                const data = await response.json();
+                showResponse('queryResponse', data, response.ok);
+            } catch (error) {
+                showResponse('queryResponse', { error: error.message }, false);
+            }
+        }
+    </script>
+</body>
+</html>
