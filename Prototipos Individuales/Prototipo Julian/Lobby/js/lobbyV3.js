@@ -1,0 +1,340 @@
+"use strict";
+
+const canvasWidth = 800;
+const canvasHeight = 600;
+
+const worldWidth = 3000;
+const worldHeight = 3000;
+
+let ctx;
+let game;
+let oldTime = 0;
+let playerSpeed = 0.5;
+
+const keyDirections = {
+    w: "up",
+    a: "left",
+    s: "down",
+    d: "right",
+    ArrowUp: "up",
+    ArrowLeft: "left",
+    ArrowDown: "down",
+    ArrowRight: "right",
+};
+
+const playerMotion = {
+    up: {
+        status: false,
+        axis: "y",
+        sign: -1,
+        repeat: true,
+        duration: 120,
+        moveFrames: [6, 8],
+        idleFrames: [7, 7],
+    },
+    left: {
+        status: false,
+        axis: "x",
+        sign: -1,
+        repeat: true,
+        duration: 120,
+        moveFrames: [9, 11],
+        idleFrames: [10, 10],
+    },
+    down: {
+        status: false,
+        axis: "y",
+        sign: 1,
+        repeat: true,
+        duration: 120,
+        moveFrames: [0, 2],
+        idleFrames: [1, 1],
+    },
+    right: {
+        status: false,
+        axis: "x",
+        sign: 1,
+        repeat: true,
+        duration: 120,
+        moveFrames: [3, 5],
+        idleFrames: [4, 4],
+    },
+};
+
+class Camera {
+    constructor(viewWidth, viewHeight, worldWidth, worldHeight) {
+        this.position = new Vector(0, 0);
+        this.viewWidth = viewWidth;
+        this.viewHeight = viewHeight;
+        this.worldWidth = worldWidth;
+        this.worldHeight = worldHeight;
+    }
+
+    follow(target) {
+        this.position.x = target.position.x - this.viewWidth / 2;
+        this.position.y = target.position.y - this.viewHeight / 2;
+
+        this.position.x = Math.max(0, Math.min(this.position.x, this.worldWidth - this.viewWidth));
+        this.position.y = Math.max(0, Math.min(this.position.y, this.worldHeight - this.viewHeight));
+    }
+}
+
+class Game {
+    constructor() {
+        this.world = {
+            width: worldWidth,
+            height: worldHeight,
+        };
+
+        this.camera = new Camera(canvasWidth, canvasHeight, worldWidth, worldHeight);
+
+        this.tileSize = 100;
+        this.floorColor1 = "#4CAF50";
+        this.floorColor2 = "#66BB6A";
+
+        this.inventoryOpen = false;
+
+        // aqui esta la data del inventario, la teoria mantener esto vacia y hacer el metodo de la API 
+        this.inventoryData = {
+            blood: 85,
+            cards: [
+             {image: "../../assets/cards/Blood_stalker.png"},
+             {image: "../../assets/cards/Grave_whisperer.png"},
+             {image: "../../assets/cards/JBcard.png"},
+             {image: "../../assets/cards/EmperadorJB.png"},
+             {image: "../../assets/cards/ReyJB.png"},
+             {image: "../../assets/cards/caballero_plaga.png"},
+             {image: "../../assets/cards/ReyJB.png"}
+            ],
+        };
+        // secretos data 
+        this.secretsData = {
+            secrets: [
+                {title: "Secreto 1", description: "Descripción del secreto 1", },
+                {title: "Secreto 2", description: "Descripción del secreto 2", },
+                {title: "Secreto 3", description: "Descripción del secreto 3", },
+            ]
+            
+        };
+
+        this.createEventListeners();
+        this.initObjects();
+        this.inventoryUI();
+        this.drawInventory();
+        this.drawSecrets();
+    }
+
+    inventoryUI() {
+        this.inventoryHUB = document.getElementById("inventory");
+        this.inventoryBloodValue = document.getElementById("inventory_blood");
+        this.inventoryCards = document.getElementById("inventory_cards");
+        // secrtetos HUB 
+        this.secretsHUB = document.getElementById("secrets");
+        this.secretsCards = document.getElementById("secrets_cards");
+    }
+    
+
+    initObjects() {
+        this.player = new AnimatedPlayer(
+            new Vector(this.world.width / 2, this.world.height / 2),
+            60,
+            60,
+            "red",
+            3,
+            playerMotion
+        );
+
+        this.player.setSprite(
+            "../../assets/gracias.png",
+            new Rect(0, 0, 143, 145)
+        );
+
+        this.player.setSpeed(playerSpeed);
+
+        this.actors = [];
+    }
+
+    drawInventory() {
+        this.inventoryBloodValue.textContent = this.inventoryData.blood;
+        this.inventoryCards.innerHTML = "";
+
+        for (const card of this.inventoryData.cards) {
+            const cardDiv = document.createElement("div");
+            cardDiv.className = "inventory-card";
+
+            const img = document.createElement("img");
+            img.src = card.image;
+            img.alt = card.name;
+            img.className = "inventory-card-png";
+            cardDiv.append(img);
+
+            this.inventoryCards.append(cardDiv);
+        }
+    }
+
+    drawSecrets() {
+        this.secretsCards.innerHTML = "";
+
+        for (const item of this.secretsData.secrets) {
+            const secretDiv = document.createElement("div");
+            const title = document.createElement("h4");
+            title.className = "secret-title";
+            title.textContent = item.title;
+
+            const text = document.createElement("p");
+            text.className = "secret-text";
+            text.textContent = item.description;
+
+            secretDiv.append(title, text);
+            this.secretsCards.append(secretDiv);
+        }
+    }
+
+    toggleInventory(forceValue = null) {
+        // Si forceValue es null, alterna el estado actual. De lo contrario, establece el estado según forceValue. Esto permite abrir o cerrar el inventario de forma controlada.
+        this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;
+
+        if (this.inventoryOpen) {
+            this.drawInventory();
+            this.inventoryHUB.classList.remove("hidden");
+            this.player.keys = [];
+        } else {
+            this.inventoryHUB.classList.add("hidden");
+        }
+    }
+
+    toggleInventorySecrets(forceValue = null) {
+        this.inventoryOpen = forceValue === null ? !this.inventoryOpen : forceValue;
+
+        if (this.inventoryOpen) {
+            this.drawSecrets();
+            this.secretsHUB.classList.remove("hidden");
+            this.player.keys = [];
+        } else {
+            this.secretsHUB.classList.add("hidden");
+        }
+    }
+
+    update(deltaTime) {
+        if (!this.inventoryOpen) {
+            this.player.update(deltaTime, this.world);
+            this.camera.follow(this.player);
+        }
+
+        for (let actor of this.actors) {
+            if (actor.updateFrame) {
+                actor.updateFrame(deltaTime);
+            }
+        }
+    }
+
+    drawBackground(ctx) {
+        for (let y = 0; y < this.world.height; y += this.tileSize) {
+            for (let x = 0; x < this.world.width; x += this.tileSize) {
+                const useFirstColor = ((x / this.tileSize) + (y / this.tileSize)) % 2 === 0;
+                ctx.fillStyle = useFirstColor ? this.floorColor1 : this.floorColor2;
+                ctx.fillRect(x, y, this.tileSize, this.tileSize);
+            }
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(-this.camera.position.x, -this.camera.position.y);
+
+        this.drawBackground(ctx);
+
+        for (let actor of this.actors) {
+            actor.draw(ctx);
+        }
+
+        this.player.draw(ctx);
+        ctx.restore();
+    }
+
+    createEventListeners() {
+        window.addEventListener("keydown", (event) => {
+            if (event.key === "e" || event.key === "E") {
+                if(this.inventoryOpen){
+                    this.inventoryHUB.classList.add("hidden");
+                    this.secretsHUB.classList.add("hidden");
+                    this.inventoryOpen = false;
+                }
+                else{
+                    this.toggleInventory();
+                }
+                return;
+            }
+
+            if (this.inventoryOpen) return;
+
+            if (event.key in keyDirections) {
+                this.addKey(keyDirections[event.key]);
+                this.player.startMovement(keyDirections[event.key]);
+            }
+        });
+
+
+        window.addEventListener("keydown", (event) => {
+            if ((event.key === "s" || event.key === "S") && this.inventoryOpen) {
+                this.inventoryHUB.classList.add("hidden");
+                this.inventoryOpen = false;
+                this.toggleInventorySecrets();
+                return;
+        }   
+            if (this.inventoryOpen) return;
+
+            if (event.key in keyDirections) {
+                this.addKey(keyDirections[event.key]);
+                this.player.startMovement(keyDirections[event.key]);
+            }
+        });
+
+        window.addEventListener("keyup", (event) => {
+            if (event.key in keyDirections) {
+                this.delKey(keyDirections[event.key]);
+                this.player.stopMovement(keyDirections[event.key]);
+            }
+        });
+    }
+
+    addKey(direction) {
+        if (!this.player.keys.includes(direction)) {
+            this.player.keys.push(direction);
+        }
+    }
+
+    delKey(direction) {
+        const index = this.player.keys.indexOf(direction);
+        if (index !== -1) {
+            this.player.keys.splice(index, 1);
+        }
+    }
+}
+
+function main() {
+    const canvas = document.getElementById("canvas");
+
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    ctx = canvas.getContext("2d");
+
+    game = new Game();
+
+    requestAnimationFrame(drawScene);
+}
+
+function drawScene(newTime) {
+    if (!oldTime) oldTime = newTime;
+
+    let deltaTime = newTime - oldTime;
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    game.update(deltaTime);
+    game.draw(ctx);
+
+    oldTime = newTime;
+    requestAnimationFrame(drawScene);
+}

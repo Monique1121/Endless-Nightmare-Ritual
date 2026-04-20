@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lobby Version 1 </title>
+        <link rel="stylesheet" href="../css/styles.css">
+        <script src="../../libs/game_functions.js"></script>
+        <script src="../../libs/Rect.js"></script>
+        <script src="../../libs/Vector.js"></script>
+        <script src="../../libs/GameObject.js"></script>
+        <script src="../../libs/AnimatedObject.js"></script>
+        <script src="../../libs/AnimatedPlayer.js"></script>
+        <script src="../js/lobbyV2.js"></script>
+    </head>
+
+    <body>
+        <div id="headerContainer">
+            <h1>Lobby Version 2 </h1>
+        </div>
+        <canvas id="canvas"></canvas>
+
+    <div id="inventory" class="inventory-popup hidden">
+        <div class="inventory-panel">
+
+            <div class="inventory-header">
+                <h2>Inventario</h2>
+                
+            </div>
+
+            
+            <div class="inventory-blood">
+                Sangre: <span id="inventory_blood">100</span>  
+            </div>
+
+            <div class="inventory-section">
+                <h3>Cartas</h3>
+                <div id="inventory_cards" class="inventory-cards-list"></div>
+            </div>
+
+            <p class="inventory-help">E para cerrar </p>
+
+        </div>
+    </div>
+
+
+        <script> main(); </script>
+        <footer>
+            <p>Version de lobby con inventario se abre con e </p>
+        </footer>
+    </body>           
+</html>
+                                         
+
+
+
+

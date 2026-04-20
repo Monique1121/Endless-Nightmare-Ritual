@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Combate - Ritual TCG</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>◆ Ritual TCG - Batalla</h1>
+      <div class="controls">
+        <button id="mapBtn" class="btn" style="background: rgba(0,80,120,0.18); border:1px solid rgba(0,100,200,0.14)">◄ Mapa</button>
+        <button id="resetBtn" class="btn btn-secondary">Reiniciar</button>
+      </div>
+    </header>
+
+    <div class="board">
+      <div class="zones">
+        <!-- Panel Rival -->
+        <div class="side">
+          <div class="stats">
+            <div class="stat-item">
+              <span class="stat-label">Rival</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label blood">Sangre</span>
+              <span class="stat-value blood"><span id="oppBlood">50</span>/50</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" style="color:#ff6b6b">Cartas Perdidas</span>
+              <span class="stat-value" style="color:#ff6b6b;font-weight:bold;"><span id="oppKnockouts">0</span>/6</span>
+            </div>
+          </div>
+          <div class="log" id="oppLog">
+            <div class="log-entry">El rival está listo</div>
+          </div>
+        </div>
+
+        <!-- Área Central -->
+        <div class="center-area">
+          <div class="opp-hand" id="oppHand">
+            <!-- Cartas del rival (visuales) -->
+          </div>
+
+          <div class="battle-area">
+            <div class="phase" id="phaseDisplay">FASE: Preparación</div>
+
+            <!-- Banco Rival -->
+            <div class="bench" id="oppBench">
+              <div class="slot empty" data-player="opp" data-zone="bench" data-index="0"></div>
+              <div class="slot empty" data-player="opp" data-zone="bench" data-index="1"></div>
+              <div class="slot empty" data-player="opp" data-zone="bench" data-index="2"></div>
+              <div class="slot empty" data-player="opp" data-zone="bench" data-index="3"></div>
+            </div>
+
+            <!-- Zona Activa Rival -->
+            <div class="active-row">
+              <div class="active-slot empty" id="oppActive" data-player="opp" data-zone="active"></div>
+            </div>
+
+            <!-- Zona Activa Jugador -->
+            <div class="active-row">
+              <div class="active-slot empty" id="playerActive" data-player="player" data-zone="active"></div>
+            </div>
+
+            <!-- Banco Jugador -->
+            <div class="bench" id="playerBench">
+              <div class="slot empty" data-player="player" data-zone="bench" data-index="0"></div>
+              <div class="slot empty" data-player="player" data-zone="bench" data-index="1"></div>
+              <div class="slot empty" data-player="player" data-zone="bench" data-index="2"></div>
+              <div class="slot empty" data-player="player" data-zone="bench" data-index="3"></div>
+            </div>
+          </div>
+
+          <div class="hand" id="hand">
+            <!-- Mano del jugador -->
+          </div>
+          
+          <!-- Botones de control -->
+          <div class="controls" style="justify-content: center; padding: 4px; gap: 6px;">
+            <button class="btn" id="btnAtacar" onclick="manualAttack()">⚔️ ATACAR</button>
+            <button class="btn" id="btnSacrificio" onclick="sacrificeForPower()" style="background:#9333ea">⚡ SACRIFICAR</button>
+            <button class="btn btn-secondary" id="btnTerminarTurno" onclick="manualEndTurn()">⏸️ TERMINAR TURNO</button>
+          </div>
+        </div>
+
+        <!-- Panel Jugador -->
+        <div class="side">
+          <!-- Panel de Ayuda: Mecánicas del Juego -->
+          <div class="help-panel">
+            <h4 style="margin:0 0 8px 0; font-size:13px; color:#e2e8f0; text-align:center; border-bottom:1px solid #374151; padding-bottom:6px;">Como Jugar</h4>
+            
+            <div style="margin-bottom:8px;">
+              <div style="font-size:9px; color:#94a3b8; margin-bottom:3px; font-weight:600;">▸ LO BÁSICO</div>
+              <ul style="font-size:9px; line-height:1.5; color:#cbd5e1; margin:0; padding-left:12px;">
+                <li>Empieza con 8 cartas, robas 2 cada turno</li>
+                <li>Juega máximo 3 cartas por turno</li>
+                <li>Tienes 50 de sangre (se regenera +2/turno)</li>
+              </ul>
+            </div>
+
+            <div style="margin-bottom:8px;">
+              <div style="font-size:9px; color:#94a3b8; margin-bottom:3px; font-weight:600;">▸ POSICIONES</div>
+              <ul style="font-size:9px; line-height:1.5; color:#cbd5e1; margin:0; padding-left:12px;">
+                <li><span style="color:#fbbf24;">Ataque:</span> Espacio grande del centro</li>
+                <li><span style="color:#60a5fa;">Defensa:</span> 4 slots arriba (fila)</li>
+                <li>Si no tienes defensa, te golpean directo</li>
+              </ul>
+            </div>
+
+            <div style="margin-bottom:8px;">
+              <div style="font-size:9px; color:#94a3b8; margin-bottom:3px; font-weight:600;">▸ SISTEMA DE FILA</div>
+              <ul style="font-size:9px; line-height:1.5; color:#cbd5e1; margin:0; padding-left:12px;">
+                <li>Cartas se organizan de izquierda a derecha</li>
+                <li>La primera siempre sube al morir tu ATK</li>
+                <li>Solo puedes sacrificar la 1ra carta</li>
+              </ul>
+            </div>
+
+            <div style="margin-bottom:6px; padding:5px; background:rgba(147,51,234,0.15); border-left:2px solid #9333ea; border-radius:2px;">
+              <div style="font-size:8px; color:#c084fc; font-weight:600; margin-bottom:2px;">⚡ SACRIFICIO</div>
+              <div style="font-size:8px; color:#e9d5ff; line-height:1.4;">Gasta 5 de sangre para destruir tu 1ra carta DEF y dar <strong>+3 ATK / +2 HP</strong> a tu carta activa</div>
+            </div>
+
+            <div style="padding:5px; background:rgba(34,197,94,0.15); border-left:2px solid #22c55e; border-radius:2px;">
+              <div style="font-size:9px; color:#4ade80; font-weight:700; text-align:center;">Victoria: Destruir 6 cartas del rival</div>
+            </div>
+          </div>
+          
+          <div class="stats">
+            <div class="stat-item">
+              <span class="stat-label">Jugador</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label blood">Sangre</span>
+              <span class="stat-value blood"><span id="playerBlood">50</span>/50</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" style="color:#4ade80">Cartas Perdidas</span>
+              <span class="stat-value" style="color:#4ade80;font-weight:bold;"><span id="playerKnockouts">0</span>/6</span>
+            </div>
+          </div>
+          <div class="log" id="playerLog">
+            <div class="log-entry">Batalla iniciada</div>
+            <div class="log-entry">► Coloca cartas y usa tus recursos</div>
+            <div class="log-entry">► Sacrificio: 5 sangre por +3 ATK +2 HP</div>
+            <div class="log-entry">► Primera carta del banco sube automático</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Victoria/Derrota -->
+  <div id="gameOverModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <h2 id="gameOverTitle">¡Victoria!</h2>
+      <p id="gameOverText">Has derrotado al rival</p>
+      <button class="btn" onclick="location.reload()">Jugar de Nuevo</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
