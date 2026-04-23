@@ -215,10 +215,10 @@ app.get('/api/player/:playerId/stats', async (req, res) => {
                 Blood_max,
                 Secrets_discovered,
                 Total_playtime,
-                Achievments_unlocked,
-                Escuela_unlocked,
+                Achievements_unlocked,
+                School_unlocked,
                 Hospital_unlocked,
-                Laboratorio_unlocked
+                Laboratory_unlocked
              FROM Player 
              WHERE Player_id = ?`,
             [playerId]
@@ -346,10 +346,10 @@ app.get('/api/player/:playerId/deck', async (req, res) => {
 
     try {
         const [deck] = await pool.query(
-            `SELECT d.*, c.Card_name, c.Blood_cost, c.Damage, c.HP 
+            `SELECT d.*, c.Card_name, c.Blood_cost, c.Damage, c.HP, c.Sprite_path
              FROM Deck d 
              JOIN Cards c ON d.Card_id = c.Card_id 
-             WHERE d.Player_id = ?`,
+             WHERE d.Player_id = ? AND d.Card_gained = TRUE`,
             [playerId]
         );
 
@@ -367,6 +367,310 @@ app.get('/api/player/:playerId/deck', async (req, res) => {
         });
     }
 });
+
+// Inicializar deck con 5 cartas aleatorias
+app.post('/api/player/:playerId/deck/initialize', async (req, res) => {
+    const { playerId } = req.params;
+
+    try {
+        // Verificar si ya tiene cartas
+        const [existingCards] = await pool.query(
+            `SELECT COUNT(*) as count FROM Deck WHERE Player_id = ? AND Card_gained = TRUE`,
+            [playerId]
+        );
+
+        if (existingCards[0].count > 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'El jugador ya tiene cartas en su deck'
+            });
+        }
+
+        // Obtener 5 cartas aleatorias de las primeras 15 (comunes)
+        const [randomCards] = await pool.query(
+            `SELECT Card_id FROM Cards WHERE Card_id <= 15 ORDER BY RAND() LIMIT 5`
+        );
+
+        // Insertar las 5 cartas en el deck
+        for (const card of randomCards) {
+            await pool.query(
+                `INSERT INTO Deck (Card_id, Player_id, Card_gained) 
+                 VALUES (?, ?, TRUE)`,
+                [card.Card_id, playerId]
+            );
+        }
+
+        // Obtener las cartas insertadas con sus detalles
+        const [newDeck] = await pool.query(
+            `SELECT d.*, c.Card_name, c.Blood_cost, c.Damage, c.HP, c.Sprite_path
+             FROM Deck d 
+             JOIN Cards c ON d.Card_id = c.Card_id 
+             WHERE d.Player_id = ? AND d.Card_gained = TRUE`,
+            [playerId]
+        );
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Deck inicializado con 5 cartas',
+            cards: newDeck
+        });
+
+    } catch (error) {
+        console.error('Error al inicializar deck:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Obtener cartas temporales de un run (aún no guardadas)
+app.get('/api/run/:runId/cards/temp', async (req, res) => {
+    const { runId } = req.params;
+
+    try {
+        const [tempCards] = await pool.query(
+            `SELECT d.*, c.Card_name, c.Blood_cost, c.Damage, c.HP, c.Sprite_path
+             FROM Deck d 
+             JOIN Cards c ON d.Card_id = c.Card_id 
+             WHERE d.Run_id = ? AND d.Card_gained = FALSE`,
+            [runId]
+        );
+
+        res.json({ 
+            success: true, 
+            tempCards: tempCards
+        });
+
+    } catch (error) {
+        console.error('Error al obtener cartas temporales:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Recoger carta en laberinto (temporal, no guardada aún)
+app.post('/api/run/:runId/card/collect', async (req, res) => {
+    const { runId } = req.params;
+    const { playerId, cardId } = req.body;
+
+    if (!playerId || !cardId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'playerId y cardId son requeridos' 
+        });
+    }
+
+    try {
+        // Verificar que el run existe y pertenece al jugador
+        const [run] = await pool.query(
+            `SELECT * FROM Run WHERE Run_id = ? AND Player_id = ?`,
+            [runId, playerId]
+        );
+
+        if (run.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Run no encontrado' 
+            });
+        }
+
+        // Insertar carta temporal (Card_gained = FALSE)
+        await pool.query(
+            `INSERT INTO Deck (Card_id, Player_id, Run_id, Card_gained) 
+             VALUES (?, ?, ?, FALSE)`,
+            [cardId, playerId, runId]
+        );
+
+        // Incrementar contador de cartas encontradas en el run
+        await pool.query(
+            `UPDATE Run SET Cards_found = Cards_found + 1 WHERE Run_id = ?`,
+            [runId]
+        );
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Carta recogida (temporal)'
+        });
+
+    } catch (error) {
+        console.error('Error al recoger carta:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Completar laberinto y guardar cartas permanentemente
+app.post('/api/run/:runId/complete', async (req, res) => {
+    const { runId } = req.params;
+    const { playerId, timeTaken } = req.body;
+
+    if (!playerId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'playerId es requerido' 
+        });
+    }
+
+    try {
+        // Verificar que el run existe
+        const [run] = await pool.query(
+            `SELECT * FROM Run WHERE Run_id = ? AND Player_id = ?`,
+            [runId, playerId]
+        );
+
+        if (run.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Run no encontrado' 
+            });
+        }
+
+        // Marcar run como completado
+        await pool.query(
+            `UPDATE Run 
+             SET Completed = TRUE, 
+                 Time_taken = ?,
+                 Completed_at = CURRENT_TIMESTAMP
+             WHERE Run_id = ?`,
+            [timeTaken || 0, runId]
+        );
+
+        // Guardar PERMANENTEMENTE todas las cartas temporales de este run
+        const [result] = await pool.query(
+            `UPDATE Deck 
+             SET Card_gained = TRUE 
+             WHERE Run_id = ? AND Player_id = ? AND Card_gained = FALSE`,
+            [runId, playerId]
+        );
+
+        const cardsGained = result.affectedRows;
+
+        res.json({ 
+            success: true, 
+            message: 'Laberinto completado',
+            cardsGained: cardsGained
+        });
+
+    } catch (error) {
+        console.error('Error al completar laberinto:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Fallar en laberinto y perder cartas temporales
+app.post('/api/run/:runId/fail', async (req, res) => {
+    const { runId } = req.params;
+    const { playerId } = req.body;
+
+    if (!playerId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'playerId es requerido' 
+        });
+    }
+
+    try {
+        // Verificar que el run existe
+        const [run] = await pool.query(
+            `SELECT * FROM Run WHERE Run_id = ? AND Player_id = ?`,
+            [runId, playerId]
+        );
+
+        if (run.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Run no encontrado' 
+            });
+        }
+
+        // Contar cuántas cartas se perderán
+        const [tempCards] = await pool.query(
+            `SELECT COUNT(*) as count FROM Deck 
+             WHERE Run_id = ? AND Player_id = ? AND Card_gained = FALSE`,
+            [runId, playerId]
+        );
+
+        const cardsLost = tempCards[0].count;
+
+        // ELIMINAR todas las cartas temporales de este run
+        await pool.query(
+            `DELETE FROM Deck 
+             WHERE Run_id = ? AND Player_id = ? AND Card_gained = FALSE`,
+            [runId, playerId]
+        );
+
+        // Marcar run como fallido
+        await pool.query(
+            `UPDATE Run 
+             SET Completed = FALSE,
+                 Completed_at = CURRENT_TIMESTAMP
+             WHERE Run_id = ?`,
+            [runId]
+        );
+
+        res.json({ 
+            success: true, 
+            message: 'Run fallido, cartas temporales perdidas',
+            cardsLost: cardsLost
+        });
+
+    } catch (error) {
+        console.error('Error al fallar laberinto:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// ========== GESTIÓN DE RUNS ==========
+
+// Crear nuevo run (iniciar laberinto)
+app.post('/api/run/create', async (req, res) => {
+    const { playerId, labyrinthId } = req.body;
+
+    if (!playerId || !labyrinthId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'playerId y labyrinthId son requeridos' 
+        });
+    }
+
+    try {
+        // Crear nuevo run
+        const [result] = await pool.query(
+            `INSERT INTO Run (Player_id, Labyrinth_id, Completed, Cards_found) 
+             VALUES (?, ?, NULL, 0)`,
+            [playerId, labyrinthId]
+        );
+
+        res.json({ 
+            success: true, 
+            runId: result.insertId
+        });
+
+    } catch (error) {
+        console.error('Error al crear run:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor'
+        });
+    }
+});
+
 app.get('/api/labyrinth/:labyrinthId/chests', async (req, res) => {
     const { labyrinthId } = req.params;
 
@@ -567,7 +871,264 @@ app.get('/api/leaderboard/playtime', async (req, res) => {
         });
     }
 });
-// ENDPOINT DE PRUEBA
+// ==================== ENDPOINTS TCG ====================
+
+// Obtener pool de cartas para el TCG
+app.get('/api/cards/pool', async (req, res) => {
+    try {
+        const [cards] = await pool.query(
+            `SELECT Card_id, Card_name, Blood_cost AS Cost, Damage AS Attack, HP AS Life, Sprite_path 
+             FROM Cards 
+             ORDER BY Blood_cost, Card_name`
+        );
+
+        res.json(cards);
+
+    } catch (error) {
+        console.error('Error al obtener pool de cartas:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Obtener datos del enemigo por nivel
+app.get('/api/enemy/:levelId', async (req, res) => {
+    const { levelId } = req.params;
+
+    try {
+        const [enemies] = await pool.query(
+            `SELECT e.*, l.Level_name, l.Level_number
+             FROM Enemy e
+             JOIN Levels l ON e.Level_id = l.Level_id
+             WHERE e.Level_id = ?`,
+            [levelId]
+        );
+
+        if (enemies.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Enemigo no encontrado' 
+            });
+        }
+
+        // Obtener cartas del enemigo
+        const [enemyCards] = await pool.query(
+            `SELECT c.Card_id, c.Card_name, c.Blood_cost AS Cost, c.Damage AS Attack, c.HP AS Life
+             FROM Enemy_Cards ec
+             JOIN Cards c ON ec.Card_id = c.Card_id
+             WHERE ec.Enemy_id = ?`,
+            [enemies[0].Enemy_id]
+        );
+
+        res.json({ 
+            success: true,
+            enemy: enemies[0],
+            cards: enemyCards
+        });
+
+    } catch (error) {
+        console.error('Error al obtener enemigo:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Iniciar nuevo combate
+app.post('/api/combat/start', async (req, res) => {
+    const { player_id, enemy_id, run_id, level_id } = req.body;
+
+    if (!player_id || !enemy_id) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'player_id y enemy_id son requeridos' 
+        });
+    }
+
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO Combat (Player_id, Enemy_id, Run_id, Level_id, Started_at) 
+             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            [player_id, enemy_id, run_id || null, level_id || 1]
+        );
+
+        res.status(201).json({ 
+            success: true,
+            combat_id: result.insertId,
+            message: 'Combate iniciado'
+        });
+
+    } catch (error) {
+        console.error('Error al iniciar combate:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Registrar un turno
+app.post('/api/combat/:combatId/turn', async (req, res) => {
+    const { combatId } = req.params;
+    const { turn_number, active_player, blood_spent } = req.body;
+
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO Combat_Turns (Combat_id, Turn_number, Active_player, Blood_spent) 
+             VALUES (?, ?, ?, ?)`,
+            [combatId, turn_number, active_player, blood_spent || 0]
+        );
+
+        res.status(201).json({ 
+            success: true,
+            turn_id: result.insertId
+        });
+
+    } catch (error) {
+        console.error('Error al registrar turno:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Registrar acción de carta
+app.post('/api/combat/:combatId/action', async (req, res) => {
+    const { combatId } = req.params;
+    const { 
+        turn_id, 
+        card_id, 
+        action_type, 
+        used_by, 
+        blood_spent, 
+        damage_dealt, 
+        hp_before, 
+        hp_after, 
+        card_dead 
+    } = req.body;
+
+    try {
+        const [result] = await pool.query(
+            `INSERT INTO Combat_Cards_Actions 
+             (Combat_id, Turn_id, Card_id, Action_type, Used_by, Blood_spent, 
+              Damage_dealt, HP_before, HP_after, Card_dead) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [combatId, turn_id, card_id, action_type, used_by, blood_spent || 0, 
+             damage_dealt || 0, hp_before, hp_after, card_dead || false]
+        );
+
+        res.status(201).json({ 
+            success: true,
+            action_id: result.insertId
+        });
+
+    } catch (error) {
+        console.error('Error al registrar acción:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Finalizar combate
+app.put('/api/combat/:combatId/end', async (req, res) => {
+    const { combatId } = req.params;
+    const { 
+        winner, 
+        player_id,
+        blood_used, 
+        total_turns, 
+        player_ko, 
+        enemy_ko,
+        cards_gained
+    } = req.body;
+
+    try {
+        const result_text = winner === 'player' ? 'Win' : 'Lose';
+        
+        // Actualizar combate
+        await pool.query(
+            `UPDATE Combat 
+             SET Result = ?,
+                 Blood_used = ?,
+                 Total_turns = ?,
+                 Player_KO = ?,
+                 Enemy_KO = ?,
+                 Ended_at = CURRENT_TIMESTAMP
+             WHERE Combat_id = ?`,
+            [result_text, blood_used || 0, total_turns || 0, 
+             player_ko || 0, enemy_ko || 0, combatId]
+        );
+
+        // Si ganó, agregar cartas al deck
+        if (winner === 'player' && cards_gained && cards_gained.length > 0) {
+            for (const cardId of cards_gained) {
+                await pool.query(
+                    `INSERT INTO Deck (Card_id, Player_id, Card_gained) 
+                     VALUES (?, ?, TRUE)`,
+                    [cardId, player_id]
+                );
+            }
+        }
+
+        res.json({ 
+            success: true,
+            message: `Combate finalizado: ${result_text}`
+        });
+
+    } catch (error) {
+        console.error('Error al finalizar combate:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// Obtener historial de combates del jugador
+app.get('/api/player/:playerId/combats', async (req, res) => {
+    const { playerId } = req.params;
+    const limit = parseInt(req.query.limit) || 10;
+
+    try {
+        const [combats] = await pool.query(
+            `SELECT c.*, e.Enemy_name, l.Level_name
+             FROM Combat c
+             JOIN Enemy e ON c.Enemy_id = e.Enemy_id
+             JOIN Levels l ON c.Level_id = l.Level_id
+             WHERE c.Player_id = ?
+             ORDER BY c.Started_at DESC
+             LIMIT ?`,
+            [playerId, limit]
+        );
+
+        res.json({ 
+            success: true,
+            combats: combats
+        });
+
+    } catch (error) {
+        console.error('Error al obtener historial de combates:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor',
+            error: error.message 
+        });
+    }
+});
+
+// ==================== ENDPOINTS DE PRUEBA ====================
 
 app.get('/api/test', (req, res) => {
     res.json({ 
@@ -590,6 +1151,12 @@ app.listen(PORT, () => {
     console.log('  GET    /api/player/:playerId/inventory - Inventario completo');
     console.log('  PUT    /api/player/:playerId/sync - Sincronizar estado');
     console.log('  GET    /api/player/:playerId/deck  - Deck del jugador');
+    console.log('  POST   /api/player/:playerId/deck/initialize - Inicializar con 5 cartas');
+    console.log('  POST   /api/run/create         - Crear nuevo run');
+    console.log('  GET    /api/run/:runId/cards/temp - Cartas temporales del run');
+    console.log('  POST   /api/run/:runId/card/collect - Recoger carta en laberinto');
+    console.log('  POST   /api/run/:runId/complete - Completar laberinto');
+    console.log('  POST   /api/run/:runId/fail     - Fallar laberinto');
     console.log('  GET    /api/cards              - Todas las cartas');
     console.log('  GET    /api/labyrinth/:labyrinthId/chests - Cofres del laberinto');
     console.log('  GET    /api/player/:playerId/chests/opened - Cofres visitados');
@@ -599,5 +1166,13 @@ app.listen(PORT, () => {
     console.log('  GET    /api/leaderboard/cards  - Top jugadores por cartas');
     console.log('  GET    /api/leaderboard/secrets - Top jugadores por secretos');
     console.log('  GET    /api/leaderboard/playtime - Top jugadores por tiempo');
-    console.log('  GET    /api/test               - Test de conexión');
+    console.log('\n  === TCG ENDPOINTS ===');
+    console.log('  GET    /api/cards/pool         - Pool de cartas para TCG');
+    console.log('  GET    /api/enemy/:levelId     - Obtener enemigo por nivel');
+    console.log('  POST   /api/combat/start       - Iniciar combate');
+    console.log('  POST   /api/combat/:combatId/turn - Registrar turno');
+    console.log('  POST   /api/combat/:combatId/action - Registrar acción');
+    console.log('  PUT    /api/combat/:combatId/end - Finalizar combate');
+    console.log('  GET    /api/player/:playerId/combats - Historial de combates');
+    console.log('\n  GET    /api/test               - Test de conexión');
 });
