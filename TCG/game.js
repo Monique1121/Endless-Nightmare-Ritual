@@ -51,7 +51,10 @@ let gameState = {
   gameOver: false,
   won: false,
   returnTimeout: null,
-  combatId: null  // ID del combate en la BD
+  combatId: null,  // ID del combate en la BD
+  turnNumber: 0,    // Número de turno actual
+  currentTurnId: null, // ID del turno actual en la BD
+  bloodSpentThisTurn: 0 // Sangre gastada en el turno actual
 };
 async function loadCardPool() {
   try {
@@ -100,7 +103,13 @@ async function startCombat() {
     const token = localStorage.getItem('authToken');
     const playerId = localStorage.getItem('playerId');
     
-    if (!token || !playerId) return;
+    if (!token || !playerId) {
+      console.warn('No hay token o playerId, combate sin registrar');
+      return;
+    }
+    
+    // Obtener enemigo del nivel actual (por defecto nivel 1)
+    const levelId = localStorage.getItem('currentLevel') || 1;
     
     const response = await fetch(`${API_URL}/combat/start`, {
       method: 'POST',
@@ -110,14 +119,20 @@ async function startCombat() {
       },
       body: JSON.stringify({
         player_id: parseInt(playerId),
-        enemy_id: 1  // ID genérico del enemigo
+        enemy_id: 1,  // ID genérico del enemigo (se puede mejorar)
+        level_id: parseInt(levelId)
       })
     });
     
     if (response.ok) {
       const data = await response.json();
       gameState.combatId = data.combat_id;
-      console.log('Combate iniciado en BD:', data.combat_id);
+      console.log('✅ Combate iniciado en BD:', data.combat_id);
+      
+      // Registrar el turno inicial
+      await logTurn('Player', 0);
+    } else {
+      console.warn('No se pudo iniciar combate en BD');
     }
   } catch (error) {
     console.error('Error al iniciar combate:', error);
@@ -132,6 +147,19 @@ async function endCombat(won) {
     
     if (!token || !playerId || !gameState.combatId) return;
     
+    // Calcular sangre total usada
+    const bloodUsed = gameState.playerMaxBlood - gameState.playerBlood;
+    
+    // Determinar cartas ganadas (aleatorio entre 1-3 cartas)
+    const cardsGained = [];
+    if (won) {
+      const numCards = Math.floor(Math.random() * 3) + 1;
+      for (let i = 0; i < numCards; i++) {
+        const randomCard = cardPool[Math.floor(Math.random() * cardPool.length)];
+        cardsGained.push(randomCard.id);
+      }
+    }
+    
     const response = await fetch(`${API_URL}/combat/${gameState.combatId}/end`, {
       method: 'PUT',
       headers: {
@@ -140,12 +168,20 @@ async function endCombat(won) {
       },
       body: JSON.stringify({
         winner: won ? 'player' : 'enemy',
-        player_id: parseInt(playerId)
+        player_id: parseInt(playerId),
+        blood_used: bloodUsed,
+        total_turns: gameState.turnNumber || 0,
+        player_ko: gameState.playerKnockouts,
+        enemy_ko: gameState.oppKnockouts,
+        cards_gained: cardsGained
       })
     });
     
     if (response.ok) {
       console.log(`Combate finalizado: ${won ? 'VICTORIA' : 'DERROTA'}`);
+      if (won && cardsGained.length > 0) {
+        console.log(`Cartas ganadas: ${cardsGained.length}`);
+      }
       
       // Sincronizar GameState si existe
       if (typeof GameState !== 'undefined' && GameState.sync) {
@@ -156,6 +192,70 @@ async function endCombat(won) {
     console.error('Error al finalizar combate:', error);
   }
 }
+
+// Registrar turno en la BD
+async function logTurn(activePlayer, bloodSpent) {
+  if (!gameState.combatId) return;
+  
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    
+    gameState.turnNumber = (gameState.turnNumber || 0) + 1;
+    
+    const response = await fetch(`${API_URL}/combat/${gameState.combatId}/turn`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        turn_number: gameState.turnNumber,
+        active_player: activePlayer,
+        blood_spent: bloodSpent || 0
+      })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      gameState.currentTurnId = data.turn_id;
+    }
+  } catch (error) {
+    console.error('Error al registrar turno:', error);
+  }
+}
+
+// Registrar acción de carta en la BD
+async function logCardAction(cardId, actionType, usedBy, bloodSpent, damagDealt, hpBefore, hpAfter, cardDead) {
+  if (!gameState.combatId || !gameState.currentTurnId) return;
+  
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    
+    await fetch(`${API_URL}/combat/${gameState.combatId}/action`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        turn_id: gameState.currentTurnId,
+        card_id: cardId,
+        action_type: actionType,
+        used_by: usedBy,
+        blood_spent: bloodSpent || 0,
+        damage_dealt: damagDealt || 0,
+        hp_before: hpBefore,
+        hp_after: hpAfter,
+        card_dead: cardDead || false
+      })
+    });
+  } catch (error) {
+    console.error('Error al registrar acción:', error);
+  }
+}
+
 // FUNCIONES AUXILIARES
 
 // Funciones auxiliares simples
@@ -463,7 +563,9 @@ function playCardToField(zone, index) {
   }
   
   let card = cloneCard(gameState.selectedHandCard);
-  gameState.playerBlood = gameState.playerBlood - card.cost;
+  let bloodCost = card.cost;
+  gameState.playerBlood = gameState.playerBlood - bloodCost;
+  gameState.bloodSpentThisTurn += bloodCost;
   
   if (zone === 'bench' && !gameState.playerBenchCards[index]) {
     gameState.playerBenchCards[index] = card;
@@ -475,6 +577,18 @@ function playCardToField(zone, index) {
     log('Espacio ocupado');
     return;
   }
+  
+  // Registrar acción en BD
+  logCardAction(
+    card.id,
+    'Play',
+    'Player',
+    bloodCost,
+    0,
+    card.hp,
+    card.currentHP,
+    false
+  );
   
   // Quitar carta de la mano
   let newHand = [];
@@ -518,21 +632,51 @@ function performBattle() {
   
   log(playerCard.name + ' vs ' + oppCard.name);
   
+  // Guardar HP antes del combate
+  const playerHpBefore = playerCard.currentHP;
+  const oppHpBefore = oppCard.currentHP;
+  
   // Aplicar daño
   playerCard.currentHP = playerCard.currentHP - oppCard.atk;
   oppCard.currentHP = oppCard.currentHP - playerCard.atk;
   
   log('Tu carta: ' + playerCard.currentHP + ' HP, Rival: ' + oppCard.currentHP + ' HP');
   
+  // Registrar acciones de ataque en BD
+  const playerCardDead = playerCard.currentHP <= 0;
+  const oppCardDead = oppCard.currentHP <= 0;
+  
+  logCardAction(
+    playerCard.id,
+    'Attack',
+    'Player',
+    0,
+    playerCard.atk,
+    playerHpBefore,
+    playerCard.currentHP,
+    playerCardDead
+  );
+  
+  logCardAction(
+    oppCard.id,
+    'Attack',
+    'Enemy',
+    0,
+    oppCard.atk,
+    oppHpBefore,
+    oppCard.currentHP,
+    oppCardDead
+  );
+  
   // Verificar muertes
-  if (oppCard.currentHP <= 0) {
+  if (oppCardDead) {
     log('Destruiste ' + oppCard.name);
     gameState.oppActiveCard = null;
     gameState.oppKnockouts = gameState.oppKnockouts + 1;
     promoteFromBench('opponent');
   }
   
-  if (playerCard.currentHP <= 0) {
+  if (playerCardDead) {
     log('Tu ' + playerCard.name + ' fue destruido');
     gameState.playerActiveCard = null;
     gameState.playerKnockouts = gameState.playerKnockouts + 1;
@@ -615,6 +759,10 @@ function sacrificeForPower() {
   
   // Gastar sangre
   gameState.playerBlood = gameState.playerBlood - sacrificeCost;
+  gameState.bloodSpentThisTurn += sacrificeCost;
+  
+  // Guardar HP antes del boost
+  const activeCardHpBefore = gameState.playerActiveCard.currentHP;
   
   // Dar boost a carta activa
   gameState.playerActiveCard.atk = gameState.playerActiveCard.atk + 3;
@@ -624,6 +772,30 @@ function sacrificeForPower() {
   
   log('Sacrificaste ' + sacrificedCard.name + ' (-15 sangre)');
   log('Tu carta activa gana +3 ATK y +2 HP');
+  
+  // Registrar acción de sacrificio en BD
+  logCardAction(
+    sacrificedCard.id,
+    'Sacrifice',
+    'Player',
+    sacrificeCost,
+    0,
+    sacrificedCard.currentHP,
+    0,
+    true
+  );
+  
+  // Registrar el boost de la carta activa
+  logCardAction(
+    gameState.playerActiveCard.id,
+    'Boost',
+    'Player',
+    0,
+    3,
+    activeCardHpBefore,
+    gameState.playerActiveCard.currentHP,
+    false
+  );
   
   // Compactar banco (mover cartas a la izquierda)
   compactBench();
@@ -650,10 +822,14 @@ function compactBench() {
 // Terminar turno (interna)
 function endTurn() {
   if (gameState.turn === 'player') {
+    // Registrar turno del jugador antes de cambiar
+    logTurn('Player', gameState.bloodSpentThisTurn);
+    
     gameState.turn = 'opponent';
     gameState.phase = 'main';
     gameState.cardsPlayedThisTurn = 0;
     gameState.sacrificeUsedThisTurn = false;
+    gameState.bloodSpentThisTurn = 0;
     
     // Regenerar sangre del rival
     if (gameState.oppBlood < gameState.oppMaxBlood) {
@@ -664,10 +840,14 @@ function endTurn() {
     gameState.waitingForAI = true;
     gameState.aiTimer = 0;
   } else {
+    // Registrar turno del enemigo antes de cambiar
+    logTurn('Enemy', gameState.bloodSpentThisTurn);
+    
     gameState.turn = 'player';
     gameState.phase = 'main';
     gameState.cardsPlayedThisTurn = 0;
     gameState.sacrificeUsedThisTurn = false;
+    gameState.bloodSpentThisTurn = 0;
     
     // Regenerar sangre del jugador
     if (gameState.playerBlood < gameState.playerMaxBlood) {

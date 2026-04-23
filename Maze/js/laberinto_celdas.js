@@ -5,6 +5,9 @@ const API_URL = 'http://localhost:3000/api';
 let cardPool = [];
 let secretsPool = [];
 
+// Sistema de cartas para laberinto
+let cardSystem = null;
+
 const BLOOD_AMOUNTS = [5, 10, 15, 20, 25];
 
 const worldWidth = 3000;
@@ -81,22 +84,6 @@ const playerMotion = {
     },
 
 };
-async function hasLightMask() {
-    try {
-        const playerId = localStorage.getItem('playerId');
-        if (!playerId) return false;
-        
-        const response = await fetch(`${API_URL}/player/${playerId}/item/mascara_luz`);
-        if (!response.ok) return false;
-        
-        const data = await response.json();
-        return data.hasItem;
-    } catch (error) {
-        console.error('Error verificando máscara de luz:', error);
-        return false;
-    }
-}
-
 // Cargar cofres abiertos del jugador
 async function loadOpenedChests() {
     try {
@@ -235,10 +222,6 @@ class Game {
         
         this.chests = [];
         
-        // Máscara de luz (efecto linterna)
-        this.hasLightMask = false;
-        this.lightRadius = 180;
-        
         // Imágenes para el efecto de luz/oscuridad
         this.floorImage = new Image();
         this.floorImage.src = "../assets/floor.png";
@@ -247,7 +230,7 @@ class Game {
         this.lightMask.src = "../assets/light.png";
         
         this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/mascara_3.png";
+        this.darknessMask.src = "../assets/mascara_1.png";
         
         this.timeLimit = 60000;
         this.elapsedTime = 0;
@@ -516,6 +499,12 @@ class Game {
             ? secretsPool[Math.floor(Math.random() * secretsPool.length)]
             : null;
         
+        // Recolectar carta en el sistema (temporal)
+        if (cardSystem && card.id > 0) {
+            await cardSystem.collectCard(card.id);
+            console.log(`Carta ${card.name} recolectada (temporal)`);
+        }
+        
         // Guardar en BD
         await markChestAsOpened(chest.id);
         if (typeof GameState !== 'undefined') {
@@ -588,7 +577,18 @@ class Game {
             
             // Redirigir despues de 3 segundos
             if (!this.returnTimeout) {
-                this.returnTimeout = setTimeout(() => {
+                this.returnTimeout = setTimeout(async () => {
+                    // Guardar o perder cartas segun resultado
+                    if (cardSystem) {
+                        if (this.won) {
+                            await cardSystem.completeLabyrinth();
+                            console.log('Cartas guardadas permanentemente');
+                        } else {
+                            await cardSystem.failLabyrinth();
+                            console.log('Cartas temporales perdidas');
+                        }
+                    }
+                    
                     if (this.won) {
                         window.location.href = "../../TCG/game.html";
                     } else {
@@ -601,7 +601,7 @@ class Game {
     
     drawLight(ctx) {
         const player = this.player;
-        const size = this.hasLightMask ? 2500 : 800; // Tamaño de luz según máscara
+        const size = 2500; // Todos tienen luz completa
 
         ctx.drawImage(
             this.lightMask,
@@ -713,6 +713,17 @@ async function main() {
     canvas.height = canvasHeight;
 
     ctx = canvas.getContext("2d");
+    
+    // Inicializar sistema de cartas
+    cardSystem = new LabyrinthCardSystem();
+    const playerId = localStorage.getItem('playerId') || JSON.parse(localStorage.getItem('player')).Player_id;
+    await cardSystem.ensurePlayerHasDeck(playerId);
+    
+    // Iniciar run del laberinto (Level_id = 1 por defecto, ajustar segun nivel)
+    const labyrinthId = 1; // TODO: Obtener del contexto del juego
+    await cardSystem.startRun(labyrinthId);
+    console.log('Sistema de cartas inicializado');
+    
     console.log('Cargando datos desde la API...');
     await Promise.all([
         loadCardPool(),
@@ -720,9 +731,8 @@ async function main() {
     ]);
     game = new Game();
     
-    // Cargar estado del jugador
+    // Cargar cofres abiertos del jugador
     console.log('Cargando estado del jugador...');
-    game.hasLightMask = await hasLightMask();
     const openedChests = await loadOpenedChests();
     for (let chest of game.chests) {
         if (openedChests.includes(chest.id)) {
@@ -730,7 +740,6 @@ async function main() {
         }
     }
     
-    console.log(`Mascara de luz: ${game.hasLightMask ? 'SI' : 'NO'}`);
     console.log(`Cofres abiertos: ${openedChests.length}/${game.chests.length}`);
 
     requestAnimationFrame(drawScene);

@@ -103,6 +103,55 @@ loginForm.addEventListener('submit', async function(event) {
       playerId = await createPlayerIfNeeded(result.userId, username);
     }
     
+    // Asegurar que el jugador tenga 5 cartas iniciales
+    errorMessage.textContent = 'Preparando cartas...';
+    try {
+      await fetch(`${API_URL}/player/${playerId}/deck/initialize`, {
+        method: 'POST'
+      });
+    } catch (e) {
+      // Si falla es porque ya tiene cartas, continuar normalmente
+      console.log('Jugador ya tiene cartas iniciales');
+    }
+    
+    // Cargar cartas desde la API y sincronizar con GameState
+    errorMessage.textContent = 'Sincronizando inventario...';
+    try {
+      const deckResponse = await fetch(`${API_URL}/player/${playerId}/deck`);
+      if (deckResponse.ok) {
+        const deckData = await deckResponse.json();
+        if (deckData.success && deckData.deck) {
+          // Crear o actualizar GameState con las cartas
+          let playerData = localStorage.getItem('playerData');
+          if (!playerData) {
+            playerData = {
+              username: username,
+              blood: 100,
+              maxBlood: 100,
+              inventory: { demonCards: [], loreCards: [] },
+              stats: { secretsDiscovered: 0, labyrinthsCompleted: 0, combatsWon: 0, combatsLost: 0, chestsOpened: 0 },
+              currentLevel: "escuela",
+              chestsOpened: []
+            };
+          } else {
+            playerData = JSON.parse(playerData);
+          }
+          
+          // Sincronizar cartas de demonio
+          playerData.inventory.demonCards = deckData.deck.map(card => ({
+            id: card.Card_id,
+            name: card.Card_name,
+            image: card.Sprite_path || `assets/sprites/card${card.Card_id}.png`,
+            quantity: 1
+          }));
+          
+          localStorage.setItem('playerData', JSON.stringify(playerData));
+        }
+      }
+    } catch (e) {
+      console.error('Error sincronizando inventario:', e);
+    }
+    
     // Guardar datos en localStorage
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('username', username);
