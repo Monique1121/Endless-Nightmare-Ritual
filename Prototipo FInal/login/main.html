@@ -8,32 +8,36 @@
 </head>
 <body>
   <div class="main-container">
-    <div class="content">
-      <div class="game-section">
-        <iframe src="../menu/menu.html"></iframe>
+    <div class="welcome-section">
+      <h1>ENDLESS NIGHTMARE RITUAL</h1>
+      <p>El ritual te espera en la oscuridad...</p>
+      <button class="play-btn" onclick="goToLogin()">JUGAR AHORA</button>
+    </div>
+    
+    <div class="stats-section">
+      <div class="stats-header">
+        <h2>Registro del Ritual - Top 5</h2>
       </div>
       
-      <div class="stats-section">
-        <div class="stats-header">
-          <h2>Registro del Ritual</h2>
-          <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+      <div class="stats-grid">
+        <div class="stat-item leaderboard-item">
+          <h3>Más Cartas Obtenidas</h3>
+          <div id="top-cards" class="mini-leaderboard">
+            <p class="loading">Cargando...</p>
+          </div>
         </div>
-        <p id="welcome-user" class="welcome-text"></p>
         
-        <div class="stats-grid">
-          <div class="stat-item">
-            <h3>Cartas Obtenidas</h3>
-            <p class="placeholder">Próximamente</p>
+        <div class="stat-item leaderboard-item">
+          <h3>Más Secretos Obtenidos</h3>
+          <div id="top-secrets" class="mini-leaderboard">
+            <p class="loading">Cargando...</p>
           </div>
-          
-          <div class="stat-item">
-            <h3>Secretos Obtenidos</h3>
-            <p class="placeholder">Próximamente</p>
-          </div>
-          
-          <div class="stat-item">
-            <h3>Tiempo de Juego</h3>
-            <p class="placeholder">Próximamente</p>
+        </div>
+        
+        <div class="stat-item leaderboard-item">
+          <h3>Más Tiempo de Juego</h3>
+          <div id="top-playtime" class="mini-leaderboard">
+            <p class="loading">Cargando...</p>
           </div>
         </div>
       </div>
