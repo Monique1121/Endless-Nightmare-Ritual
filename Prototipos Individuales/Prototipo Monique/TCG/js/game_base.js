@@ -1,8 +1,5 @@
 "use strict";
  
-// ---------------------------------------------------------------------------
-// Card — datos e instancia de carta
-// ---------------------------------------------------------------------------
 class Card {
   constructor(id, name, cost, atk, hp) {
     this.id        = id;
@@ -25,9 +22,6 @@ class Card {
   }
 }
  
-// ---------------------------------------------------------------------------
-// Bench — los 4 slots de banca
-// ---------------------------------------------------------------------------
 class Bench {
   constructor(size = 4) {
     this.slots = new Array(size).fill(null);
@@ -86,9 +80,7 @@ class Bench {
   }
 }
  
-// ---------------------------------------------------------------------------
-// Player — estado e inventario de un jugador
-// ---------------------------------------------------------------------------
+
 class Player {
   constructor(maxBlood = 100) {
     this.maxBlood  = maxBlood;
@@ -206,9 +198,7 @@ class AIPlayer extends Player {
   }
 }
  
-// ---------------------------------------------------------------------------
-// IdCounter — contador de IDs de instancia
-// ---------------------------------------------------------------------------
+
 class IdCounter {
   constructor(start = 100) {
     this._value = start;
@@ -218,9 +208,7 @@ class IdCounter {
   }
 }
  
-// ---------------------------------------------------------------------------
-// GameState — estado puro del juego (sin lógica)
-// ---------------------------------------------------------------------------
+
 class GameState {
   constructor() {
     this.turn    = 'player';
@@ -234,9 +222,7 @@ class GameState {
   }
 }
  
-// ---------------------------------------------------------------------------
-// Renderer — todo lo relacionado con dibujar en canvas
-// ---------------------------------------------------------------------------
+
 class Renderer {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
@@ -471,9 +457,6 @@ class Renderer {
   }
 }
  
-// ---------------------------------------------------------------------------
-// InputHandler — captura clicks y los delega al juego
-// ---------------------------------------------------------------------------
 class InputHandler {
   constructor(renderer, game) {
     this.renderer = renderer;
@@ -487,9 +470,7 @@ class InputHandler {
   }
 }
  
-// ---------------------------------------------------------------------------
-// Game — coordinador central
-// ---------------------------------------------------------------------------
+
 class Game {
   constructor(cardPool) {
     this.cardPool    = cardPool;
@@ -511,9 +492,7 @@ class Game {
     log('Juego iniciado');
   }
  
-  // -------------------------------------------------------------------------
-  // Game loop
-  // -------------------------------------------------------------------------
+
   gameLoop() {
     this._update();
     this.renderer.render(this.state, this.selectedCard);
@@ -541,9 +520,7 @@ class Game {
     }
   }
  
-  // -------------------------------------------------------------------------
-  // Acciones del jugador
-  // -------------------------------------------------------------------------
+
   selectCard(card) {
     if (this.state.turn !== 'player' || this.state.phase !== 'main') return;
     this.selectedCard = card;
@@ -698,9 +675,6 @@ class Game {
     }
   }
  
-  // -------------------------------------------------------------------------
-  // Fin de juego
-  // -------------------------------------------------------------------------
   _checkGameOver() {
     const { state } = this;
     if (state.gameOver) return;
@@ -715,10 +689,7 @@ class Game {
       log('Perdiste el juego');
     }
   }
- 
-  // -------------------------------------------------------------------------
-  // Manejo de clicks
-  // -------------------------------------------------------------------------
+
   handleClick(x, y) {
     const { state } = this;
     if (state.gameOver) return;
@@ -768,16 +739,12 @@ class Game {
   }
 }
  
-// ---------------------------------------------------------------------------
-// Utilidades globales
-// ---------------------------------------------------------------------------
+
 function log(msg) {
   console.log(msg);
 }
  
-// ---------------------------------------------------------------------------
-// Pool de cartas y arranque
-// ---------------------------------------------------------------------------
+
 const cardPool = [
   new Card(1,  'Sombra Voraz',   1, 3, 3),
   new Card(2,  'Imán Llamas',    2, 4, 4),
