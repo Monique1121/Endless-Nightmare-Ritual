@@ -1,5 +1,53 @@
 "use strict";
- 
+
+const API_URL = 'http://localhost:3000/api';
+
+
+async function loadCardPool() {
+    const playerId = localStorage.getItem("playerId");
+    const runId = localStorage.getItem("runId");
+
+    if (!playerId) {
+        console.error("Missing playerId");
+        return [];
+    }
+
+    let finalCards = [];
+
+    const deckRes = await fetch(`${API_URL}/player/${playerId}/deck`);
+    const deckData = await deckRes.json();
+    if (deckData.success && deckData.deck) {
+        finalCards.push(...deckData.deck);
+    }
+
+    if (runId) {
+        const tempRes = await fetch(`${API_URL}/run/${runId}/cards/temp`);
+        const tempData = await tempRes.json();
+        if (tempData.success && tempData.tempCards) {
+            finalCards.push(...tempData.tempCards);
+        }
+    }
+
+    return finalCards.map(card =>
+        new Card(
+            card.Card_id,
+            card.Card_name,
+            card.Blood_cost,
+            card.Damage,
+            card.HP
+        )
+    );
+}
+
+function normalizeCards(apiCards) {
+  return apiCards.map(card => new Card(
+    card.Card_id,
+    card.Card_name,
+    card.Cost,
+    card.Attack,
+    card.Life
+  ));
+}
 
 class Card {
   constructor(id, name, cost, atk, hp) {
@@ -77,7 +125,7 @@ class Player {
 }
  
 
-class AIPlayer extends Player {
+class OpponentPlayer extends Player {
   constructor() {
     super(50);
   }
@@ -155,15 +203,15 @@ class AIPlayer extends Player {
   }
 }
  
-class GameState {
+class CombatState {
   constructor(cardPool) {
     this.cardPool     = cardPool;
     this.turn         = 'player';
     this.phase        = 'main';
     this.player       = new Player();
-    this.opponent     = new AIPlayer();
-    this.waitingForAI = false;
-    this.aiTimer      = 0;
+    this.opponent     = new OpponentPlayer();
+    this.waitingForOpponent = false;
+    this.opponentTimer      = 0;
     this.gameOver     = false;
     this.winner       = null;
   }
@@ -178,8 +226,6 @@ class Draw {
     this.canvas.height = 900;
   }
  
-  // Convierte coordenadas del click a coordenadas del canvas,
-  // corrigiendo el letterboxing de object-fit: contain
   toCanvasCoords(event) {
     const rect         = this.canvas.getBoundingClientRect();
     const canvasRatio  = this.canvas.width / this.canvas.height;
@@ -216,6 +262,7 @@ class Draw {
     this.drawOppField(state);
     this.drawPlayerField(state, selectedCard);
     this.drawPlayerHand(state, selectedCard);
+    this.drawCombatLog();
     if (state.gameOver) this.drawGameOver(state);
   }
  
@@ -403,8 +450,70 @@ class Draw {
       this.canvas.width / 2, this.canvas.height / 2 + 20
     );
     ctx.font = '28px Arial';
-    ctx.fillText('Regresando al lobby...', this.canvas.width / 2, this.canvas.height / 2 + 100);
+    ctx.fillText('Guardando partida...', this.canvas.width / 2, this.canvas.height / 2 + 70);
+    ctx.fillText('Regresando al lobby...', this.canvas.width / 2, this.canvas.height / 2 + 110);
     ctx.textAlign = 'left';
+  }
+  
+  drawCombatLog() {
+    const ctx = this.ctx;
+    const logX = 1100;
+    const logY = 50;
+    const logWidth = 480;
+    const logHeight = 830;
+    
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(logX, logY, logWidth, logHeight);
+    
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(logX, logY, logWidth, logHeight);
+    
+    ctx.fillStyle = '#ff6666';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('REGISTRO DE COMBATE', logX + 10, logY + 25);
+    
+    if (!window.gameInstance || !window.gameInstance.combatLogs) return;
+    
+    const logs = window.gameInstance.combatLogs;
+    const maxVisibleLogs = 45;
+    const startIndex = Math.max(0, logs.length - maxVisibleLogs);
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '13px Courier New';
+    
+    let yPos = logY + 50;
+    for (let i = startIndex; i < logs.length; i++) {
+      const log = logs[i];
+      const lines = this.wrapText(ctx, log, logWidth - 20);
+      
+      for (const line of lines) {
+        if (yPos > logY + logHeight - 10) break;
+        ctx.fillText(line, logX + 10, yPos);
+        yPos += 18;
+      }
+    }
+  }
+  
+  wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) lines.push(currentLine);
+    return lines;
   }
 }
  
@@ -426,17 +535,136 @@ class Game {
   constructor(cardPool) {
     this.cardPool       = cardPool;
     this.idCounter      = { value: 100 };
-    this.state          = new GameState(cardPool);
+    this.state          = new CombatState(cardPool);
     this.renderer       = new Draw('canvas');
     this.input          = new InputHandler(this.renderer.canvas, this);
     this.selectedCard   = null;
     this._returnTimeout = null;
+    this.combatLogs     = [];
+    // Variables para BD
+    this.combatId       = null;
+    this.turnNumber     = 0;
+    this.currentTurnId  = null;
+    this.bloodSpentThisTurn = 0;
   }
  
-  init() {
+  async init() {
+    await this.startCombat();
+    
+    if (typeof GameState !== 'undefined') {
+      const playerData = GameState.load();
+      if (playerData) {
+        this.state.player.blood = playerData.blood;
+        this.state.player.maxBlood = playerData.maxBlood;
+        console.log(`Sangre inicial del jugador: ${this.state.player.blood}/${this.state.player.maxBlood}`);
+      }
+    }
+    
     this.state.player.drawCards(this.cardPool, this.idCounter, 5);
     this.state.opponent.drawCards(this.cardPool, this.idCounter, 5);
     log('Juego iniciado');
+  }
+
+  async startCombat() {
+    const playerId = localStorage.getItem('playerId');
+    const runId = localStorage.getItem('runId');
+    if (!playerId || !runId) return;
+
+    try {
+        const res = await fetch(`${API_URL}/combat/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                player_id: parseInt(playerId),
+                enemy_id: 1,
+                run_id: parseInt(runId),
+                level_id: 1
+            })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            this.combatId = data.combat_id;
+            console.log('Combate iniciado ID:', this.combatId);
+            await this.logTurn('Player', 0);
+        }
+    } catch (err) {
+        console.error('Error al iniciar combate:', err);
+    }
+}
+
+  async endCombat(won) {
+
+    if (!this.combatId) return;
+    const playerId = localStorage.getItem('playerId');
+
+    if (!playerId) return;
+    try {
+        const bloodUsed = this.state.player.maxBlood - this.state.player.blood;
+        await fetch(`${API_URL}/combat/${this.combatId}/end`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                winner: won ? 'player' : 'enemy',
+                player_id: parseInt(playerId),
+                blood_used: bloodUsed,
+                total_turns: this.turnNumber || 0,
+                player_ko: this.state.player.knockouts,
+                enemy_ko: this.state.opponent.knockouts
+            })
+        });
+        console.log(`Combate guardado: ${won ? 'VICTORIA' : 'DERROTA'}`);
+    } catch (err) {
+        console.error('Error al finalizar combate:', err);
+    }
+}
+
+  async logTurn(activePlayer, bloodSpent) {
+
+    if (!this.combatId) return;
+
+    try {
+        this.turnNumber++;
+        const res = await fetch(`${API_URL}/combat/${this.combatId}/turn`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                turn_number: this.turnNumber,
+                active_player: activePlayer,
+                blood_spent: bloodSpent || 0
+            })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            this.currentTurnId = data.turn_id;
+        }
+    } catch (err) {
+        console.error('Error al registrar turno:', err);
+    }
+  
+  }
+
+  async logCardAction(cardId, actionType, usedBy, bloodSpent, damageDealt, hpBefore, hpAfter, cardDead) {
+    
+    if (!this.combatId || !this.currentTurnId) return;
+    try {
+        await fetch(`${API_URL}/combat/${this.combatId}/action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                turn_id: this.currentTurnId,
+                card_id: cardId,
+                action_type: actionType,
+                used_by: usedBy,
+                blood_spent: bloodSpent || 0,
+                damage_dealt: damageDealt || 0,
+                hp_before: hpBefore,
+                hp_after: hpAfter,
+                card_dead: cardDead || false
+            })
+        });
+    } catch (err) {
+        console.error('Error al registrar acción:', err);
+    }
   }
  
   gameLoop() {
@@ -448,19 +676,21 @@ class Game {
   update() {
     this.checkGameOver();
  
-    if (this.state.waitingForAI) {
-      this.state.aiTimer++;
-      if (this.state.aiTimer > 60) {
-        this.state.waitingForAI = false;
-        this.state.aiTimer      = 0;
+    if (this.state.waitingForOpponent) {
+      this.state.opponentTimer++;
+      if (this.state.opponentTimer > 60) {
+        this.state.waitingForOpponent = false;
+        this.state.opponentTimer      = 0;
         this.state.opponent.takeTurn(this);
       }
     }
  
+    // Regresar al lobby después de 4 segundos (dar tiempo para guardar)
     if (this.state.gameOver && !this._returnTimeout) {
       this._returnTimeout = setTimeout(() => {
+        console.log('Regresando al lobby...');
         window.location.href = '../lobby/lobbyV1.html';
-      }, 3000);
+      }, 4000);
     }
   }
  
@@ -480,6 +710,7 @@ class Game {
     }
  
     const card = this.selectedCard.cloneCard(this.idCounter.value++);
+    const bloodCost = card.cost;
  
     if (zone === 'bench') {
       if (player.bench[index] !== null) { log('Espacio ocupado'); return; }
@@ -491,7 +722,21 @@ class Game {
       log('Carta activa colocada');
     }
  
-    player.spend(card.cost);
+    player.spend(bloodCost);
+    this.bloodSpentThisTurn += bloodCost;
+    
+    // Registrar acción en BD
+    this.logCardAction(
+      card.id,
+      'Play',
+      'Player',
+      bloodCost,
+      0,
+      card.hp,
+      card.currentHP,
+      false
+    );
+    
     player.hand = player.hand.filter(c => c !== this.selectedCard);
     this.selectedCard = null;
     player.cardsPlayedThisTurn++;
@@ -524,19 +769,49 @@ class Game {
  
     log(pCard.name + ' vs ' + oCard.name);
  
+    // Guardar HP antes del combate
+    const playerHpBefore = pCard.currentHP;
+    const oppHpBefore = oCard.currentHP;
+ 
     pCard.currentHP -= oCard.atk;
     oCard.currentHP -= pCard.atk;
  
     log('Tu carta: ' + pCard.currentHP + ' HP, Rival: ' + oCard.currentHP + ' HP');
  
-    if (oCard.isDead) {
+    // Registrar acciones de ataque en BD
+    const playerCardDead = pCard.isDead;
+    const oppCardDead = oCard.isDead;
+    
+    this.logCardAction(
+      pCard.id,
+      'Attack',
+      'Player',
+      0,
+      pCard.atk,
+      playerHpBefore,
+      pCard.currentHP,
+      playerCardDead
+    );
+    
+    this.logCardAction(
+      oCard.id,
+      'Attack',
+      'Enemy',
+      0,
+      oCard.atk,
+      oppHpBefore,
+      oCard.currentHP,
+      oppCardDead
+    );
+ 
+    if (oppCardDead) {
       log('Destruiste ' + oCard.name);
       opponent.activeCard = null;
       opponent.knockouts++;
       opponent.promoteFromBench();
     }
  
-    if (pCard.isDead) {
+    if (playerCardDead) {
       log('Tu ' + pCard.name + ' fue destruido');
       player.activeCard = null;
       player.knockouts++;
@@ -565,8 +840,12 @@ class Game {
     if (idx === -1) { log('No tienes cartas en el banco para sacrificar'); return; }
  
     const sacrificed   = player.bench[idx];
+    const activeCardHpBefore = player.activeCard.currentHP;
+    
     player.bench[idx]  = null;
     player.spend(15);
+    this.bloodSpentThisTurn += 15;
+    
     player.activeCard.atk += 3;
     player.activeCard.currentHP += 2;
     player.sacrificeUsedThisTurn = true;
@@ -574,6 +853,30 @@ class Game {
  
     log('Sacrificaste ' + sacrificed.name + ' (-15 sangre)');
     log('Tu carta activa gana +3 ATK y +2 HP');
+    
+    // Registrar acción de sacrificio en BD
+    this.logCardAction(
+      sacrificed.id,
+      'Sacrifice',
+      'Player',
+      15,
+      0,
+      sacrificed.currentHP,
+      0,
+      true
+    );
+    
+    // Registrar el boost de la carta activa
+    this.logCardAction(
+      player.activeCard.id,
+      'Boost',
+      'Player',
+      0,
+      3,
+      activeCardHpBefore,
+      player.activeCard.currentHP,
+      false
+    );
   }
  
   endTurn() {
@@ -582,34 +885,77 @@ class Game {
     const opponent  = state.opponent;
  
     if (state.turn === 'player') {
+      this.logTurn('Player', this.bloodSpentThisTurn);
+      
       state.turn  = 'opponent';
       state.phase = 'main';
       player.resetTurnState();
+      this.bloodSpentThisTurn = 0;
       opponent.regen(2);
-      state.waitingForAI = true;
-      state.aiTimer      = 0;
+      state.waitingForOpponent = true;
+      state.opponentTimer      = 0;
     } else {
+      this.logTurn('Enemy', this.bloodSpentThisTurn);
+      
       state.turn  = 'player';
       state.phase = 'main';
       opponent.resetTurnState();
+      this.bloodSpentThisTurn = 0;
       player.regen(2);
       player.drawCards(this.cardPool, this.idCounter, 2);
       log('Robaste 2 cartas');
     }
   }
  
-  checkGameOver() {
+  async checkGameOver() {
     if (this.state.gameOver) return;
  
     if (this.state.opponent.knockouts >= 6) {
       this.state.gameOver = true;
       this.state.winner   = 'player';
       log('¡Ganaste el juego!');
+      await this.handleGameOver(true);
     } else if (this.state.player.knockouts >= 6) {
       this.state.gameOver = true;
       this.state.winner   = 'opponent';
       log('Perdiste el juego');
+      await this.handleGameOver(false);
     }
+  }
+
+  async handleGameOver(won) {
+    // Guardado automatico al finalizar
+    console.log('Finalizando partida...');
+    console.log(`Resultado: ${won ? 'VICTORIA' : 'DERROTA'}`);
+    console.log(`Sangre final: ${this.state.player.blood}/${this.state.player.maxBlood}`);
+    
+    if (typeof GameState !== 'undefined') {
+      GameState.setBlood(this.state.player.blood);
+      console.log('Sangre guardada');
+      
+      if (won) {
+        GameState.updateStat('combatsWon');
+        console.log('Estadisticas actualizadas: +1 victoria');
+        
+        const randomCard = this.cardPool[Math.floor(Math.random() * this.cardPool.length)];
+        GameState.addDemonCard(randomCard.id, randomCard.name);
+        console.log(`Recompensa obtenida: ${randomCard.name}`);
+      } else {
+        GameState.updateStat('combatsLost');
+        console.log('Estadisticas actualizadas: +1 derrota');
+      }
+      
+      console.log('Sincronizando con servidor...');
+      const syncSuccess = await GameState.sync();
+      
+      if (syncSuccess) {
+        console.log('Partida guardada correctamente');
+      } else {
+        console.warn('Error al sincronizar, datos guardados localmente');
+      }
+    }
+    
+    await this.endCombat(won);
   }
  
   handleClick(x, y) {
@@ -659,62 +1005,33 @@ class Game {
 
 function log(msg) {
   console.log(msg);
+  
+  if (window.gameInstance && window.gameInstance.combatLogs) {
+    const timestamp = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    window.gameInstance.combatLogs.push(`[${timestamp}] ${msg}`);
+    
+    if (window.gameInstance.combatLogs.length > 100) {
+      window.gameInstance.combatLogs.shift();
+    }
+  }
 }
  
-
-
-const API_URL = "http://localhost:3000/api";
-
-async function loadPlayerDeck() {
-    const playerId = localStorage.getItem("playerId");
-    const runId = localStorage.getItem("runId");
-
-    if (!playerId) {
-        console.error("Missing playerId");
-        return [];
-    }
-
-    let finalCards = [];
-
-    // 1. Load permanent deck cards
-    const deckRes = await fetch(`${API_URL}/player/${playerId}/deck`);
-    const deckData = await deckRes.json();
-
-    if (deckData.success && deckData.deck) {
-        finalCards.push(...deckData.deck);
-    }
-
-    // 2. Load temporary cards from current run
-    if (runId) {
-        const tempRes = await fetch(`${API_URL}/run/${runId}/cards/temp`);
-        const tempData = await tempRes.json();
-
-        if (tempData.success && tempData.tempCards) {
-            finalCards.push(...tempData.tempCards);
-        }
-    }
-
-    return finalCards.map(card =>
-        new Card(
-            card.Card_id,
-            card.Card_name,
-            card.Blood_cost,
-            card.Damage,
-            card.HP
-        )
-    );
-}
-
+// Inicialización asíncrona
 window.onload = async function () {
-    const cardPool = await loadPlayerDeck();
-
-    if (cardPool.length === 0) {
-        alert("No tienes cartas en tu deck todavía.");
-        window.location.href = "../lobby/lobbyV1.html";
-        return;
-    }
-
-    const game = new Game(cardPool);
-    game.init();
-    game.gameLoop();
+  window.gameInstance = { combatLogs: ['===== REGISTRO DE COMBATE ====='] };
+  
+  log('Cargando cartas desde la API...');
+  const cardPool = await loadCardPool();
+  
+  if (cardPool.length === 0) {
+    console.error('No se pudieron cargar las cartas');
+    alert('Error: No se pudieron cargar las cartas del juego');
+    return;
+  }
+  
+  const game = new Game(cardPool);
+  game.combatLogs = window.gameInstance.combatLogs;
+  window.gameInstance = game;
+  await game.init();
+  game.gameLoop();
 };

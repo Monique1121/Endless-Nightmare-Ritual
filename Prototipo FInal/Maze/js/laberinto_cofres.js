@@ -182,6 +182,9 @@ class Game {
 
         this.mouse = new Vector(0, 0);
 
+        this.bloodRecovered = 0;
+        this.secretsFound = 0;
+
         
     }
 
@@ -427,6 +430,7 @@ openChest() {
 
     const mostrarPopup = (card, secret) => {
         GameState.updateBlood(blood);
+        this.bloodRecovered += blood;
         showChestPopup(card, blood, secret);
     };
 
@@ -441,6 +445,7 @@ openChest() {
                     }).catch(console.error);
                     GameState.addLoreCard(secret.Secret_id, secret.Secret_name, secret.Content);
                     mostrarPopup(card, { name: secret.Secret_name, desc: secret.Content });
+                    this.secretsFound++;
                 })
                 .catch(err => {
                     console.error("Error obteniendo secretos:", err);
@@ -614,16 +619,17 @@ if (!this.returnTimeout) {
     this.returnTimeout = setTimeout(async () => {
         const playerId = localStorage.getItem("playerId");
         const runId = localStorage.getItem("runId");
-        console.log("Timeout ejecutado, won:", this.won);
-        console.log("playerId:", playerId, "runId:", runId);
+
         
         if (this.won) {
-            await fetch(`http://localhost:3000/api/run/${runId}/complete`, {
+           await fetch(`http://localhost:3000/api/run/${runId}/complete`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     playerId: playerId,
-                    timeTaken: Math.floor(this.elapsedTime / 1000)
+                    timeTaken: Math.floor(this.elapsedTime / 1000),
+                    bloodRecovered: this.bloodRecovered,
+                    secretsFound: this.secretsFound
                 })
             });
 
