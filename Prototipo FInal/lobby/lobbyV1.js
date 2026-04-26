@@ -380,7 +380,7 @@ class Game {
             // Tecla E para interactuar con la escuela
             if (event.key === "e" || event.key === "E") {
                 if (this.inSchoolZone) {
-                    window.location.href = "../Maze/html/laberinto_celdas.html";
+                    window.location.href = "../Maze/html/laberinto_cofres.html";
                 }
             }
         });
