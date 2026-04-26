@@ -350,7 +350,7 @@ class Game {
     }
 
     createEventListeners() {
-        window.addEventListener("keydown", (event) => {
+        window.addEventListener("keydown", async (event) => {
             // Tecla I para abrir/cerrar inventario
             if (event.key === "i" || event.key === "I") {
                 this.toggleInventory();
@@ -378,11 +378,34 @@ class Game {
             }
             
             // Tecla E para interactuar con la escuela
+            // if (event.key === "e" || event.key === "E") {
+            //     if (this.inSchoolZone) {
+            //         window.location.href = "../Maze/html/laberinto_cofres.html";
+            //     }
+            // }
             if (event.key === "e" || event.key === "E") {
-                if (this.inSchoolZone) {
+            if (this.inSchoolZone) {
+                const playerId = localStorage.getItem("playerId");
+
+                const res = await fetch("http://localhost:3000/api/run/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        playerId: playerId,
+                        labyrinthId: 1
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem("runId", data.runId);
                     window.location.href = "../Maze/html/laberinto_cofres.html";
+                } else {
+                    alert("No se pudo iniciar el laberinto");
                 }
             }
+        }
         });
 
         window.addEventListener("keyup", (event) => {

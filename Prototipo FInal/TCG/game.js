@@ -662,20 +662,44 @@ function log(msg) {
 }
  
 
-const cardPool = [
-  new Card(1,  'Sombra Voraz',   1, 3, 3),
-  new Card(2,  'Imán Llamas',    2, 4, 4),
-  new Card(3,  'Látigo Umbral',  1, 2, 2),
-  new Card(4,  'Guardia Abisal', 3, 5, 6),
-  new Card(5,  'Bendición',      2, 1, 5),
-  new Card(6,  'Furia Carmesí',  4, 7, 5),
-  new Card(7,  'Eco Vacío',      2, 3, 3),
-  new Card(8,  'Tormentador',    3, 6, 4),
-  new Card(9,  'Pesadilla',      1, 2, 3),
-  new Card(10, 'Asesino',        2, 4, 3),
-];
- 
-window.onload = function () {
+const API_URL = "http://localhost:3000/api";
+
+async function loadPlayerDeck() {
+  const playerId = localStorage.getItem("playerId");
+
+  if (!playerId) {
+    console.error("Missing playerId in localStorage");
+    return [];
+  }
+
+  const response = await fetch(`${API_URL}/player/${playerId}/deck`);
+  const data = await response.json();
+
+  if (!data.success || !data.deck || data.deck.length === 0) {
+    console.warn("No cards found in player deck");
+    return [];
+  }
+
+  return data.deck.map(card =>
+    new Card(
+      card.Card_id,
+      card.Card_name,
+      card.Blood_cost,
+      card.Damage,
+      card.HP
+    )
+  );
+}
+
+window.onload = async function () {
+  const cardPool = await loadPlayerDeck();
+
+  if (cardPool.length === 0) {
+    alert("No tienes cartas en tu deck todavía.");
+    window.location.href = "../lobby/lobbyV1.html";
+    return;
+  }
+
   const game = new Game(cardPool);
   game.init();
   game.gameLoop();

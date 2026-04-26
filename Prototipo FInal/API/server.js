@@ -14,7 +14,7 @@ const dbConfig = {
     host: 'localhost',
     user: 'root',
     password: 'housekeeping67',
-    database: 'endless'
+    database: 'endless',
 };
 const pool = mysql.createPool(dbConfig);
 app.post('/api/register', async (req, res) => {
@@ -419,6 +419,15 @@ app.post('/api/player/:playerId/deck/initialize', async (req, res) => {
     }
 });
 
+app.get('/api/secrets', async (req, res) => {
+    try {
+        const [secrets] = await pool.query('SELECT * FROM Secrets');
+        res.json({ success: true, secrets });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Obtener cartas temporales de un run (aún no guardadas)
 app.get('/api/run/:runId/cards/temp', async (req, res) => {
     const { runId } = req.params;
@@ -563,6 +572,22 @@ app.post('/api/run/:runId/complete', async (req, res) => {
     }
 });
 
+app.get('/api/player/:playerId/cards/available', async (req, res) => {
+    const { playerId } = req.params;
+    try {
+        const [cards] = await pool.query(
+            `SELECT * FROM Cards 
+             WHERE Card_id NOT IN (
+                 SELECT Card_id FROM Deck WHERE Player_id = ?
+             )`,
+            [playerId]
+        );
+        res.json({ success: true, cards });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Fallar en laberinto y perder cartas temporales
 app.post('/api/run/:runId/fail', async (req, res) => {
     const { runId } = req.params;
@@ -645,10 +670,24 @@ app.post('/api/run/create', async (req, res) => {
 
     try {
         // Crear nuevo run
+        const [labyrinth] = await pool.query(
+            `SELECT Level_id FROM Labyrinth WHERE Labyrinth_id = ?`,
+            [labyrinthId]
+        );
+
+        if (labyrinth.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Laberinto no encontrado'
+            });
+        }
+
+        const levelId = labyrinth[0].Level_id;
+
         const [result] = await pool.query(
-            `INSERT INTO Run (Player_id, Labyrinth_id, Completed, Cards_found) 
-             VALUES (?, ?, NULL, 0)`,
-            [playerId, labyrinthId]
+            `INSERT INTO Run (Player_id, Labyrinth_id, Level_id, Completed, Cards_found) 
+            VALUES (?, ?, ?, NULL, 0)`,
+            [playerId, labyrinthId, levelId]
         );
 
         res.json({ 
@@ -1169,4 +1208,4 @@ app.listen(PORT, () => {
     console.log('  PUT    /api/combat/:combatId/end - Finalizar combate');
     console.log('  GET    /api/player/:playerId/combats - Historial de combates');
     console.log('\n  GET    /api/test               - Test de conexión');
-});
+}); 
