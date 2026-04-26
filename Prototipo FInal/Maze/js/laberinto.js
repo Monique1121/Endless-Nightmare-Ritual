@@ -14,8 +14,8 @@ const cell_size = 60;
 
 const canvasWidth = 800;
 const canvasHeight = 600;
-const wall = "white";
-const path = "white";
+const wall = "green";
+const path = "peru";
 
 let ctx;
 
@@ -25,7 +25,7 @@ let game;
 
 let oldTime = 0;
 
-let playerSpeed = 0.6;
+let playerSpeed = 0.4;
 
 
 const keyDirections = {
@@ -93,16 +93,18 @@ class Wall {
     }
 }
 
-class Door {
-    constructor(x, y, width, height, imageSrc) {
-        this.position = new Vector(x + width / 2, y + height / 2);
-        this.halfSize = new Vector(width / 2, height / 2);
+class Exit {
+    constructor(x, y, size, imageSrc) {
+        this.position = new Vector(x + size / 2, y + size / 2);
+        this.halfSize = new Vector(size / 2, size / 2);
 
+        // Cargamos la imagen
         this.image = new Image();
         this.image.src = imageSrc;
     }
 
     draw(ctx) {
+        // Dibujamos la imagen centrada en la posición
         ctx.drawImage(
             this.image,
             this.position.x - this.halfSize.x,
@@ -111,9 +113,8 @@ class Door {
             this.halfSize.y * 2
         );
     }
+
 }
-
-
 
 class Camera {
     constructor(viewWidth, viewHeight, worldWidth, worldHeight) {
@@ -143,46 +144,9 @@ class Game {
 
         this.camera = new Camera(canvasWidth, canvasHeight, this.world.width, this.world.height);
 
-        this.chestImage = new Image();
-        this.chestImage.src = "../assets/cofre.png";
-        this.isolatedCells = new Set();
-
         this.createEventListeners();
         this.initObjects();
         this.generateMaze();
-        this.chestImage = new Image();
-        this.chestImage.src = "../assets/cofre.png";
-
-        this.floorImage = new Image();
-        this.floorImage.src = "../assets/floor.png";
-
-        this.lightMask= new Image();
-        this.lightMask.src = "../assets/light.png";
-
-        this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/mascara_5.png";
-
-        this.mouse = new Vector(0, 0);
-
-        
-    }
-
-    findDeadEnds() {
-
-        const directions = [[1,0],[-1,0],[0,1],[0,-1]];
-        this.deadEnds = Array(rows).fill().map(() => Array(cols).fill(false));
-
-        for (let r = 1; r < rows - 1; r++) {
-            for (let c = 1; c < cols - 1; c++) {
-                if (this.maze[r][c] === 0) {
-                    let freeNeighbors = 0;
-                    for (let [dr, dc] of directions) {
-                        if (this.maze[r + dr][c + dc] === 0) freeNeighbors++;
-                    }
-                    if (freeNeighbors === 1) this.deadEnds[r][c] = true;
-                }
-            }
-        }
     }
 
     generateMaze(){
@@ -196,6 +160,7 @@ class Game {
 
         this.carvePasssage(startRow, startCol);
 
+   
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
                 if (this.maze[row][col] === 1) {
@@ -204,31 +169,9 @@ class Game {
             }
         }
 
-        this.findDeadEnds();
-        const randomExit = this.getRandomExit();
-        this.exit = new Door(randomExit.x, randomExit.y - cell_size, cell_size, cell_size * 2, "../assets/puerta.png");
-    }
-
-    getRandomExit() {
-
-        let candidates = [];
-
-        for (let r = 1; r < rows - 1; r++) {
-            for (let c = 1; c < cols - 1; c++) {
-                if (this.deadEnds[r][c] && !(r === 1 && c === 1)) {
-                    candidates.push([r, c]);
-                }
-            }
-        }
-
-        const idx = Math.floor(Math.random() * candidates.length);
-        const [r, c] = candidates[idx];
-        return { x: c * cell_size, y: r * cell_size };
-
     }
 
     carvePasssage(r, c){
-
         const direction = [
             [-3, 0],
             [0, 3],
@@ -259,94 +202,14 @@ class Game {
 
     drawMaze(){
 
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-
-                let key = `${row},${col}`;
-
-                if (this.maze[row][col] === 1) {
-                    ctx.fillStyle = wall;
-                    ctx.fillRect(col * cell_size, row * cell_size, cell_size, cell_size);
-                } else {
-                    ctx.drawImage(
-                        this.floorImage,
-                        col * cell_size,
-                        row * cell_size,
-                        cell_size,
-                        cell_size
-                    );
-
-                }
-                
-                if (this.deadEnds[row][col]) {
-                    ctx.drawImage(this.chestImage, col * cell_size, row * cell_size, cell_size, cell_size);
-                }
+        for (let row = 0; row < rows; row++){
+            for (let col = 0; col < cols; col++){
+                ctx.fillStyle = this.maze[row][col] == 1 ? wall : path;
+                ctx.fillRect(col * cell_size, row * cell_size, cell_size, cell_size);
             }
         }
 
     }
-
-    drawDarkness(ctx) {
-
-        const size = 3000;
-        const dx = this.mouse.x - this.player.position.x;
-        const dy = this.mouse.y - this.player.position.y;
-        const angle = Math.atan2(dy, dx);
-
-        ctx.save();
-
-        const offset = 20;
-
-        const px = this.player.position.x + Math.cos(angle) * offset;
-        const py = this.player.position.y + Math.sin(angle) * offset;
-
-        ctx.translate(px, py);
-        ctx.rotate(angle - Math.PI / 2);
-        ctx.drawImage(
-            this.darknessMask, - size / 2 + 5, - size / 2 + 5, size, size);
-
-        ctx.restore();
-    }
-
-    drawLight(ctx) {
-        
-        const player = this.player;
-
-        const size = 3000;
-
-        ctx.drawImage(
-            this.lightMask,
-            player.position.x - size / 2,
-            player.position.y - size / 2,
-            size,
-            size
-        );
-    }
-
-    drawArrow(ctx) {
-        
-        const dx = this.exit.position.x - this.player.position.x;
-        const dy = this.exit.position.y - this.player.position.y;
-        const angle = Math.atan2(dy, dx);
-
-        const arrowX = this.player.position.x;
-        const arrowY = this.player.position.y - this.player.halfSize.y * 2 - 10;
-
-        ctx.save();
-
-        ctx.translate(arrowX, arrowY);
-        ctx.rotate(angle);
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.moveTo(15, 0); 
-        ctx.lineTo(-10, -8);
-        ctx.lineTo(-10, 8);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.restore();
-    }
-
 
     initObjects() {
 
@@ -357,51 +220,50 @@ class Game {
         this.player.halfSize = new Vector(cell_size / 2, cell_size / 2);
         this.player.setSprite("../assets/gracias.png", new Rect(0, 0, 143, 145));
         this.player.setCollider(cell_size * 0.65, cell_size * 0.65);
+
         this.player.setSpeed(playerSpeed);
 
-        this.entrance = new Door(cell_size, 0, cell_size, cell_size * 2, "../assets/puerta.png");
- 
+        this.exit = new Exit((cols - 4) * cell_size, (rows - 3) * cell_size, cell_size, "../assets/puerta.png");
+
     }
 
-    update(deltaTime) {
-        const oldX = this.player.position.x;
-        const oldY = this.player.position.y;
-        
+   update(deltaTime) {
+    const oldX = this.player.position.x;
+    const oldY = this.player.position.y;
 
-        this.player.update(deltaTime, this.world);
-        this.player.updateCollider();
+    this.player.update(deltaTime, this.world);
+    this.player.updateCollider();
 
-        const Collider = new Vector(this.player.colliderWidth / 2, this.player.colliderHeight / 2);
+    const Collider = new Vector(this.player.colliderWidth / 2, this.player.colliderHeight / 2);
 
-        let testX = { position: new Vector(this.player.position.x, oldY), halfSize: Collider };
-        for (let wall of this.actors) {
-            if (boxOverlap(testX, wall)) {
-                if (oldX < wall.position.x) {
-                    this.player.position.x = wall.position.x - wall.halfSize.x - Collider.x;
-                } else {
-                    this.player.position.x = wall.position.x + wall.halfSize.x + Collider.x;
-                }
-                break;
+    let testX = { position: new Vector(this.player.position.x, oldY), halfSize: Collider };
+    for (let wall of this.actors) {
+        if (boxOverlap(testX, wall)) {
+            if (this.player.position.x < wall.position.x) {
+                this.player.position.x = wall.position.x - wall.halfSize.x - Collider.x;
+            } else {
+                this.player.position.x = wall.position.x + wall.halfSize.x + Collider.x;
             }
+            break;
         }
-
-        let testY = { position: new Vector(this.player.position.x, this.player.position.y), halfSize: Collider };
-        for (let wall of this.actors) {
-            if (boxOverlap(testY, wall)) {
-                if (oldY < wall.position.y) {
-                    this.player.position.y = wall.position.y - wall.halfSize.y - Collider.y;
-                } else {
-                    this.player.position.y = wall.position.y + wall.halfSize.y + Collider.y;
-                }
-                break;
-            }
-        }
-
-        this.camera.follow(this.player);
     }
+
+    let testY = { position: new Vector(this.player.position.x, this.player.position.y), halfSize: Collider };
+    for (let wall of this.actors) {
+        if (boxOverlap(testY, wall)) {
+            if (this.player.position.y < wall.position.y) {
+                this.player.position.y = wall.position.y - wall.halfSize.y - Collider.y;
+            } else {
+                this.player.position.y = wall.position.y + wall.halfSize.y + Collider.y;
+            }
+            break;
+        }
+    }
+
+    this.camera.follow(this.player);
+}
 
     draw(ctx) {
-
         ctx.save();
         ctx.translate(-this.camera.position.x, -this.camera.position.y);
         
@@ -411,13 +273,9 @@ class Game {
             actor.draw(ctx);
         }
 
-        this.entrance.draw(ctx);
         this.exit.draw(ctx);
-        this.drawLight(ctx);
-        this.drawDarkness(ctx);
         this.player.draw(ctx);
 
-        this.drawArrow(ctx);
 
         ctx.restore();
     }
@@ -436,18 +294,6 @@ class Game {
                 this.delKey(keyDirections[event.key]);
                 this.player.stopMovement(keyDirections[event.key]);
             }
-        });
-
-        canvas.addEventListener("mousemove", (event) => {
-
-            const rect = canvas.getBoundingClientRect();
-
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
-
-            this.mouse.x = mouseX + this.camera.position.x;
-            this.mouse.y = mouseY + this.camera.position.y;
-
         });
     }
 

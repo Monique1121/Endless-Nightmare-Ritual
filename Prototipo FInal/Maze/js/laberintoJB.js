@@ -8,25 +8,19 @@
 const worldWidth = 3000;
 const worldHeight = 3000;
 
-const rows = 25;
-const cols = 30;
+const rows = 40;
+const cols = 50;
 const cell_size = 60;
 
 const canvasWidth = 800;
 const canvasHeight = 600;
-const wall = "white";
+const wall = "black";
 const path = "white";
 
 let ctx;
-
-
 let game;
-
-
 let oldTime = 0;
-
 let playerSpeed = 0.6;
-
 
 const keyDirections = {
     w: "up",
@@ -38,7 +32,6 @@ const keyDirections = {
     ArrowDown: "down",
     ArrowRight: "right",
 };
-
 
 const playerMotion = {
     up: {
@@ -134,15 +127,13 @@ class Door {
     draw(ctx) {
         ctx.drawImage(
             this.image,
-            this.position.x - this.halfSize.x,
+            this.position.x - this.halfSize.x, 
             this.position.y - this.halfSize.y,
-            this.halfSize.x * 2,
+            this.halfSize.x * 2, 
             this.halfSize.y * 2
         );
     }
 }
-
-
 
 class Camera {
     constructor(viewWidth, viewHeight, worldWidth, worldHeight) {
@@ -165,35 +156,18 @@ class Camera {
 
 class Game {
     constructor() {
-        this.world = {
-            width: cols * cell_size,
-            height: rows * cell_size,
-        };
-
+        this.world = { width: cols * cell_size, height: rows * cell_size };
         this.camera = new Camera(canvasWidth, canvasHeight, this.world.width, this.world.height);
 
         this.chestImage = new Image();
         this.chestImage.src = "../assets/cofre.png";
-        this.isolatedCells = new Set();
 
         this.createEventListeners();
         this.initObjects();
         this.generateMaze();
+
         this.chestImage = new Image();
         this.chestImage.src = "../assets/cofre.png";
-
-        this.floorImage = new Image();
-        this.floorImage.src = "../assets/floor.png";
-
-        this.lightMask= new Image();
-        this.lightMask.src = "../assets/light.png";
-
-        this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/mascara_4.png";
-
-        this.mouse = new Vector(0, 0);
-
-        
     }
 
     findDeadEnds() {
@@ -235,6 +209,7 @@ class Game {
 
         this.findDeadEnds();
 
+
         this.chests = [];
         for (let r = 1; r < rows - 1; r++) {
             for (let c = 1; c < cols - 1; c++) {
@@ -243,21 +218,9 @@ class Game {
                 }
             }
         }
-
         const randomExit = this.getRandomExit();
-
         this.exit = new Door(randomExit.x, randomExit.y - cell_size, cell_size, cell_size * 2, "../assets/puerta.png");
-
-        
-        
-        this.chests = this.chests.filter(chest => {
-            return chest.position.x !== randomExit.x + cell_size / 2 ||
-            chest.position.y !== randomExit.y + cell_size / 2;
-        });
-
-        
     }
-
 
     getRandomExit() {
 
@@ -277,18 +240,16 @@ class Game {
 
     }
 
-    carvePasssage(r, c){
+     carvePasssage(r, c){
 
         const direction = [
-            [-3, 0],    // left
-            [0, 3],     // right
-            [3, 0],     // down
-            [0, -3]     // up
+            [-3, 0],
+            [0, 3],
+            [3, 0],
+            [0, -3]
         ];
 
-        if (Math.random() < 0.4) {
         direction.sort(() => Math.random() - 0.5);
-    }
 
         for (let [dr, dc] of direction){
             const newRow = r + dr;
@@ -318,17 +279,10 @@ class Game {
 
                 if (this.maze[row][col] === 1) {
                     ctx.fillStyle = wall;
-                    ctx.fillRect(col * cell_size, row * cell_size, cell_size, cell_size);
                 } else {
-                    ctx.drawImage(
-                        this.floorImage,
-                        col * cell_size,
-                        row * cell_size,
-                        cell_size,
-                        cell_size
-                    );
-
+                    ctx.fillStyle = path;
                 }
+                ctx.fillRect(col * cell_size, row * cell_size, cell_size, cell_size);
                 
                 if (this.deadEnds[row][col]) {
                     ctx.drawImage(this.chestImage, col * cell_size, row * cell_size, cell_size, cell_size);
@@ -338,49 +292,12 @@ class Game {
 
     }
 
-    drawDarkness(ctx) {
-
-        const size = 3000;
-        const dx = this.mouse.x - this.player.position.x;
-        const dy = this.mouse.y - this.player.position.y;
-        const angle = Math.atan2(dy, dx);
-
-        ctx.save();
-
-        const offset = 20;
-
-        const px = this.player.position.x + Math.cos(angle) * offset;
-        const py = this.player.position.y + Math.sin(angle) * offset;
-
-        ctx.translate(px, py);
-        ctx.rotate(angle - Math.PI / 2);
-        ctx.drawImage(
-            this.darknessMask, - size / 2 + 5, - size / 2 + 5, size, size);
-
-        ctx.restore();
-    }
-
-
-    drawLight(ctx) {
-        
-        const player = this.player;
-
-        const size = 3000;
-
-        ctx.drawImage(
-            this.lightMask,
-            player.position.x - size / 2,
-            player.position.y - size / 2,
-            size,
-            size
-        );
-    }
-
     drawArrow(ctx) {
-        
         const dx = this.exit.position.x - this.player.position.x;
         const dy = this.exit.position.y - this.player.position.y;
         const angle = Math.atan2(dy, dx);
+
+
 
         const arrowX = this.player.position.x;
         const arrowY = this.player.position.y - this.player.halfSize.y * 2 - 10;
@@ -404,7 +321,7 @@ class Game {
     initObjects() {
 
         this.actors = [];
-
+        this.chests = [];
         this.player = new AnimatedPlayer(new Vector(cell_size + cell_size / 2, cell_size + cell_size / 2), cell_size,
             cell_size, "red", 3, playerMotion);
         this.player.halfSize = new Vector(cell_size / 2, cell_size / 2);
@@ -440,20 +357,21 @@ class Game {
         showChestPopup(card, blood, secret);
     } 
 
+
     update(deltaTime) {
         const oldX = this.player.position.x;
         const oldY = this.player.position.y;
-        
 
         this.player.update(deltaTime, this.world);
         this.player.updateCollider();
+        
 
         const Collider = new Vector(this.player.colliderWidth / 2, this.player.colliderHeight / 2);
 
         let testX = { position: new Vector(this.player.position.x, oldY), halfSize: Collider };
         for (let wall of this.actors) {
             if (boxOverlap(testX, wall)) {
-                if (oldX < wall.position.x) {
+                if (this.player.position.x < wall.position.x) {
                     this.player.position.x = wall.position.x - wall.halfSize.x - Collider.x;
                 } else {
                     this.player.position.x = wall.position.x + wall.halfSize.x + Collider.x;
@@ -465,7 +383,7 @@ class Game {
         let testY = { position: new Vector(this.player.position.x, this.player.position.y), halfSize: Collider };
         for (let wall of this.actors) {
             if (boxOverlap(testY, wall)) {
-                if (oldY < wall.position.y) {
+                if (this.player.position.y < wall.position.y) {
                     this.player.position.y = wall.position.y - wall.halfSize.y - Collider.y;
                 } else {
                     this.player.position.y = wall.position.y + wall.halfSize.y + Collider.y;
@@ -479,30 +397,23 @@ class Game {
     }
 
     draw(ctx) {
-
         ctx.save();
         ctx.translate(-this.camera.position.x, -this.camera.position.y);
-        
+
         this.drawMaze(ctx);
-        
-        for (let actor of this.actors) {
-            actor.draw(ctx);
-        }
+
+        for (let actor of this.actors) actor.draw(ctx);
 
         this.entrance.draw(ctx);
         this.exit.draw(ctx);
-        this.drawLight(ctx);
-        this.drawDarkness(ctx);
         this.player.draw(ctx);
-
         this.drawArrow(ctx);
 
         ctx.restore();
     }
 
-
     createEventListeners() {
-         window.addEventListener("keydown", (event) => {
+        window.addEventListener("keydown", (event) => {
             if (event.key === "e" || event.key === "E") {
                 closeChestPopup();
                 return;
@@ -519,33 +430,18 @@ class Game {
                 this.player.stopMovement(keyDirections[event.key]);
             }
         });
-
-        canvas.addEventListener("mousemove", (event) => {
-
-            const rect = canvas.getBoundingClientRect();
-
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
-
-            this.mouse.x = mouseX + this.camera.position.x;
-            this.mouse.y = mouseY + this.camera.position.y;
-
-        });
     }
 
     addKey(direction) {
-        if (!this.player.keys.includes(direction)) {
-            this.player.keys.push(direction);
-        }
+        if (!this.player.keys.includes(direction)) this.player.keys.push(direction);
     }
 
     delKey(direction) {
-        const index = this.player.keys.indexOf(direction);
-        if (index !== -1) {
-            this.player.keys.splice(index, 1);
-        }
+        const i = this.player.keys.indexOf(direction);
+        if (i !== -1) this.player.keys.splice(i, 1);
     }
 }
+
 
 function showChestPopup(card, blood, secret) {
     document.getElementById("chestCardName").textContent  = card.name;
@@ -570,21 +466,16 @@ function closeChestPopup() {
 
 function main() {
     const canvas = document.getElementById("canvas");
-
-    canvas.width = canvasWidth;
+    canvas.width  = canvasWidth;
     canvas.height = canvasHeight;
-
     ctx = canvas.getContext("2d");
 
     game = new Game();
-
     requestAnimationFrame(drawScene);
 }
 
-
 function drawScene(newTime) {
     if (!oldTime) oldTime = newTime;
-
     let deltaTime = newTime - oldTime;
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
