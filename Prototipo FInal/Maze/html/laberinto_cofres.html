@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Laberinto </title>
+        <link rel="stylesheet" href="../css/styles.css">
+        <script src="../js/libs/game_functions.js"></script>
+        <script src="../js/libs/Rect.js"></script>
+        <script src="../js/libs/Vector.js"></script>
+        <script src="../js/libs/GameObject.js"></script>
+        <script src="../js/libs/AnimatedObject.js"></script>
+        <script src="../js/libs/AnimatedPlayer.js"></script>
+        <script src="../js/laberinto_cofres.js"></script>
+    </head>
+
+    <body>
+        <div id="headerContainer">
+            <h1>Laberinto </h1>
+        </div>
+        <canvas id="canvas"></canvas>
+        <a href="./">
+            <button id="backButton">Back</button>
+        </a>
+
+        <div id="chestOverlay" class="hidden">
+            <div id="chestPopup">
+
+                <p id="chestTitle">Cofre</p>
+
+                
+                <div class="chest-entry">
+                    <p class="chest-entry-label" id="chestCardName">—</p>
+                    <p class="chest-entry-value" id="chestCardDesc"></p>
+                </div>
+
+                
+                <div class="chest-entry">
+                    <p class="chest-entry-label">Blood received: <span id="chestBloodAmount"></span></p>
+                </div>
+
+                
+                <div id="chestSecret" class="hidden">
+                    <p class="chest-entry-label" id="chestSecretTitle">—</p>
+                    <p class="chest-entry-value" id="chestSecretText"></p>
+                </div>
+
+                <p id="chestHint">E para cerrar</p>
+
+            </div>
+        </div>
+
+        <script> main(); </script>
+    </body>           
+</html>
+                                         
