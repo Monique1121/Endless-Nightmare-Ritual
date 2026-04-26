@@ -13,8 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'housekeeping67',
-    database: 'endless'
+    password: 'nctdream123',
+    database: 'endless',
+    port: '3306'
 };
 const pool = mysql.createPool(dbConfig);
 app.post('/api/register', async (req, res) => {
