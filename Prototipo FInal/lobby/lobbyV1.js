@@ -105,9 +105,130 @@ class Game {
         // Cargar imagen del mapa completo
         this.mapImage = new Image();
         this.mapImage.src = "assets/sprites/bosqueescuela.png";
+        
+        this.inventoryOpen = false;
+        this.viewingSecrets = false;
 
         this.createEventListeners();
         this.initObjects();
+        this.initInventoryUI();
+    }
+    
+    initInventoryUI() {
+        this.inventoryPopup = document.getElementById("inventory-popup");
+        this.inventoryBlood = document.getElementById("inventory-blood");
+        this.inventoryCardsList = document.getElementById("inventory-cards-list");
+        this.secretsList = document.getElementById("secrets-list");
+        this.inventorySection = document.getElementById("inventory-section");
+        this.secretsSection = document.getElementById("secrets-section");
+    }
+    
+    toggleInventory() {
+        if (this.inventoryOpen) {
+            // Cerrar inventario
+            this.inventoryOpen = false;
+            this.viewingSecrets = false;
+            this.inventoryPopup.classList.add("hidden");
+        } else {
+            // Abrir inventario (vista de cartas)
+            this.inventoryOpen = true;
+            this.viewingSecrets = false;
+            this.player.keys = []; // Detener movimiento
+            this.updateInventoryDisplay();
+            this.showInventoryView();
+            this.inventoryPopup.classList.remove("hidden");
+        }
+    }
+    
+    toggleSecretsView() {
+        if (!this.inventoryOpen) return;
+        
+        this.viewingSecrets = !this.viewingSecrets;
+        
+        if (this.viewingSecrets) {
+            this.updateSecretsDisplay();
+            this.showSecretsView();
+        } else {
+            this.updateInventoryDisplay();
+            this.showInventoryView();
+        }
+    }
+    
+    showInventoryView() {
+        this.inventorySection.classList.remove("hidden");
+        this.secretsSection.classList.add("hidden");
+    }
+    
+    showSecretsView() {
+        this.inventorySection.classList.add("hidden");
+        this.secretsSection.classList.remove("hidden");
+    }
+    
+    updateInventoryDisplay() {
+        const playerData = GameState.load();
+        if (!playerData) return;
+        this.inventoryBlood.textContent = `${playerData.blood} / ${playerData.maxBlood}`;
+        this.inventoryCardsList.innerHTML = "";
+        
+        if (playerData.inventory.demonCards.length === 0) {
+            const emptyMsg = document.createElement("div");
+            emptyMsg.className = "inventory-empty";
+            emptyMsg.textContent = "No tienes cartas de demonio aún";
+            this.inventoryCardsList.appendChild(emptyMsg);
+        } else {
+            for (const card of playerData.inventory.demonCards) {
+                const cardDiv = document.createElement("div");
+                cardDiv.className = "inventory-card";
+                
+                const img = document.createElement("img");
+                img.src = card.image;
+                img.alt = card.name;
+                img.className = "inventory-card-png";
+                img.title = card.name;
+                
+                cardDiv.appendChild(img);
+                
+                if (card.quantity > 1) {
+                    const quantityDiv = document.createElement("div");
+                    quantityDiv.className = "inventory-card-quantity";
+                    quantityDiv.textContent = `x${card.quantity}`;
+                    cardDiv.appendChild(quantityDiv);
+                }
+                
+                this.inventoryCardsList.appendChild(cardDiv);
+            }
+        }
+    }
+    
+    updateSecretsDisplay() {
+        const playerData = GameState.load();
+        if (!playerData) return;
+        this.inventoryBlood.textContent = `${playerData.blood} / ${playerData.maxBlood}`;
+        this.secretsList.innerHTML = "";
+        
+        if (playerData.inventory.loreCards.length === 0) {
+            const emptyMsg = document.createElement("div");
+            emptyMsg.className = "inventory-empty";
+            emptyMsg.textContent = "No has descubierto secretos aún";
+            this.secretsList.appendChild(emptyMsg);
+        } else {
+            for (const secret of playerData.inventory.loreCards) {
+                const secretDiv = document.createElement("div");
+                secretDiv.className = "secret-item";
+                
+                const title = document.createElement("h4");
+                title.className = "secret-title";
+                title.textContent = secret.title;
+                
+                const text = document.createElement("p");
+                text.className = "secret-text";
+                text.textContent = secret.description;
+                
+                secretDiv.appendChild(title);
+                secretDiv.appendChild(text);
+                this.secretsList.appendChild(secretDiv);
+            }
+        }
     }
 
     initObjects() {
@@ -145,23 +266,20 @@ class Game {
     }
 
     update(deltaTime) {
-        this.player.update(deltaTime, this.world, this.colliders);
-        this.camera.follow(this.player);
-
-        // Verificar si el jugador está en la zona del hospital
+        // No actualizar jugador si el inventario está abierto
+        if (!this.inventoryOpen) {
+            this.player.update(deltaTime, this.world, this.colliders);
+            this.camera.follow(this.player);
+        }
         let px = this.player.position.x;
         let py = this.player.position.y;
         
         if (px > 2017 && py >= 995 && py <= 1024) {
             window.location.href = "../hospital/hospital.html";
         }
-        
-        // Verificar si el jugador está en la zona del laboratorio
         if (px <= 30 && py >= 900 && py <= 1100) {
             window.location.href = "../laboratorio/laboratorio.html";
         }
-        
-        // Verificar si el jugador está en la zona de la escuela (laberinto)
         if (px >= 1000 && px <= 1050 && py >= 990 && py <= 1041) {
             this.inSchoolZone = true;
         } else {
@@ -216,13 +334,9 @@ class Game {
         }
 
         ctx.restore();
-        
-        // Dibujar coordenadas del jugador (para debug)
         ctx.fillStyle = "white";
         ctx.font = "16px Arial";
         ctx.fillText("X: " + Math.floor(this.player.position.x) + " Y: " + Math.floor(this.player.position.y), 10, 20);
-        
-        // Mostrar mensaje si está en zona de escuela
         if (this.inSchoolZone) {
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.fillRect(canvasWidth / 2 - 150, 50, 300, 60);
@@ -237,6 +351,27 @@ class Game {
 
     createEventListeners() {
         window.addEventListener("keydown", (event) => {
+            // Tecla I para abrir/cerrar inventario
+            if (event.key === "i" || event.key === "I") {
+                this.toggleInventory();
+                return;
+            }
+            
+            // Tecla S para cambiar a secretos (solo si inventario está abierto)
+            if ((event.key === "s" || event.key === "S") && this.inventoryOpen && !this.viewingSecrets) {
+                this.toggleSecretsView();
+                return;
+            }
+            
+            // Tecla C para cambiar a cartas (solo si inventario está abierto y viendo secretos)
+            if ((event.key === "c" || event.key === "C") && this.inventoryOpen && this.viewingSecrets) {
+                this.toggleSecretsView();
+                return;
+            }
+            
+            // No procesar otras teclas si el inventario está abierto
+            if (this.inventoryOpen) return;
+            
             if (event.key in keyDirections) {
                 this.addKey(keyDirections[event.key]);
                 this.player.startMovement(keyDirections[event.key]);
@@ -273,7 +408,22 @@ class Game {
 }
 
 
-function main() {
+async function main() {
+    // Verificar autenticación antes de iniciar el juego
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+        alert('Debes iniciar sesión para jugar');
+        window.location.href = '../login/index.html';
+        return;
+    }
+    
+    // Inicializar GameState con el usuario logueado
+    const username = localStorage.getItem('username') || 'Jugador';
+    GameState.init(username);
+    console.log('🎮 Cargando inventario desde el servidor...');
+    await GameState.loadFromServer();
+    
     const canvas = document.getElementById("canvas");
 
     canvas.width = canvasWidth;
