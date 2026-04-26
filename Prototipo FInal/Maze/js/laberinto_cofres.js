@@ -425,20 +425,54 @@ class Game {
         for (let chest of this.chests) {
             if (!chest.opened && boxOverlap(playerBox, chest)) {
                 chest.opened = true;
-                this.openChest();
+                this.openChest().catch(console.error);
                 break;
             }
         }
     }
 
-    openChest() {
-        const card   = CARDS[Math.floor(Math.random() * CARDS.length)];
-        const blood  = BLOOD_AMOUNTS[Math.floor(Math.random() * BLOOD_AMOUNTS.length)];
+    async openChest() {
+        const playerId = localStorage.getItem("playerId");
+        const runId = localStorage.getItem("runId");
+
+        if (!playerId || !runId) {
+            console.error("Missing playerId or runId in localStorage");
+            return;
+        }
+
+        // Get real cards from backend
+        const res = await fetch("http://localhost:3000/api/cards");
+        const data = await res.json();
+
+        const randomCard = data.cards[Math.floor(Math.random() * data.cards.length)];
+
+        // Save card as temporary in the run
+        await fetch(`http://localhost:3000/api/run/${runId}/card/collect`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                playerId: playerId,
+                cardId: randomCard.Card_id
+            })
+        });
+
+        const blood = BLOOD_AMOUNTS[Math.floor(Math.random() * BLOOD_AMOUNTS.length)];
+
         const secret = Math.random() < 0.25
             ? SECRETS[Math.floor(Math.random() * SECRETS.length)]
             : null;
-        showChestPopup(card, blood, secret);
-    } 
+
+        showChestPopup(
+            {
+                name: randomCard.Card_name,
+                desc: `Cost: ${randomCard.Blood_cost} | Damage: ${randomCard.Damage} | HP: ${randomCard.HP}`
+            },
+            blood,
+            secret
+        );
+    }
 
     update(deltaTime) {
         const oldX = this.player.position.x;

@@ -2,57 +2,11 @@
 <html>
 <head>
     <title>Endless Nightmare Ritual - TCG</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 10px;
-            background-color: #0f0f1e;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        
-        h1 {
-            color: #ff0000;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-        
-        #canvas {
-            border: 3px solid #ff0000;
-            background-color: #1a1a2e;
-            cursor: pointer;
-            max-width: 95vw;
-            height: auto;
-        }
-        
-        .instructions {
-            color: #ffffff;
-            margin-top: 10px;
-            text-align: center;
-            max-width: 95vw;
-            font-size: 12px;
-        }
-    </style>
 </head>
 <body>
     <h1>Endless Nightmare Ritual - TCG</h1>
     <canvas id="canvas"></canvas>
-    
-    <div class="instructions">
-        <p><strong>Instrucciones:</strong></p>
-        <p>1. Haz clic en una carta de tu mano para seleccionarla (parte inferior)</p>
-        <p>2. Haz clic en un espacio vacío del banco o activo para colocarla</p>
-        <p>3. Puedes jugar hasta 3 cartas por turno</p>
-        <p>4. Presiona ATACAR para combatir con tu carta activa</p>
-        <p>5. Presiona SACRIFICIO para sacrificar una carta del banco y potenciar tu carta activa (+3 ATK, +2 HP)</p>
-        <p>6. Objetivo: Noquear 6 cartas del rival para ganar</p>
-    </div>
-    
+    <link rel="stylesheet" href="style.css">
     <script src="game.js"></script>
 
 </body>
