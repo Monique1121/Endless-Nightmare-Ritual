@@ -260,7 +260,7 @@ const GameState = {
             });
             
             if (response.ok) {
-                console.log('✅ Estado sincronizado con el servidor');
+                console.log('Estado sincronizado con el servidor');
                 return true;
             } else {
                 console.error('Error al sincronizar:', response.statusText);
@@ -313,7 +313,7 @@ const GameState = {
             }));
             
             this.save(localData);
-            console.log('✅ Inventario cargado desde el servidor');
+            console.log('Inventario cargado desde el servidor');
             console.log(`   Sangre: ${localData.blood}/${localData.maxBlood}`);
             console.log(`   Cartas: ${inventory.cards.length}`);
             console.log(`   Secretos: ${inventory.secrets_count}`);

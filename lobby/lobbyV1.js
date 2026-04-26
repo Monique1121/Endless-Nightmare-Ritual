@@ -421,7 +421,7 @@ async function main() {
     // Inicializar GameState con el usuario logueado
     const username = localStorage.getItem('username') || 'Jugador';
     GameState.init(username);
-    console.log('🎮 Cargando inventario desde el servidor...');
+    console.log('Cargando inventario desde el servidor...');
     await GameState.loadFromServer();
     
     const canvas = document.getElementById("canvas");

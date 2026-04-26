@@ -33,7 +33,7 @@ class LabyrinthCardSystem {
                 await fetch(`${this.apiUrl}/player/${this.playerId}/deck/initialize`, { 
                     method: 'POST' 
                 });
-                console.log('✅ Jugador recibió 5 cartas iniciales');
+                console.log('Jugador recibio 5 cartas iniciales');
             }
             return true;
         } catch (error) {
@@ -79,7 +79,7 @@ class LabyrinthCardSystem {
 
             const data = await response.json();
             if (data.success) {
-                console.log('✅ Carta recolectada:', data.card.Card_name);
+                console.log('Carta recolectada:', data.card.Card_name);
                 return true;
             }
             return false;
@@ -100,7 +100,7 @@ class LabyrinthCardSystem {
 
             const data = await response.json();
             if (data.success) {
-                console.log(`✅ ¡Laberinto completado! ${data.cardsGained} cartas guardadas`);
+                console.log(`Laberinto completado: ${data.cardsGained} cartas guardadas`);
                 this.currentRunId = null;
                 localStorage.removeItem('activeRunId');
                 return true;
@@ -123,7 +123,7 @@ class LabyrinthCardSystem {
 
             const data = await response.json();
             if (data.success) {
-                console.log(`❌ Laberinto fallido. ${data.cardsLost} cartas perdidas`);
+                console.log(`Laberinto fallido: ${data.cardsLost} cartas perdidas`);
                 this.currentRunId = null;
                 localStorage.removeItem('activeRunId');
                 return true;
