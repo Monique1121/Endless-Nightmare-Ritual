@@ -708,8 +708,6 @@ async function loadPlayerDeck() {
 window.onload = async function () {
     const cardPool = await loadPlayerDeck();
 
-    console.log("Cards loaded for battle:", cardPool);
-
     if (cardPool.length === 0) {
         alert("No tienes cartas en tu deck todavía.");
         window.location.href = "../lobby/lobbyV1.html";

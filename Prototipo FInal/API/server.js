@@ -15,7 +15,7 @@ const dbConfig = {
     user: 'root',
     password: 'nctdream123',
     database: 'endless',
-    port: '3306'
+    port: '3305'
 };
 const pool = mysql.createPool(dbConfig);
 app.post('/api/register', async (req, res) => {
@@ -286,6 +286,39 @@ app.get('/api/player/:playerId/inventory', async (req, res) => {
             message: 'Error en el servidor',
             error: error.message 
         });
+    }
+});
+
+app.post('/api/player/:playerId/secret/:secretId/discover', async (req, res) => {
+    const { playerId, secretId } = req.params;
+    try {
+        await pool.query(
+            `INSERT IGNORE INTO Player_Secrets (Player_id, Secret_id) VALUES (?, ?)`,
+            [playerId, secretId]
+        );
+        await pool.query(
+            `UPDATE Player SET Secrets_discovered = Secrets_discovered + 1 WHERE Player_id = ?`,
+            [playerId]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.get('/api/player/:playerId/cards/available', async (req, res) => {
+    const { playerId } = req.params;
+    try {
+        const [cards] = await pool.query(
+            `SELECT * FROM Cards 
+             WHERE Card_id NOT IN (
+                 SELECT Card_id FROM Deck WHERE Player_id = ?
+             )`,
+            [playerId]
+        );
+        res.json({ success: true, cards });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

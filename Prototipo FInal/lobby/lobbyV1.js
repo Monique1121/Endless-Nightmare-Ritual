@@ -392,7 +392,8 @@ class Game {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         playerId: playerId,
-                        labyrinthId: 1
+                        labyrinthId: 1,
+                        levelId: 1
                     })
                 });
 

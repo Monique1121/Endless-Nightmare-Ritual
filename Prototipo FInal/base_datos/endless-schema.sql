@@ -201,6 +201,20 @@ CREATE TABLE Secrets (
     PRIMARY KEY (Secret_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE Player_Secrets (
+    Player_secret_id INT AUTO_INCREMENT NOT NULL,
+    Player_id INT NOT NULL,
+    Secret_id INT NOT NULL,
+    Discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (Player_secret_id),
+    FOREIGN KEY (Player_id) REFERENCES Player(Player_id) ON DELETE CASCADE,
+    FOREIGN KEY (Secret_id) REFERENCES Secrets(Secret_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_player_secret (Player_id, Secret_id)
+    
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
+
 -- ============================================
 -- SISTEMA DE COFRES
 -- ============================================
