@@ -12,51 +12,48 @@ INSERT INTO Users (Username, Password_user) VALUES
 
 
 INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
-('Acechador Carmesi', 4, 5, 10, '../assets/cards/achador.png'),
-('Bestia del Abismo', 10, 10, 18, '../assets/cards/bestia_del_Abismo.png'),
-('Blood Stalker', 8, 9, 14, '../assets/cards/Blood_stalker.png'),
-('Caballero de Sangre', 9, 8, 16, '../assets/cards/caballero_sangre.png'),
-('Caballero de la Plaga', 8, 8, 15, '../assets/cards/caballero_plaga.png'),
-('Emperador Julian', 7, 7, 14, '../assets/cards/EmperadorJB.png'),
-('Epstein', 6, 6, 10, '../assets/cards/epstein.png'),
-('Espectro Nocturno', 5, 7, 12, '../assets/cards/espectro_nocturno.png'),
-('Grave Whisper', 3, 5, 10, '../assets/cards/Grave_whisperer.png'),
-('Guardian Colosal', 10, 9, 18, '../assets/cards/guardian_colosal.png'),
-('JB', 12, 11, 20, '../assets/cards/JBcard.png'),
-('Pesadilla', 6, 6, 11, '../assets/cards/pesadilla.png'),
-('El Rey Julen', 9, 10, 16, '../assets/cards/ReyJB.png'),
-('Sacerdotisa Carmesi', 7, 7, 14, '../assets/cards/sarcedostista.png'),
-('Sauron', 10, 9, 18, '../assets/cards/sauron.png'),
+-- comunes
+('Acechador Carmesi', 4,  5, 10, '../assets/cards/achador.png'),
+('Espectro Nocturno', 5,  6, 11, '../assets/cards/espectro_nocturno.png'),
+('Grave Whisper', 5,  5, 10, '../assets/cards/Grave_whisperer.png'),
+('Sombra Voraz', 4,  5, 10, '../assets/cards/sombra_voraz.png'),
+('Latigo Umbral', 5,  6, 10, '../assets/cards/latigo_umbral.png'),
+('Criatura de la Niebla',6,  6, 11, '../assets/cards/criatura_niebla.png'),
+('Pesadilla', 6,  6, 11, '../assets/cards/pesadilla.png'),
+('Engendro Oscuro', 6,  7, 12, '../assets/cards/engendro_oscuro.png'),
+('Epstein', 6,  6, 10, '../assets/cards/epstein.png'),
+
+-- poco comunes
+('Devorador de Almas', 7,  7, 13, '../assets/cards/devorador_almas.png'),
+('Fantasma Errante', 7,  8, 13, '../assets/cards/fantasma_errante.png'),
+('Emperador Julian', 7,  7, 14, '../assets/cards/EmperadorJB.png'),
+('Sacerdotisa Carmesi', 7,  7, 14, '../assets/cards/sarcedostista.png'),
+('Blood Stalker', 8,  9, 14, '../assets/cards/Blood_stalker.png'),
+('TZA la bruja', 8,  8, 14, '../assets/cards/TZA_bruja.png'),
+('Golem de Huesos', 8,  9, 15, '../assets/cards/golem_huesos.png'),
+('Caballero de la Plaga',8,  8, 15, '../assets/cards/caballero_plaga.png'),
 
 -- raras
-('Senor de la Cripta', 9, 9, 16, 'assets/cards/senor_cripta.png'),
-('Simmon el Tenebroso', 10, 10, 14, 'assets/cards/simmon.png'),
-('TZA la bruja', 8, 8, 12, 'assets/cards/TZA_bruja.png'),
-('Sombra Voraz', 4, 5, 10, 'assets/cards/sombra_voraz.png'),
-('Latigo Umbral', 5, 6, 10, 'assets/cards/latigo_umbral.png'),
-('Criatura de la Niebla', 6, 6, 11, 'assets/cards/criatura_niebla.png'),
-('Engendro Oscuro', 6, 7, 12, 'assets/cards/engendro_oscuro.png'),
-('Devorador de Almas', 7, 7, 13, 'assets/cards/devorador_almas.png'),
-('Fantasma Errante', 7, 8, 12, 'assets/cards/fantasma_errante.png'),
-('Hechicero Maldito', 9, 9, 14, 'assets/cards/hechicero_maldito.png'),
-('Golem de Huesos', 8, 9, 15, 'assets/cards/golem_huesos.png'),
-('Vampiro Ancestral', 9, 9, 16, 'assets/cards/vampiro_ancestral.png'),
-('Liche Eterno', 10, 10, 18, 'assets/cards/liche_eterno.png'),
-('Demonio Menor', 10, 11, 18, 'assets/cards/demonio_menor.png'),
-('Senor del Caos', 11, 11, 20, 'assets/cards/senor_caos.png'),
+('Hechicero Maldito', 9,  9, 16, '../assets/cards/hechicero_maldito.png'),
+('Caballero de Sangre', 9,  9, 16, '../assets/cards/caballero_sangre.png'),
+('El Rey Julen', 9, 10, 16, '../assets/cards/ReyJB.png'),
+('Vampiro Ancestral', 9,  9, 16, '../assets/cards/vampiro_ancestral.png'),
+('Senor de la Cripta', 9,  9, 17, '../assets/cards/senor_cripta.png'),
+('Simmon el Tenebroso', 10, 10, 18, '../assets/cards/simmon.png'),
+('Guardian Colosal', 10, 10, 18, '../assets/cards/guardian_colosal.png'),
+('Bestia del Abismo', 10, 10, 18, '../assets/cards/bestia_del_Abismo.png'),
+('Sauron', 10, 10, 18, '../assets/cards/sauron.png'),
+('Liche Eterno', 10, 10, 18, '../assets/cards/liche_eterno.png'),
+('Demonio Menor', 10, 11, 18, '../assets/cards/demonio_menor.png'),
 
--- épicas (más controladas)
-('Dragon de Sombras', 10, 11, 18, 'assets/cards/dragon_sombras.png'),
-('Titan Corrupto', 11, 11, 20, 'assets/cards/titan_corrupto.png'),
-('Archimago Oscuro', 10, 10, 18, 'assets/cards/archimago_oscuro.png'),
-('Leviatan', 11, 12, 20, 'assets/cards/leviatan.png'),
-('JB el Inmortal', 12, 12, 24, 'assets/cards/JB_inmortal.png');
-
-INSERT INTO Levels (Level_name, Level_number, Enemy_name) VALUES
-('Tutorial', 0, 'Arantza Basica'),
-('Escuela', 1, 'Monique'),
-('Hospital', 2, 'Monique Enojada'),
-('Laboratorio', 3, 'Arantza y Monique');
+-- épicas
+('Senor del Caos', 11, 11, 20, '../assets/cards/senor_caos.png'),
+('Dragon de Sombras', 11, 12, 20, '../assets/cards/dragon_sombras.png'),
+('Titan Corrupto', 11, 12, 21, '../assets/cards/titan_corrupto.png'),
+('Archimago Oscuro', 11, 11, 20, '../assets/cards/archimago_oscuro.png'),
+('Leviatan', 12, 13, 22, '../assets/cards/leviatan.png'),
+('JB', 12, 12, 22, '../assets/cards/JBcard.png'),
+('JB el Inmortal', 14, 14, 28, '../assets/cards/JB_inmortal.png');
 
 -- ============================================
 -- LABERINTOS (uno por nivel)
@@ -201,6 +198,35 @@ FROM Deck d
 JOIN Cards c ON d.Card_id = c.Card_id
 WHERE d.Player_id = 1
 ORDER BY d.Created_at DESC;
+
+-- Ver combates
+SELECT * FROM Combat;
+
+-- Ver turnos de un combate
+SELECT * FROM Combat_Turns WHERE Combat_id = 1;
+
+-- Ver acciones de un combate
+SELECT * FROM Combat_Cards_Actions WHERE Combat_id = 1;
+
+-- Ver todo junto
+SELECT 
+    c.Combat_id,
+    c.Result,
+    c.Total_turns,
+    c.Player_KO,
+    c.Enemy_KO,
+    ct.Turn_number,
+    ct.Active_player,
+    cca.Action_type,
+    cca.Used_by,
+    cca.Damage_dealt,
+    cca.HP_before,
+    cca.HP_after,
+    cca.Card_dead
+FROM Combat c
+JOIN Combat_Turns ct ON c.Combat_id = ct.Combat_id
+JOIN Combat_Cards_Actions cca ON ct.Turn_id = cca.Turn_id
+WHERE c.Combat_id = 1;
 
 
 
