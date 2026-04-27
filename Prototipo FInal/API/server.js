@@ -13,9 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'housekeeping67',
+    password: 'nctdream123',
     database: 'endless',
-    // port: '3305'
+    port: '3305'
 };
 const pool = mysql.createPool(dbConfig);
 app.post('/api/register', async (req, res) => {
@@ -322,6 +322,22 @@ app.get('/api/player/:playerId/cards/available', async (req, res) => {
     }
 });
 
+app.get('/api/secrets/available/:playerId', async (req, res) => {
+    const { playerId } = req.params;
+    try {
+        const [secrets] = await pool.query(
+            `SELECT * FROM Secrets 
+             WHERE Secret_id NOT IN (
+                 SELECT Secret_id FROM Player_Secrets WHERE Player_id = ?
+             )`,
+            [playerId]
+        );
+        res.json({ success: true, secrets });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Sincronizar estado del jugador
 app.put('/api/player/:playerId/sync', async (req, res) => {
     const { playerId } = req.params;
@@ -456,6 +472,22 @@ app.post('/api/player/:playerId/deck/initialize', async (req, res) => {
 app.get('/api/secrets', async (req, res) => {
     try {
         const [secrets] = await pool.query('SELECT * FROM Secrets');
+        res.json({ success: true, secrets });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.get('/api/player/:playerId/secrets', async (req, res) => {
+    const { playerId } = req.params;
+    try {
+        const [secrets] = await pool.query(
+            `SELECT s.Secret_id, s.Secret_name, s.Content 
+             FROM Player_Secrets ps
+             JOIN Secrets s ON ps.Secret_id = s.Secret_id
+             WHERE ps.Player_id = ?`,
+            [playerId]
+        );
         res.json({ success: true, secrets });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
