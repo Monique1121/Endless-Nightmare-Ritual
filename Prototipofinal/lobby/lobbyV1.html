@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Endless Nightmare Ritual - Lobby</title>
+
+        <link rel="stylesheet" href="styles.css">
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <script src="libs/game_functions.js"></script>
+        <script src="libs/Rect.js"></script>
+        <script src="libs/Vector.js"></script>
+        <script src="libs/GameObject.js"></script>
+        <script src="libs/AnimatedObject.js"></script>
+        <script src="libs/AnimatedPlayer.js"></script>
+        <script src="libs/gameState.js"></script>
+        <script src="lobbyV1.js"></script>
+    </head>
+
+    <body>
+        <!-- agregado width/height y tabindex para que funcione el teclado -->
+        <canvas id="canvas" width="800" height="600" tabindex="0"></canvas>
+        
+        <!-- BOT\u00d3N DE SALIR -->
+        <div class="exit-button" id="exitButton" title="Volver al men\u00fa">
+            <span>&#x2190;</span>
+            <span class="exit-text">ESC</span>
+        </div>
+        
+        <!-- MODAL DE CONFIRMACION DE SALIDA -->
+        <div id="exit-modal" class="modal-overlay hidden">
+            <div class="modal-box">
+                <h2>SALIR AL MENU</h2>
+                <p>Progreso guardado</p>
+                <p>Volver al menu principal?</p>
+                <div class="modal-buttons">
+                    <button class="btn-cancel" id="btnCancelExit">NO</button>
+                    <button class="btn-confirm" id="btnConfirmExit">SI</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- INVENTARIO OVERLAY -->
+        <div id="inventory-popup" class="inventory-popup hidden">
+            <div class="inventory-panel">
+                <div class="inventory-header">
+                    <h2>INVENTARIO</h2>
+                    <div class="inventory-blood">
+                        <span id="inventory-blood">100 / 100</span>
+                    </div>
+                </div>
+                
+                <!-- Seccion de Cartas -->
+                <div id="inventory-section" class="inventory-section">
+                    <h3>Cartas de Demonio</h3>
+                    <div id="inventory-cards-list" class="inventory-cards-list">
+                        <!-- Las cartas se cargan dinamicamente -->
+                    </div>
+                </div>
+                
+                <!-- Seccion de Secretos -->
+                <div id="secrets-section" class="inventory-section hidden">
+                    <h3>Secretos Descubiertos</h3>
+                    <div id="secrets-list" class="secrets-list">
+                        <!-- Los secretos se cargan dinamicamente -->
+                    </div>
+                </div>
+                
+                <div class="inventory-help">
+                    <kbd>I</kbd> Cerrar | 
+                    <kbd>S</kbd> Ver Secretos | 
+                    <kbd>C</kbd> Ver Cartas
+                </div>
+            </div>
+        </div>
+        
+        <script> main(); </script>
+    </body>           
+</html>
+                                         

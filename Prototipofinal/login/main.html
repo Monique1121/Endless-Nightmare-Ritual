@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endless Nightmare Ritual</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="main-container">
+    <div class="welcome-section">
+      <h1>ENDLESS NIGHTMARE RITUAL</h1>
+      <p>El ritual te espera en la oscuridad...</p>
+      <button class="play-btn" onclick="goToLogin()">JUGAR AHORA</button>
+    </div>
+    
+    <div class="stats-section">
+      <div class="stats-header">
+        <h2>Registro del Ritual - Top 5</h2>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-item leaderboard-item">
+          <h3>Más Cartas Obtenidas</h3>
+          <div id="top-cards" class="mini-leaderboard">
+            <p class="loading">Cargando...</p>
+          </div>
+        </div>
+        
+        <div class="stat-item leaderboard-item">
+          <h3>Más Secretos Obtenidos</h3>
+          <div id="top-secrets" class="mini-leaderboard">
+            <p class="loading">Cargando...</p>
+          </div>
+        </div>
+        
+        <div class="stat-item leaderboard-item">
+          <h3>Más Tiempo de Juego</h3>
+          <div id="top-playtime" class="mini-leaderboard">
+            <p class="loading">Cargando...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="main.js"></script>
+</body>
+</html>
