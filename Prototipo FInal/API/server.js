@@ -13,9 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'nctdream123',
+    password: 'housekeeping67',
     database: 'endless',
-    port: '3305'
+    // port: '3305'
 };
 const pool = mysql.createPool(dbConfig);
 app.post('/api/register', async (req, res) => {
@@ -245,7 +245,7 @@ app.get('/api/player/:playerId/inventory', async (req, res) => {
 
     try {
         const [cards] = await pool.query(
-            `SELECT d.Deck_id, d.Card_id, c.Card_name, c.Blood_cost, c.Damage, c.HP 
+            `SELECT d.Deck_id, d.Card_id, c.Card_name, c.Blood_cost, c.Damage, c.HP, c.Sprite_path
              FROM Deck d 
              JOIN Cards c ON d.Card_id = c.Card_id 
              WHERE d.Player_id = ?`,

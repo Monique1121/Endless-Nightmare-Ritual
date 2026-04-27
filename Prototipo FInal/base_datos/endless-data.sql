@@ -13,19 +13,19 @@ INSERT INTO Users (Username, Password_user) VALUES
 
 INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 -- comunes
-('Acechador Carmesi', 4,  5, 10, '../assets/cards/achador.png'),
+('Acechador Carmesi', 4,  5, 10, '../assets/cards/1.png'),
 ('Espectro Nocturno', 5,  6, 11, '../assets/cards/espectro_nocturno.png'),
 ('Grave Whisper', 5,  5, 10, '../assets/cards/Grave_whisperer.png'),
 ('Sombra Voraz', 4,  5, 10, '../assets/cards/sombra_voraz.png'),
 ('Latigo Umbral', 5,  6, 10, '../assets/cards/latigo_umbral.png'),
 ('Criatura de la Niebla',6,  6, 11, '../assets/cards/criatura_niebla.png'),
 ('Pesadilla', 6,  6, 11, '../assets/cards/pesadilla.png'),
-('Engendro Oscuro', 6,  7, 12, '../assets/cards/engendro_oscuro.png'),
+('Engendro Oscuro', 6,  7, 12, '../assets/cards/e_oscuro.png'),
 ('Epstein', 6,  6, 10, '../assets/cards/epstein.png'),
 
 -- poco comunes
 ('Devorador de Almas', 7,  7, 13, '../assets/cards/devorador_almas.png'),
-('Fantasma Errante', 7,  8, 13, '../assets/cards/fantasma_errante.png'),
+('Vinicius Junior', 7,  8, 13, '../assets/cards/viniJR.png'),
 ('Emperador Julian', 7,  7, 14, '../assets/cards/EmperadorJB.png'),
 ('Sacerdotisa Carmesi', 7,  7, 14, '../assets/cards/sarcedostista.png'),
 ('Blood Stalker', 8,  9, 14, '../assets/cards/Blood_stalker.png'),
@@ -35,29 +35,36 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 
 -- raras
 ('Hechicero Maldito', 9,  9, 16, '../assets/cards/hechicero_maldito.png'),
-('Caballero de Sangre', 9,  9, 16, '../assets/cards/caballero_sangre.png'),
+('Caballero de Sangre', 9,  9, 16, '../assets/cards/caballer_sangre.png'),
 ('El Rey Julen', 9, 10, 16, '../assets/cards/ReyJB.png'),
-('Vampiro Ancestral', 9,  9, 16, '../assets/cards/vampiro_ancestral.png'),
+('Saka el Fantasma', 9,  9, 16, '../assets/cards/saka.png'),
 ('Senor de la Cripta', 9,  9, 17, '../assets/cards/senor_cripta.png'),
 ('Simmon el Tenebroso', 10, 10, 18, '../assets/cards/simmon.png'),
-('Guardian Colosal', 10, 10, 18, '../assets/cards/guardian_colosal.png'),
+('Guardian Colosal', 10, 10, 18, '../assets/cards/guardain_colosal.png'),
 ('Bestia del Abismo', 10, 10, 18, '../assets/cards/bestia_del_Abismo.png'),
 ('Sauron', 10, 10, 18, '../assets/cards/sauron.png'),
-('Liche Eterno', 10, 10, 18, '../assets/cards/liche_eterno.png'),
-('Demonio Menor', 10, 11, 18, '../assets/cards/demonio_menor.png'),
+('El Lich', 10, 10, 18, '../assets/cards/lich.png'),
+('La panza Pandi', 10, 11, 18, '../assets/cards/pandi.png'),
 
 -- épicas
-('Senor del Caos', 11, 11, 20, '../assets/cards/senor_caos.png'),
-('Dragon de Sombras', 11, 12, 20, '../assets/cards/dragon_sombras.png'),
-('Titan Corrupto', 11, 12, 21, '../assets/cards/titan_corrupto.png'),
-('Archimago Oscuro', 11, 11, 20, '../assets/cards/archimago_oscuro.png'),
+('Tragg ', 11, 11, 20, '../assets/cards/tragg.png'),
+('Simmon el Tenebroso', 11, 12, 20, '../assets/cards/simmon.png'),
+('Mbappe el Dictador', 11, 12, 21, '../assets/cards/mbappe.png'),
 ('Leviatan', 12, 13, 22, '../assets/cards/leviatan.png'),
 ('JB', 12, 12, 22, '../assets/cards/JBcard.png'),
-('JB el Inmortal', 14, 14, 28, '../assets/cards/JB_inmortal.png');
+('JB el Inmortal', 14, 14, 28, '../assets/cards/JBinmortal.png');
 
 -- ============================================
 -- LABERINTOS (uno por nivel)
 -- ============================================
+
+INSERT INTO Levels (Level_name, Level_number, Enemy_name) VALUES
+('Tutorial', 0, 'Arantza Basica'),
+('Escuela', 1, 'Monique'),
+('Hospital', 2, 'Monique Enojada'),
+('Laboratorio', 3, 'Arantza y Monique');
+
+
 INSERT INTO Labyrinth (Level_id, Time_limit) VALUES
 (1, 420),  -- Tutorial: 7 minutos
 (2, 240),  -- Escuela: 4 minutos
@@ -191,42 +198,44 @@ INSERT INTO Chest_card (Chest_id, Card_id) VALUES
 (21, 21), (22, 22), (23, 23), (24, 24), (25, 25), (26, 26), (27, 27), (28, 28), (29, 29), (30, 30),
 (31, 31), (32, 32), (33, 33), (34, 34), (35, 35), (36, 1), (37, 2), (38, 3), (39, 4), (40, 5);
 
-SELECT * FROM Deck WHERE Player_id = 1 AND Card_gained = FALSE;
+-- SELECT * FROM Deck WHERE Player_id = 1 AND Card_gained = FALSE;
 
-SELECT d.Deck_id, d.Card_id, c.Card_name, d.Run_id, d.Card_gained 
-FROM Deck d
-JOIN Cards c ON d.Card_id = c.Card_id
-WHERE d.Player_id = 1
-ORDER BY d.Created_at DESC;
+-- SELECT d.Deck_id, d.Card_id, c.Card_name, d.Run_id, d.Card_gained 
+-- FROM Deck d
+-- JOIN Cards c ON d.Card_id = c.Card_id
+-- WHERE d.Player_id = 1
+-- ORDER BY d.Created_at DESC;
 
--- Ver combates
-SELECT * FROM Combat;
+-- -- Ver combates
+-- SELECT * FROM Combat;
 
--- Ver turnos de un combate
-SELECT * FROM Combat_Turns WHERE Combat_id = 1;
+-- -- Ver turnos de un combate
+-- SELECT * FROM Combat_Turns WHERE Combat_id = 1;
 
--- Ver acciones de un combate
-SELECT * FROM Combat_Cards_Actions WHERE Combat_id = 1;
+-- -- Ver acciones de un combate
+-- SELECT * FROM Combat_Cards_Actions WHERE Combat_id = 1;
 
--- Ver todo junto
-SELECT 
-    c.Combat_id,
-    c.Result,
-    c.Total_turns,
-    c.Player_KO,
-    c.Enemy_KO,
-    ct.Turn_number,
-    ct.Active_player,
-    cca.Action_type,
-    cca.Used_by,
-    cca.Damage_dealt,
-    cca.HP_before,
-    cca.HP_after,
-    cca.Card_dead
-FROM Combat c
-JOIN Combat_Turns ct ON c.Combat_id = ct.Combat_id
-JOIN Combat_Cards_Actions cca ON ct.Turn_id = cca.Turn_id
-WHERE c.Combat_id = 1;
+-- -- Ver todo junto
+-- SELECT 
+--     c.Combat_id,
+--     c.Result,
+--     c.Total_turns,
+--     c.Player_KO,
+--     c.Enemy_KO,
+--     ct.Turn_number,
+--     ct.Active_player,
+--     cca.Action_type,
+--     cca.Used_by,
+--     cca.Damage_dealt,
+--     cca.HP_before,
+--     cca.HP_after,
+--     cca.Card_dead
+-- FROM Combat c
+-- JOIN Combat_Turns ct ON c.Combat_id = ct.Combat_id
+-- JOIN Combat_Cards_Actions cca ON ct.Turn_id = cca.Turn_id
+-- WHERE c.Combat_id = 1;
 
 
-
+-- INSERT INTO Deck (Card_id, Player_id, Card_gained)
+-- SELECT Card_id, 1, TRUE
+-- FROM Cards; 

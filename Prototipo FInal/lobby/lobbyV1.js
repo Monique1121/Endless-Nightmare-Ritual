@@ -181,6 +181,7 @@ class Game {
                 cardDiv.className = "inventory-card";
                 
                 const img = document.createElement("img");
+                console.log("CARD IMAGE:", card.name, card.image);
                 img.src = card.image;
                 img.alt = card.name;
                 img.className = "inventory-card-png";
