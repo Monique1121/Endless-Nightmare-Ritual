@@ -13,9 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'nctdream123',
+    password: 'housekeeping67',
     database: 'endless',
-    port: '3306'
+    // port: '3305'
 };
 const pool = mysql.createPool(dbConfig);
 app.post('/api/register', async (req, res) => {
@@ -245,7 +245,7 @@ app.get('/api/player/:playerId/inventory', async (req, res) => {
 
     try {
         const [cards] = await pool.query(
-            `SELECT d.Deck_id, d.Card_id, c.Card_name, c.Blood_cost, c.Damage, c.HP 
+            `SELECT d.Deck_id, d.Card_id, c.Card_name, c.Blood_cost, c.Damage, c.HP, c.Sprite_path
              FROM Deck d 
              JOIN Cards c ON d.Card_id = c.Card_id 
              WHERE d.Player_id = ?`,
@@ -286,6 +286,39 @@ app.get('/api/player/:playerId/inventory', async (req, res) => {
             message: 'Error en el servidor',
             error: error.message 
         });
+    }
+});
+
+app.post('/api/player/:playerId/secret/:secretId/discover', async (req, res) => {
+    const { playerId, secretId } = req.params;
+    try {
+        await pool.query(
+            `INSERT IGNORE INTO Player_Secrets (Player_id, Secret_id) VALUES (?, ?)`,
+            [playerId, secretId]
+        );
+        await pool.query(
+            `UPDATE Player SET Secrets_discovered = Secrets_discovered + 1 WHERE Player_id = ?`,
+            [playerId]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.get('/api/player/:playerId/cards/available', async (req, res) => {
+    const { playerId } = req.params;
+    try {
+        const [cards] = await pool.query(
+            `SELECT * FROM Cards 
+             WHERE Card_id NOT IN (
+                 SELECT Card_id FROM Deck WHERE Player_id = ?
+             )`,
+            [playerId]
+        );
+        res.json({ success: true, cards });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -514,62 +547,40 @@ app.post('/api/run/:runId/card/collect', async (req, res) => {
 // Completar laberinto y guardar cartas permanentemente
 app.post('/api/run/:runId/complete', async (req, res) => {
     const { runId } = req.params;
-    const { playerId, timeTaken } = req.body;
-
-    if (!playerId) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'playerId es requerido' 
-        });
-    }
+    const { playerId, timeTaken, bloodRecovered, secretsFound } = req.body;
 
     try {
-        // Verificar que el run existe
-        const [run] = await pool.query(
-            `SELECT * FROM Run WHERE Run_id = ? AND Player_id = ?`,
-            [runId, playerId]
-        );
-
-        if (run.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Run no encontrado' 
-            });
-        }
-
-        // Marcar run como completado
         await pool.query(
             `UPDATE Run 
-             SET Completed = TRUE, 
+             SET Completed = TRUE,
                  Time_taken = ?,
+                 Blood_recovered = ?,
+                 Secrets_found = ?,
                  Completed_at = CURRENT_TIMESTAMP
-             WHERE Run_id = ?`,
-            [timeTaken || 0, runId]
+             WHERE Run_id = ? AND Player_id = ?`,
+            [timeTaken || 0, bloodRecovered || 0, secretsFound || 0, runId, playerId]
         );
 
-        // Guardar PERMANENTEMENTE todas las cartas temporales de este run
-        const [result] = await pool.query(
+        await pool.query(
             `UPDATE Deck 
              SET Card_gained = TRUE 
              WHERE Run_id = ? AND Player_id = ? AND Card_gained = FALSE`,
             [runId, playerId]
         );
 
-        const cardsGained = result.affectedRows;
+        const [result] = await pool.query(
+            `SELECT COUNT(*) as count FROM Deck 
+             WHERE Run_id = ? AND Card_gained = TRUE`,
+            [runId]
+        );
 
         res.json({ 
             success: true, 
             message: 'Laberinto completado',
-            cardsGained: cardsGained
+            cardsGained: result[0].count
         });
-
     } catch (error) {
-        console.error('Error al completar laberinto:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error en el servidor',
-            error: error.message 
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

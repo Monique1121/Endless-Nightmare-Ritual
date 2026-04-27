@@ -10,7 +10,7 @@ const worldHeight = 3000;
 
 const rows = 25;
 const cols = 30;
-const cell_size = 60;
+const cell_size = 30;
 
 const canvasWidth = 800;
 const canvasHeight = 600;
@@ -79,23 +79,6 @@ const playerMotion = {
     },
 
 };
-
-const CARDS = [
-    { name: "Carta 1" ,    desc: "DESC"},
-    { name: "Carta 2",  desc: "DESC"},
-    { name: "Carta 3",     desc: "DESC"},
-    { name: "Carta 4", desc: "DESC"},
-    { name: "Carta 5",   desc: "DESC"},
-    { name: "Carta 6",   desc: "DESC"},
-];
-
-const SECRETS = [
-    { name: "Secreto 1", desc: "DESC" },
-    { name: "Secreto 2", desc: "DESC" },
-    { name: "Secreto 3", desc: "DESC" },
-    { name: "Secreto 4", desc: "DESC" },
-    { name: "Secreto 5", desc: "DESC" },
-];
 
 
 const BLOOD_AMOUNTS = [5, 10, 15, 20, 25];
@@ -176,6 +159,12 @@ class Game {
         this.chestImage.src = "../assets/cofre.png";
         this.isolatedCells = new Set();
 
+        // Temporizador de 1 minuto (60000 ms)
+        this.timeLimit = 60000000;
+        this.elapsedTime = 0;
+        this.gameOver = false;
+        this.won = false;
+
         this.createEventListeners();
         this.initObjects();
         this.generateMaze();
@@ -189,9 +178,12 @@ class Game {
         this.lightMask.src = "../assets/light.png";
 
         this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/mascara_4.png";
+        this.darknessMask.src = "../assets/mascara_6.png";
 
         this.mouse = new Vector(0, 0);
+
+        this.bloodRecovered = 0;
+        this.secretsFound = 0;
 
         
     }
@@ -425,56 +417,96 @@ class Game {
         for (let chest of this.chests) {
             if (!chest.opened && boxOverlap(playerBox, chest)) {
                 chest.opened = true;
-                this.openChest().catch(console.error);
+                this.openChest();
                 break;
             }
         }
     }
 
-    async openChest() {
-        const playerId = localStorage.getItem("playerId");
-        const runId = localStorage.getItem("runId");
+openChest() {
+    const playerId = localStorage.getItem('playerId');
+    const blood = BLOOD_AMOUNTS[Math.floor(Math.random() * BLOOD_AMOUNTS.length)];
 
-        if (!playerId || !runId) {
-            console.error("Missing playerId or runId in localStorage");
+
+    const mostrarPopup = (card, secret) => {
+        GameState.updateBlood(blood);
+        this.bloodRecovered += blood;
+        showChestPopup(card, blood, secret);
+    };
+
+    const obtenerSecretoYMostrar = (card) => {
+        if (Math.random() < 0.25 && playerId) {
+            fetch('http://localhost:3000/api/secrets')
+                .then(res => res.json())
+                .then(data => {
+                    const secret = data.secrets[Math.floor(Math.random() * data.secrets.length)];
+                    fetch(`http://localhost:3000/api/player/${playerId}/secret/${secret.Secret_id}/discover`, {
+                        method: 'POST'
+                    }).catch(console.error);
+                    GameState.addLoreCard(secret.Secret_id, secret.Secret_name, secret.Content);
+                    mostrarPopup(card, { name: secret.Secret_name, desc: secret.Content });
+                    this.secretsFound++;
+                })
+                .catch(err => {
+                    console.error("Error obteniendo secretos:", err);
+                    mostrarPopup(card, null);
+                });
+        } else {
+            mostrarPopup(card, null);
+        }
+    };
+
+    if (!playerId) {
+        console.warn("Sin playerId, usando carta local");
+        mostrarPopup({ name: "Carta local", desc: "Sin sesión" }, null);
+        return;
+    }
+
+    fetch(`http://localhost:3000/api/player/${playerId}/cards/available`)
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.cards || data.cards.length === 0) {
+                mostrarPopup({ name: "Colección completa", desc: "¡Ya tienes todas las cartas!" }, null);
+                return;
+            }
+            const randomCard = data.cards[Math.floor(Math.random() * data.cards.length)];
+            const card = {
+                name: randomCard.Card_name,
+                desc: `Costo: ${randomCard.Blood_cost} | Daño: ${randomCard.Damage} | HP: ${randomCard.HP}`
+            };
+            const runId = localStorage.getItem('runId');
+            if (runId) {
+                fetch(`http://localhost:3000/api/run/${runId}/card/collect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerId, cardId: randomCard.Card_id })
+                }).catch(console.error);
+            }
+            GameState.addDemonCard(randomCard.Card_id, randomCard.Card_name);
+            obtenerSecretoYMostrar(card);
+        })
+        .catch(err => {
+            console.error("Error obteniendo cartas:", err);
+            mostrarPopup({ name: "Error", desc: "No se pudo conectar al servidor" }, null);
+        });
+}
+
+    update(deltaTime) {
+
+        if (this.gameOver) return;
+        
+        // Actualizar temporizador
+        this.elapsedTime += deltaTime;
+        const timeLeft = this.timeLimit - this.elapsedTime;
+        
+        // Verificar si se acabó el tiempo
+        if (timeLeft <= 0) {
+            this.gameOver = true;
+            this.won = false;
             return;
         }
 
-        // Get real cards from backend
-        const res = await fetch("http://localhost:3000/api/cards");
-        const data = await res.json();
-
-        const randomCard = data.cards[Math.floor(Math.random() * data.cards.length)];
-
-        // Save card as temporary in the run
-        await fetch(`http://localhost:3000/api/run/${runId}/card/collect`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                playerId: playerId,
-                cardId: randomCard.Card_id
-            })
-        });
-
-        const blood = BLOOD_AMOUNTS[Math.floor(Math.random() * BLOOD_AMOUNTS.length)];
-
-        const secret = Math.random() < 0.25
-            ? SECRETS[Math.floor(Math.random() * SECRETS.length)]
-            : null;
-
-        showChestPopup(
-            {
-                name: randomCard.Card_name,
-                desc: `Cost: ${randomCard.Blood_cost} | Damage: ${randomCard.Damage} | HP: ${randomCard.HP}`
-            },
-            blood,
-            secret
-        );
-    }
-
-    update(deltaTime) {
         const oldX = this.player.position.x;
         const oldY = this.player.position.y;
         
@@ -509,7 +541,17 @@ class Game {
         }
 
         this.camera.follow(this.player);
+
         this.checkChestCollisions();
+
+        // Verificar si llegó a la salida
+        let playerTest = { position: this.player.position, halfSize: Collider };
+        if (boxOverlap(playerTest, this.exit)) {
+            this.gameOver = true;
+            this.won = true;
+        }
+
+        
     }
 
     draw(ctx) {
@@ -532,6 +574,80 @@ class Game {
         this.drawArrow(ctx);
 
         ctx.restore();
+
+         // Mostrar temporizador
+        const timeLeft = Math.max(0, this.timeLimit - this.elapsedTime);
+        const seconds = Math.ceil(timeLeft / 1000);
+        
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillRect(canvasWidth / 2 - 80, 10, 160, 40);
+        ctx.fillStyle = seconds <= 10 ? "red" : "white";
+        ctx.font = "bold 24px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Tiempo: " + seconds + "s", canvasWidth / 2, 38);
+        ctx.textAlign = "left";
+        
+        // Mostrar mensaje de fin de juego
+        if (this.gameOver) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            
+            ctx.fillStyle = this.won ? "#00ff00" : "#ff0000";
+            ctx.font = "bold 48px Arial";
+            ctx.textAlign = "center";
+            
+            if (this.won) {
+                ctx.fillText("VICTORIA!", canvasWidth / 2, canvasHeight / 2 - 40);
+                ctx.fillStyle = "white";
+                ctx.font = "24px Arial";
+                ctx.fillText("Escapaste del laberinto", canvasWidth / 2, canvasHeight / 2 + 10);
+                ctx.font = "18px Arial";
+                ctx.fillText("Preparate para el combate...", canvasWidth / 2, canvasHeight / 2 + 60);
+            } else {
+                ctx.fillText("MORISTE", canvasWidth / 2, canvasHeight / 2 - 40);
+                ctx.fillStyle = "white";
+                ctx.font = "24px Arial";
+                ctx.fillText("Se acabo el tiempo", canvasWidth / 2, canvasHeight / 2 + 10);
+                ctx.font = "18px Arial";
+                ctx.fillText("Regresando al lobby...", canvasWidth / 2, canvasHeight / 2 + 60);
+            }
+            
+            ctx.textAlign = "left";
+            
+            // Redirigir despues de 3 segundos
+if (!this.returnTimeout) {
+    this.returnTimeout = setTimeout(async () => {
+        const playerId = localStorage.getItem("playerId");
+        const runId = localStorage.getItem("runId");
+
+        
+        if (this.won) {
+           await fetch(`http://localhost:3000/api/run/${runId}/complete`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    playerId: playerId,
+                    timeTaken: Math.floor(this.elapsedTime / 1000),
+                    bloodRecovered: this.bloodRecovered,
+                    secretsFound: this.secretsFound
+                })
+            });
+
+            window.location.href = "../../TCG/game.html";
+        } else {
+            await fetch(`http://localhost:3000/api/run/${runId}/fail`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    playerId: playerId
+                })
+            });
+
+            window.location.href = "../../lobby/lobbyV1.html";
+        }
+    }, 2000);
+}
+        }
     }
 
 

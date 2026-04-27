@@ -305,7 +305,7 @@ const GameState = {
             localData.inventory.demonCards = inventory.cards.map(card => ({
                 id: card.Card_id,
                 name: card.Card_name,
-                image: `../assets/cards/${card.Card_name.replace(/\s/g, '_')}.png`,
+                image: card.Sprite_path || `../assets/cards/default.png`,
                 bloodCost: card.Blood_cost,
                 damage: card.Damage,
                 hp: card.HP,

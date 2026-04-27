@@ -662,45 +662,59 @@ function log(msg) {
 }
  
 
+
 const API_URL = "http://localhost:3000/api";
 
 async function loadPlayerDeck() {
-  const playerId = localStorage.getItem("playerId");
+    const playerId = localStorage.getItem("playerId");
+    const runId = localStorage.getItem("runId");
 
-  if (!playerId) {
-    console.error("Missing playerId in localStorage");
-    return [];
-  }
+    if (!playerId) {
+        console.error("Missing playerId");
+        return [];
+    }
 
-  const response = await fetch(`${API_URL}/player/${playerId}/deck`);
-  const data = await response.json();
+    let finalCards = [];
 
-  if (!data.success || !data.deck || data.deck.length === 0) {
-    console.warn("No cards found in player deck");
-    return [];
-  }
+    // 1. Load permanent deck cards
+    const deckRes = await fetch(`${API_URL}/player/${playerId}/deck`);
+    const deckData = await deckRes.json();
 
-  return data.deck.map(card =>
-    new Card(
-      card.Card_id,
-      card.Card_name,
-      card.Blood_cost,
-      card.Damage,
-      card.HP
-    )
-  );
+    if (deckData.success && deckData.deck) {
+        finalCards.push(...deckData.deck);
+    }
+
+    // 2. Load temporary cards from current run
+    if (runId) {
+        const tempRes = await fetch(`${API_URL}/run/${runId}/cards/temp`);
+        const tempData = await tempRes.json();
+
+        if (tempData.success && tempData.tempCards) {
+            finalCards.push(...tempData.tempCards);
+        }
+    }
+
+    return finalCards.map(card =>
+        new Card(
+            card.Card_id,
+            card.Card_name,
+            card.Blood_cost,
+            card.Damage,
+            card.HP
+        )
+    );
 }
 
 window.onload = async function () {
-  const cardPool = await loadPlayerDeck();
+    const cardPool = await loadPlayerDeck();
 
-  if (cardPool.length === 0) {
-    alert("No tienes cartas en tu deck todavía.");
-    window.location.href = "../lobby/lobbyV1.html";
-    return;
-  }
+    if (cardPool.length === 0) {
+        alert("No tienes cartas en tu deck todavía.");
+        window.location.href = "../lobby/lobbyV1.html";
+        return;
+    }
 
-  const game = new Game(cardPool);
-  game.init();
-  game.gameLoop();
+    const game = new Game(cardPool);
+    game.init();
+    game.gameLoop();
 };
