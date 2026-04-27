@@ -87,7 +87,7 @@ class Game {
         };
 
         this.mapImage = new Image();
-        this.mapImage.src = "assets/hospital.png";
+        this.mapImage.src = "../assets/hospital.png";
 
         this.playerImage = new Image();
         this.playerImage.src = "../lobby/assets/sprites/gracias.png";
@@ -112,26 +112,41 @@ class Game {
         this.camera = new Camera(canvasWidth, canvasHeight, worldWidth, worldHeight);
         
         this.colliders = [];
+
+        this.inLabyrinthZone = false;
+        this.hospitalUnlocked = localStorage.getItem('hospitalUnlocked') === '1';
+
+        this.createEventListeners();
     }
 
     update(deltaTime) {
-        this.player.update(deltaTime, this.world, this.colliders);
-        this.camera.follow(this.player);
-
-        // Verificar salida del hospital
-        let px = this.player.position.x;
-        let py = this.player.position.y;
         
-        if (px <= 30 && py >= 450 && py <= 550) {
-            window.location.href = "../lobby/lobbyV1.html";
-        }
+    this.player.update(deltaTime, this.world, this.colliders);
+    this.camera.follow(this.player);
 
-        for (let actor of this.actors) {
-            if (actor.updateFrame) {
-                actor.updateFrame(deltaTime);
-            }
+    let px = this.player.position.x;
+    let py = this.player.position.y;
+    
+    // Salida al lobby principal
+    if (px <= 30 && py >= 450 && py <= 550) {
+        window.location.href = "../lobby/lobbyV1.html";
+    }
+
+    // Zona de entrada al laberinto del hospital
+    if (px >= 950 && px <= 1080 && py >= 1050 && py <= 1200) {
+        this.inLabyrinthZone = true;
+    } else {
+        this.inLabyrinthZone = false;
+    }
+
+    for (let actor of this.actors) {
+        if (actor.updateFrame) {
+            actor.updateFrame(deltaTime);
         }
     }
+
+    }
+
     
     checkPlayerInZone(zone) {
         let px = this.player.position.x;
@@ -157,6 +172,7 @@ class Game {
     }
 
     draw(ctx) {
+
         ctx.save();
         ctx.translate(-this.camera.position.x, -this.camera.position.y);
 
@@ -172,34 +188,63 @@ class Game {
         ctx.fillStyle = "white";
         ctx.font = "16px Arial";
         ctx.fillText("X: " + Math.floor(this.player.position.x) + " Y: " + Math.floor(this.player.position.y), 10, 20);
-    }
-}
 
-function handleKeyDown(event) {
-    let key = event.key;
-    if (key in keyDirections) {
-        event.preventDefault();
-        let direction = keyDirections[key];
-        if (!game.player.keys.includes(direction)) {
-            game.player.keys.push(direction);
+        if (this.inLabyrinthZone) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(canvasWidth / 2 - 150, 50, 300, 60);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 18px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Presiona E para entrar", canvasWidth / 2, 75);
+            ctx.fillText("al Laberinto", canvasWidth / 2, 95);
+            ctx.textAlign = "left";
         }
     }
-}
 
-function handleKeyUp(event) {
-    let key = event.key;
-    if (key in keyDirections) {
-        event.preventDefault();
-        let direction = keyDirections[key];
-        let index = game.player.keys.indexOf(direction);
-        if (index > -1) {
-            game.player.keys.splice(index, 1);
+    createEventListeners() {
+        window.addEventListener("keydown", async (event) => {
+        if (event.key === "e" || event.key === "E") {
+            if (this.inLabyrinthZone) {
+                const playerId = localStorage.getItem("playerId");
+                const res = await fetch("http://localhost:3000/api/run/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ playerId, labyrinthId: 3 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem("runId", data.runId);
+                    localStorage.setItem("currentLevel", "2");
+                    window.location.href = "../laboratorio/html/laberinto_cofres.html";
+                }
+            }
+            return;
         }
+        if (event.key in keyDirections) {
+            this.addKey(keyDirections[event.key]);
+            this.player.startMovement(keyDirections[event.key]);
+        }
+    });
 
-        if (game.player.keys.length === 0) {
-            let dirData = playerMotion[direction];
-            game.player.setAnimation(...dirData.idleFrames, false, dirData.duration);
-            playerMotion[direction].status = false;
+    window.addEventListener("keyup", (event) => {
+        if (event.key in keyDirections) {
+            this.delKey(keyDirections[event.key]);
+            this.player.stopMovement(keyDirections[event.key]);
+        }
+    });
+
+    }
+
+    addKey(direction) {
+        if (!this.player.keys.includes(direction)) {
+            this.player.keys.push(direction);
+        }
+    }
+
+    delKey(direction) {
+        const index = this.player.keys.indexOf(direction);
+        if (index !== -1) {
+            this.player.keys.splice(index, 1);
         }
     }
 }
@@ -217,8 +262,6 @@ function main() {
 
     game = new Game();
 
-    canvas.addEventListener("keydown", handleKeyDown);
-    canvas.addEventListener("keyup", handleKeyUp);
     canvas.focus();
 
     requestAnimationFrame(gameLoop);

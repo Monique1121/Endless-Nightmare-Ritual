@@ -1,18 +1,17 @@
-
 USE endless;
-
 
 INSERT INTO Users (Username, Password_user) VALUES
 ('Julian', '12345'),
 ('monikkkkk', '1234'),
-('Juan', 'night'),
+('arantzamonique', '1234'),
+('Juan Carlos', 'night'),
 ('Esteban', 'mysql'),
 ('Gilberto', 'delta'),
 ('Angel', 'html');
 
 
 INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
--- comunes
+# comunes
 ('Acechador Carmesi', 4,  5, 10, '../assets/cards/1.png'),
 ('Espectro Nocturno', 5,  6, 11, '../assets/cards/espectro_nocturno.png'),
 ('Grave Whisper', 5,  5, 10, '../assets/cards/Grave_whisperer.png'),
@@ -22,7 +21,7 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('Pesadilla', 6,  6, 11, '../assets/cards/pesadilla.png'),
 ('Engendro Oscuro', 6,  7, 12, '../assets/cards/e_oscuro.png'),
 ('Epstein', 6,  6, 10, '../assets/cards/epstein.png'),
--- poco comunes
+# poco comunes
 ('Devorador de Almas', 7,  7, 13, '../assets/cards/devorador_almas.png'),
 ('Vinicius Junior', 7,  8, 13, '../assets/cards/viniJR.png'),
 ('Emperador Julian', 7,  7, 14, '../assets/cards/EmperadorJB.png'),
@@ -31,8 +30,7 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('TZA la bruja', 8,  8, 14, '../assets/cards/TZA_bruja.png'),
 ('Golem de Huesos', 8,  9, 15, '../assets/cards/golem_huesos.png'),
 ('Caballero de la Plaga', 8,  8, 15, '../assets/cards/caballero_plaga.png'),
-
--- raras
+# raras
 ('Hechicero Maldito', 9,  9, 16, '../assets/cards/hechicero_maldito.png'),
 ('Caballero de Sangre', 9,  9, 16, '../assets/cards/caballer_sangre.png'),
 ('El Rey Julen', 9, 10, 16, '../assets/cards/ReyJB.png'),
@@ -44,8 +42,7 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('Sauron', 10, 10, 18, '../assets/cards/sauron.png'),
 ('El Lich', 10, 10, 18, '../assets/cards/lich.png'),
 ('La panza Pandi', 10, 11, 18, '../assets/cards/pandi.png'),
-
--- épicas
+# épicas
 ('Tragg ', 11, 11, 20, '../assets/cards/tragg.png'),
 ('Simmon el Tenebroso', 11, 12, 20, '../assets/cards/simmon.png'),
 ('Mbappe el Dictador', 11, 12, 21, '../assets/cards/mbappe.png'),
@@ -53,17 +50,13 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('JB', 12, 12, 22, '../assets/cards/JBcard.png'),
 ('JB el Inmortal', 14, 14, 28, '../assets/cards/JBinmortal.png');
 
--- Niveles
+# Niveles
 
 INSERT INTO Levels (Level_name, Level_number, Enemy_name) VALUES
 ('Tutorial', 0, 'Arantza Basica'),
 ('Escuela', 1, 'Monique'),
 ('Hospital', 2, 'Monique Enojada'),
 ('Laboratorio', 3, 'Arantza y Monique');
-
--- ============================================
--- LABERINTOS (uno por nivel)
--- ============================================
 
 INSERT INTO Levels (Level_name, Level_number, Enemy_name) VALUES
 ('Tutorial', 0, 'Arantza Basica'),
@@ -78,32 +71,23 @@ INSERT INTO Labyrinth (Level_id, Time_limit) VALUES
 (3, 90),   -- Hospital: 1.5 minutos
 (4, 60);   -- Laboratorio: 1 minuto
 
--- ============================================
--- ENEMIGOS
--- ============================================
 INSERT INTO Enemy (Level_id, Enemy_name, Blood_pool) VALUES
 (1, 'Arantza Basica', 50),
 (2, 'Monique', 80),
 (3, 'Monique Enojada', 100),
 (4, 'Arantza y Monique', 150);
 
--- Mazos de enemigos
+# Mazos de enemigos
 INSERT INTO Enemy_Cards (Enemy_id, Card_id) VALUES
--- Enemy 1 (Tutorial) - Cartas básicas
+# Enemy 1 (Escuela) - Cartas básicas
 (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8),
 
--- Enemy 2 (Escuela) - Cartas intermedias
+# Enemy 2 (Hospital) - Cartas intermedias
 (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10), (2, 11), (2, 12),
 
--- Enemy 3 (Hospital) - Cartas avanzadas
-(3, 9), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14), (3, 15), (3, 16),
+# Enemy 3 (Laboratorio) - Cartas avanzadas
+(3, 9), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14), (3, 15), (3, 16);
 
--- Enemy 4 (Laboratorio) - Cartas poderosas
-(4, 11), (4, 12), (4, 13), (4, 14), (4, 15), (4, 16), (4, 17), (4, 18);
-
--- ============================================
--- SECRETOS (40 secretos de horror - SIN ACENTOS)
--- ============================================
 INSERT INTO Secrets (Secret_name, Content) VALUES
 ('El Primer Ritual', 'Todo comenzo con un experimento fallido en el sotano del hospital...'),
 ('Verdad Oculta', 'Los doctores sabian lo que hacian. Todos lo sabian.'),
@@ -146,11 +130,9 @@ INSERT INTO Secrets (Secret_name, Content) VALUES
 ('El Ultimo Informe', 'Fue enviado a las 4:44 AM. El edificio estaba vacio desde medianoche.'),
 ('El Origen', 'Todo comenzo aqui. Todo terminara aqui.');
 
--- ============================================
--- COFRES (40 cofres - 10 por nivel)
--- ============================================
+
 INSERT INTO Chest (Labyrinth_id, Secret_id, Blood_amount, Position_x, Position_y) VALUES
--- Cofres Nivel 1 (Tutorial)
+# Cofres Nivel 1 (Tutorial)
 (1, 1, 10, 5, 5),
 (1, 2, 15, 10, 3),
 (1, 3, 20, 2, 8),
@@ -162,7 +144,7 @@ INSERT INTO Chest (Labyrinth_id, Secret_id, Blood_amount, Position_x, Position_y
 (1, 9, 11, 4, 10),
 (1, 10, 7, 12, 2),
 
--- Cofres Nivel 2 (Escuela)
+# Cofres Nivel 2 (Escuela)
 (2, 11, 10, 5, 5),
 (2, 12, 15, 10, 3),
 (2, 13, 20, 2, 8),
@@ -174,7 +156,7 @@ INSERT INTO Chest (Labyrinth_id, Secret_id, Blood_amount, Position_x, Position_y
 (2, 19, 11, 4, 10),
 (2, 20, 7, 12, 2),
 
--- Cofres Nivel 3 (Hospital)
+# Cofres Nivel 3 (Hospital)
 (3, 21, 10, 5, 5),
 (3, 22, 15, 10, 3),
 (3, 23, 20, 2, 8),
@@ -198,51 +180,53 @@ INSERT INTO Chest (Labyrinth_id, Secret_id, Blood_amount, Position_x, Position_y
 (4, 39, 11, 4, 10),
 (4, 40, 7, 12, 2);
 
--- Asignación de cartas a cofres (cada cofre tiene una carta)
+# Asignación de cartas a cofres (cada cofre tiene una carta)
 INSERT INTO Chest_card (Chest_id, Card_id) VALUES
 (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8), (9, 9), (10, 10),
 (11, 11), (12, 12), (13, 13), (14, 14), (15, 15), (16, 16), (17, 17), (18, 18), (19, 19), (20, 20),
-(21, 21), (22, 22), (23, 23), (24, 24), (25, 25), (26, 26), (27, 27), (28, 28), (29, 29), (30, 30),
-(31, 31), (32, 32), (33, 33), (34, 34), (35, 35), (36, 1), (37, 2), (38, 3), (39, 4), (40, 5);
+(21, 21), (22, 22), (23, 23), (24, 24), (25, 25),  (26, 26), (27, 27), (28, 28), (29, 29), (30, 30),
+(31, 31), (32, 32), (33, 33), (34, 34), (35, 1), (36, 2), (37, 3), (38, 4), (39, 5), (40, 6);
 
--- SELECT * FROM Deck WHERE Player_id = 1 AND Card_gained = FALSE;
+# SELECT * FROM Deck WHERE Player_id = 1 AND Card_gained = FALSE;
 
--- SELECT d.Deck_id, d.Card_id, c.Card_name, d.Run_id, d.Card_gained 
--- FROM Deck d
--- JOIN Cards c ON d.Card_id = c.Card_id
--- WHERE d.Player_id = 1
--- ORDER BY d.Created_at DESC;
+# SELECT d.Deck_id, d.Card_id, c.Card_name, d.Run_id, d.Card_gained 
+# FROM Deck d
+# JOIN Cards c ON d.Card_id = c.Card_id
+# WHERE d.Player_id = 1
+# ORDER BY d.Created_at DESC;
 
--- -- Ver combates
--- SELECT * FROM Combat;
+# Ver combates
+# SELECT * FROM Combat;
 
--- -- Ver turnos de un combate
--- SELECT * FROM Combat_Turns WHERE Combat_id = 1;
+# Ver turnos de un combate
+# SELECT * FROM Combat_Turns WHERE Combat_id = 1;
 
--- -- Ver acciones de un combate
--- SELECT * FROM Combat_Cards_Actions WHERE Combat_id = 1;
+# Ver acciones de un combate
+# SELECT * FROM Combat_Cards_Actions WHERE Combat_id = 1;
 
--- -- Ver todo junto
--- SELECT 
---     c.Combat_id,
---     c.Result,
---     c.Total_turns,
---     c.Player_KO,
---     c.Enemy_KO,
---     ct.Turn_number,
---     ct.Active_player,
---     cca.Action_type,
---     cca.Used_by,
---     cca.Damage_dealt,
---     cca.HP_before,
---     cca.HP_after,
---     cca.Card_dead
--- FROM Combat c
--- JOIN Combat_Turns ct ON c.Combat_id = ct.Combat_id
--- JOIN Combat_Cards_Actions cca ON ct.Turn_id = cca.Turn_id
--- WHERE c.Combat_id = 1;
+# Ver todo junto
+# SELECT 
+#     c.Combat_id,
+#     c.Result,
+#     c.Total_turns,
+#     c.Player_KO,
+#     c.Enemy_KO,
+#     ct.Turn_number,
+#     ct.Active_player,
+#     cca.Action_type,
+#     cca.Used_by,
+#     cca.Damage_dealt,
+#     cca.HP_before,
+#     cca.HP_after,
+#     cca.Card_dead
+# FROM Combat c
+# JOIN Combat_Turns ct ON c.Combat_id = ct.Combat_id
+# JOIN Combat_Cards_Actions cca ON ct.Turn_id = cca.Turn_id
+# WHERE c.Combat_id = 1;
 
 
--- INSERT INTO Deck (Card_id, Player_id, Card_gained)
--- SELECT Card_id, 1, TRUE
--- FROM Cards; 
+# INSERT INTO Deck (Card_id, Player_id, Card_gained)
+# SELECT Card_id, 1, TRUE
+# FROM Cards; 
+
+

@@ -2,6 +2,9 @@
  * Class for the base Game Object used for all the actors in a scene
  *
  * The position of the object is its center.
+ *
+ * Gilberto Echeverria
+ * 2026-02-15
  */
 
 "use strict";
@@ -41,13 +44,6 @@ class GameObject {
 
     setSprite(imagePath, rect) {
         this.spriteImage = new Image();
-        // agregado para debug - ver si carga el sprite
-        this.spriteImage.onload = () => {
-            console.log(`Sprite cargado exitosamente: ${imagePath}`);
-        };
-        this.spriteImage.onerror = () => {
-            console.error(`Error al cargar sprite: ${imagePath}`);
-        };
         this.spriteImage.src = imagePath;
         if (rect) {
             this.spriteRect = rect;
@@ -62,10 +58,10 @@ class GameObject {
         // The top left corner of the collider is offset by half of its size
         // TODO: Provide the correct values for the collider rectangle
         // Use the scale as well
-        this.xOffset = 0;
-        this.yOffset = 0;
-        this.colliderWidth = 10;
-        this.colliderHeight = 10;
+        this.colliderWidth = width * this.scale;
+        this.colliderHeight = height * this.scale;
+        this.xOffset = this.colliderWidth / 2;
+        this.yOffset = this.colliderHeight / 2;
         this.updateCollider();
     }
 
@@ -73,10 +69,10 @@ class GameObject {
         // Adjust the Rect of the object with its position
         // TODO: Center the collider around the object position
         // Use the scale as well
-        this.collider = new Rect(5,
-                                 5,
-                                 15,
-                                 15);
+        this.collider = new Rect(this.position.x - this.xOffset,
+                                 this.position.y - this.yOffset,
+                                 this.colliderWidth,
+                                 this.colliderHeight);
     }
 
     draw(ctx) {

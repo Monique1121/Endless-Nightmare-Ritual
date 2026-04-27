@@ -1,19 +1,8 @@
--- ============================================
--- ENDLESS NIGHTMARE RITUAL - DATABASE SCHEMA
--- ============================================
--- Base de datos completa para el juego
--- Incluye: Usuarios, Jugadores, Cartas, Laberintos, Combates, Secretos
--- ============================================
-
 DROP DATABASE IF EXISTS endless;
 CREATE DATABASE endless;
 USE endless;
 
--- ============================================
--- TABLAS PRINCIPALES
--- ============================================
-
--- Tabla de usuarios (login)
+# Tabla de usuarios (login)
 CREATE TABLE Users (
     User_id INT AUTO_INCREMENT NOT NULL,
     Username VARCHAR(45) NOT NULL UNIQUE,
@@ -27,7 +16,7 @@ CREATE TABLE Users (
     INDEX idx_username (Username)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de jugadores (perfiles de juego)
+# Tabla de jugadores (perfiles de juego)
 CREATE TABLE Player (
     Player_id INT AUTO_INCREMENT NOT NULL, 
     User_id INT NOT NULL,
@@ -49,7 +38,7 @@ CREATE TABLE Player (
     INDEX idx_user (User_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de cartas
+# Tabla de cartas
 CREATE TABLE Cards (
     Card_id INT AUTO_INCREMENT NOT NULL,
     Card_name VARCHAR(45) NOT NULL,
@@ -64,7 +53,7 @@ CREATE TABLE Cards (
     INDEX idx_cost (Blood_cost)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de niveles
+# Tabla de niveles
 CREATE TABLE Levels (
     Level_id INT AUTO_INCREMENT NOT NULL,
     Level_name VARCHAR(45) NOT NULL,
@@ -77,7 +66,7 @@ CREATE TABLE Levels (
     INDEX idx_level_number (Level_number)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de laberintos
+# Tabla de laberintos
 CREATE TABLE Labyrinth (
     Labyrinth_id INT AUTO_INCREMENT NOT NULL,
     Level_id INT NOT NULL,
@@ -90,11 +79,7 @@ CREATE TABLE Labyrinth (
     INDEX idx_level (Level_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- SISTEMA DE RUNS (PARTIDAS)
--- ============================================
-
--- Tabla de runs (intentos de completar laberinto)
+# Tabla de runs (intentos de completar laberinto)
 CREATE TABLE Run (
     Run_id INT AUTO_INCREMENT NOT NULL,
     Player_id INT NOT NULL,
@@ -117,7 +102,7 @@ CREATE TABLE Run (
     INDEX idx_completed (Completed)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de checkpoints durante un run
+# Tabla de checkpoints durante un run
 CREATE TABLE Run_Checkpoints (
     Checkpoint_id INT AUTO_INCREMENT NOT NULL,
     Run_id INT NOT NULL,
@@ -131,12 +116,8 @@ CREATE TABLE Run_Checkpoints (
     INDEX idx_run (Run_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- SISTEMA DE CARTAS DEL JUGADOR
--- ============================================
-
--- Tabla del deck del jugador (cartas obtenidas)
--- Card_gained: TRUE = permanente (guardada), FALSE = temporal (en riesgo)
+# Tabla del deck del jugador (cartas obtenidas)
+# Card_gained: TRUE = permanente (guardada), FALSE = temporal (en riesgo)
 CREATE TABLE Deck (
     Deck_id INT AUTO_INCREMENT NOT NULL,
     Card_id INT NOT NULL,
@@ -154,11 +135,7 @@ CREATE TABLE Deck (
     INDEX idx_gained (Card_gained)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- SISTEMA DE ENEMIGOS
--- ============================================
-
--- Tabla de enemigos
+# Tabla de enemigos
 CREATE TABLE Enemy (
     Enemy_id INT AUTO_INCREMENT NOT NULL,
     Level_id INT NOT NULL,
@@ -172,7 +149,7 @@ CREATE TABLE Enemy (
     INDEX idx_level (Level_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de cartas de enemigos
+# Tabla de cartas de enemigos
 CREATE TABLE Enemy_Cards (
     Enemy_card_id INT AUTO_INCREMENT NOT NULL,
     Enemy_id INT NOT NULL,
@@ -186,11 +163,7 @@ CREATE TABLE Enemy_Cards (
     UNIQUE KEY unique_enemy_card (Enemy_id, Card_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- SISTEMA DE SECRETOS
--- ============================================
-
--- Tabla de secretos (lore del juego)
+# Tabla de secretos (lore del juego)
 CREATE TABLE Secrets (
     Secret_id INT AUTO_INCREMENT NOT NULL,
     Secret_name VARCHAR(100) NOT NULL,
@@ -215,11 +188,7 @@ CREATE TABLE Player_Secrets (
     
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- SISTEMA DE COFRES
--- ============================================
-
--- Tabla de cofres en laberintos
+# Tabla de cofres en laberintos
 CREATE TABLE Chest (
     Chest_id INT AUTO_INCREMENT NOT NULL,
     Labyrinth_id INT NOT NULL,
@@ -236,7 +205,7 @@ CREATE TABLE Chest (
     INDEX idx_labyrinth (Labyrinth_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de cartas en cofres
+# Tabla de cartas en cofres
 CREATE TABLE Chest_card (
     Chest_card_id INT AUTO_INCREMENT NOT NULL,
     Chest_id INT NOT NULL,
@@ -250,7 +219,7 @@ CREATE TABLE Chest_card (
     INDEX idx_chest (Chest_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de cofres abiertos por jugadores
+# Tabla de cofres abiertos por jugadores
 CREATE TABLE Player_Chest_Opened (
     Player_chest_id INT AUTO_INCREMENT NOT NULL,
     Player_id INT NOT NULL,
@@ -267,11 +236,7 @@ CREATE TABLE Player_Chest_Opened (
     INDEX idx_chest (Chest_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- SISTEMA DE ITEMS
--- ============================================
-
--- Tabla de items especiales del jugador
+# Tabla de items especiales del jugador
 CREATE TABLE Player_Items (
     Player_item_id INT AUTO_INCREMENT NOT NULL,
     Player_id INT NOT NULL,
@@ -285,11 +250,7 @@ CREATE TABLE Player_Items (
     INDEX idx_player (Player_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- SISTEMA DE COMBATE (TCG)
--- ============================================
-
--- Tabla de combates
+# Tabla de combates
 CREATE TABLE Combat (
     Combat_id INT AUTO_INCREMENT NOT NULL,
     Player_id INT NOT NULL,
@@ -316,7 +277,7 @@ CREATE TABLE Combat (
     INDEX idx_result (Result)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de turnos de combate
+# Tabla de turnos de combate
 CREATE TABLE Combat_Turns (
     Turn_id INT AUTO_INCREMENT NOT NULL,
     Combat_id INT NOT NULL,
@@ -331,7 +292,7 @@ CREATE TABLE Combat_Turns (
     INDEX idx_combat (Combat_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de acciones de cartas en combate
+# Tabla de acciones de cartas en combate
 CREATE TABLE Combat_Cards_Actions (
     Action_id INT AUTO_INCREMENT NOT NULL,
     Combat_id INT NOT NULL,
@@ -355,7 +316,7 @@ CREATE TABLE Combat_Cards_Actions (
     INDEX idx_turn (Turn_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- Tabla de logs de combate
+# Tabla de logs de combate
 CREATE TABLE Logs_combat (
     Log_combat_id INT AUTO_INCREMENT NOT NULL,
     Combat_id INT NOT NULL,
@@ -372,11 +333,7 @@ CREATE TABLE Logs_combat (
     INDEX idx_combat (Combat_id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- ============================================
--- TRIGGERS
--- ============================================
-
--- Actualizar Last_login cuando un jugador inicia sesión
+# Actualizar Last_login cuando un jugador inicia sesión
 DELIMITER $$
 CREATE TRIGGER trg_update_last_login
 AFTER INSERT ON Player
@@ -388,7 +345,7 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Validar que Blood_current no exceda Blood_max
+# Validar que Blood_current no exceda Blood_max
 DELIMITER $$
 CREATE TRIGGER trg_validate_player_blood
 BEFORE UPDATE ON Player
@@ -404,7 +361,7 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Actualizar tiempo de juego cuando termina un combate
+# Actualizar tiempo de juego cuando termina un combate
 DELIMITER $$
 CREATE TRIGGER trg_update_playtime
 AFTER UPDATE ON Combat

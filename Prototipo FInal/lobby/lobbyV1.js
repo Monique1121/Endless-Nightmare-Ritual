@@ -276,7 +276,7 @@ class Game {
         let py = this.player.position.y;
         
         if (px > 2017 && py >= 995 && py <= 1024) {
-            window.location.href = "../hospital/hospital.html";
+            window.location.href = "../hospital/html/hospital.html";
         }
         if (px <= 30 && py >= 900 && py <= 1100) {
             window.location.href = "../laboratorio/laboratorio.html";

@@ -1,9 +1,13 @@
 /*
  * Class for the principal game object in a simple game
  * This object will have animation for some of its actions
+ *
+ * Gilberto Echeverria
+ * 2026-02-22
  */
 
-
+//import { Vector } from "./Vector.js";
+//import { AnimatedObject } from "./AnimatedObject.js";
 
 class AnimatedPlayer extends AnimatedObject {
     constructor( position, width, height, color, sheetCols, motion ) {
@@ -16,63 +20,48 @@ class AnimatedPlayer extends AnimatedObject {
             sheetCols
         );
         this.velocity = new Vector(0, 0);
+        // Default value for player speed
         this.speed = 1.0;
         this.sheetCols = sheetCols;
+
+        // Keys pressed to move the player
         this.keys = [];
+
+        // Data structure with the directions a character can move, the
+        // direction sign and the related animation.
         this.motion = motion;
     }
 
-    update(deltaTime, canvas, colliders = []) {
-        // guardar posicion anterior por si hay colision
-        const oldX = this.position.x;
-        const oldY = this.position.y;
-
+    update(deltaTime, canvas) {
+        // Restart the velocity
         this.velocity.x = 0;
         this.velocity.y = 0;
-
+        // Modify the velocity according to the directions pressed
         for (const direction of this.keys) {
             const axis = this.motion[direction].axis;
             const sign = this.motion[direction].sign;
             this.velocity[axis] += sign;
 
-        
+            // Adapt the animation according to the direction
             const dirData = this.motion[direction];
-     
+            // Make changes only if the direction is different
             if (!dirData.status) {
                 dirData.status = true;
                 this.setAnimation(...dirData.moveFrames, dirData.repeat, dirData.duration);
             }
         }
-        // velocity diagonales normalized to the speed
+        // Normalize the velocity to avoid greater speed on diagonals
         this.velocity = this.velocity.normalize().times(this.speed);
         this.position = this.position.plus(this.velocity.times(deltaTime));
 
-        // verificar colisiones
-        if (this.checkCollision(colliders)) {
-            // volver a la posicion anterior si hay colision
-            this.position.x = oldX;
-            this.position.y = oldY;
-        }
-
+        // Restrict the player to move only within the canvas area
         this.clampWithinCanvas(canvas);
 
+        // Update to show then next frame when necessary
         this.updateFrame(deltaTime);
 
- 
+        // Change the collider's position
         this.updateCollider();
-    }
-    
-    checkCollision(colliders) {
-        // ver si el jugador esta tocando alguna zona de colision
-        for (const collider of colliders) {
-            if (this.position.x - this.halfSize.x < collider.x + collider.width &&
-                this.position.x + this.halfSize.x > collider.x &&
-                this.position.y - this.halfSize.y < collider.y + collider.height &&
-                this.position.y + this.halfSize.y > collider.y) {
-                return true; // hay colision
-            }
-        }
-        return false; // no hay colision
     }
 
     clampWithinCanvas(canvas) {
@@ -100,25 +89,19 @@ class AnimatedPlayer extends AnimatedObject {
 
 
     startMovement(direction) {
-        // forzar cambiar animacion siempre que se presiona una tecla
+        // Check whether we are already moving in a direction
         const dirData = this.motion[direction];
-        dirData.status = true;
-        this.setAnimation(...dirData.moveFrames, dirData.repeat, dirData.duration);
+        // Make changes only if the direction is different
+        if (!dirData.status) {
+            dirData.status = true;
+            this.setAnimation(...dirData.moveFrames, dirData.repeat, dirData.duration);
+        }
     }
 
     stopMovement(direction) {
         const dirData = this.motion[direction];
         dirData.status = false;
-        
-        // si todavia hay teclas presionadas, usar esa animacion
-        if (this.keys.length > 0) {
-            const lastKey = this.keys[this.keys.length - 1];
-            const lastDirData = this.motion[lastKey];
-            this.setAnimation(...lastDirData.moveFrames, lastDirData.repeat, lastDirData.duration);
-        } else {
-            // solo idle si no hay teclas presionadas
-            this.setAnimation(...dirData.idleFrames, dirData.repeat, dirData.duration);
-        }
+        this.setAnimation(...dirData.idleFrames, dirData.repeat, dirData.duration);
     }
 
 }

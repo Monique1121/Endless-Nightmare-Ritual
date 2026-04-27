@@ -1,0 +1,143 @@
+*{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+body {
+    background-color: black;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    margin: 0;
+    overflow: hidden;
+    display:grid;
+    grid-template-rows: 10vh 1fr;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+        "header"
+        "main";
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+}
+
+
+h1{
+    margin: 0px;
+}
+
+canvas {
+    /* width: 75vw; */
+    /* height: 75vh; */
+    border: 2px solid black;
+    background-color: #87ceeb;
+    /* width: 600px; */
+    /* height: 600px; */
+}
+
+#canvas {
+    background-color: #87ceeb;
+    grid-area: main;
+}
+
+.lil-gui.autoPlace{
+    top: 15vh;
+    right: 5vw;
+}
+
+#backButton {
+    margin: 10px;
+}
+
+
+#examplesContainer{
+    margin: 1em;
+    display:flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.exampleGroup{
+    margin: 0.5em;
+    padding: 1em;
+    max-width: 40vw;
+    border: 3px solid black;
+    border-radius: 20px;
+    background-color: #FFFFFF;
+    filter: drop-shadow(gray 5px 5px 3px);
+}
+
+
+#chestOverlay {
+    display: flex;   
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+#chestOverlay.hidden {
+    display: none;
+}
+
+                
+#chestPopup {
+    background: #111;
+    border-radius: 12px;           
+    padding: 28px 32px 20px;
+    min-width: 340px;
+    max-width: 500px;
+    width: 90%;
+    color: #fff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#chestTitle {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.chest-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chest-entry-label {
+    font-size: 0.78rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
+    margin: 0;
+}
+
+.chest-entry-value {
+    font-size: 0.82rem;
+    color: #aaa;
+    margin: 0;
+}
+
+                
+#chestSecret {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#chestSecret.hidden {
+    display: none;
+}
+
+#chestHint {
+    text-align: center;
+    font-size: 0.78rem;
+    color: #666;
+    margin: 4px 0 0;
+}
+    
