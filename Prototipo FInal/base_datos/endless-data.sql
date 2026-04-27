@@ -21,7 +21,8 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('Criatura de la Niebla', 6,  6, 11, '../assets/cards/criatura_niebla.png'),
 ('Pesadilla', 6,  6, 11, '../assets/cards/pesadilla.png'),
 ('Engendro Oscuro', 6,  7, 12, '../assets/cards/e_oscuro.png'),
-('Epstein', 6,  6, 10, '../assets/cards/epstein.png'),
+('Epstein', 13,  13, 9, '../assets/cards/epstein.png'),
+
 -- poco comunes
 ('Devorador de Almas', 7,  7, 13, '../assets/cards/devorador_almas.png'),
 ('Vinicius Junior', 7,  8, 13, '../assets/cards/viniJR.png'),
@@ -31,11 +32,12 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('TZA la bruja', 8,  8, 14, '../assets/cards/TZA_bruja.png'),
 ('Golem de Huesos', 8,  9, 15, '../assets/cards/golem_huesos.png'),
 ('Caballero de la Plaga', 8,  8, 15, '../assets/cards/caballero_plaga.png'),
+("Grumpy Daniel",8,10,12,'../assets/cards/daniel.png'),
 
 -- raras
 ('Hechicero Maldito', 9,  9, 16, '../assets/cards/hechicero_maldito.png'),
 ('Caballero de Sangre', 9,  9, 16, '../assets/cards/caballer_sangre.png'),
-('El Rey Julen', 9, 10, 16, '../assets/cards/ReyJB.png'),
+('El Rey Julen', 9, 10, 16, '../assets/cards/ReyJulen.png'), 
 ('Saka el Fantasma', 9,  9, 16, '../assets/cards/saka.png'),
 ('Senor de la Cripta', 9,  9, 17, '../assets/cards/senor_cripta.png'),
 ('Simmon el Tenebroso', 10, 10, 18, '../assets/cards/simmon.png'),
@@ -50,8 +52,8 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('Simmon el Tenebroso', 11, 12, 20, '../assets/cards/simmon.png'),
 ('Mbappe el Dictador', 11, 12, 21, '../assets/cards/mbappe.png'),
 ('Leviatan', 12, 13, 22, '../assets/cards/leviatan.png'),
-('JB', 12, 12, 22, '../assets/cards/JBcard.png'),
-('JB el Inmortal', 14, 14, 28, '../assets/cards/JBinmortal.png');
+('JB', 12, 12, 22, '../assets/cards/jbcard55.png'), 
+('JB el Inmortal', 14, 14, 28, '../assets/cards/JBinmortal.png'); 
 
 -- Niveles
 
