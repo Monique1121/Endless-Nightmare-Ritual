@@ -18,11 +18,10 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('Grave Whisper', 5,  5, 10, '../assets/cards/Grave_whisperer.png'),
 ('Sombra Voraz', 4,  5, 10, '../assets/cards/sombra_voraz.png'),
 ('Latigo Umbral', 5,  6, 10, '../assets/cards/latigo_umbral.png'),
-('Criatura de la Niebla',6,  6, 11, '../assets/cards/criatura_niebla.png'),
+('Criatura de la Niebla', 6,  6, 11, '../assets/cards/criatura_niebla.png'),
 ('Pesadilla', 6,  6, 11, '../assets/cards/pesadilla.png'),
 ('Engendro Oscuro', 6,  7, 12, '../assets/cards/e_oscuro.png'),
 ('Epstein', 6,  6, 10, '../assets/cards/epstein.png'),
-
 -- poco comunes
 ('Devorador de Almas', 7,  7, 13, '../assets/cards/devorador_almas.png'),
 ('Vinicius Junior', 7,  8, 13, '../assets/cards/viniJR.png'),
@@ -31,7 +30,7 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('Blood Stalker', 8,  9, 14, '../assets/cards/Blood_stalker.png'),
 ('TZA la bruja', 8,  8, 14, '../assets/cards/TZA_bruja.png'),
 ('Golem de Huesos', 8,  9, 15, '../assets/cards/golem_huesos.png'),
-('Caballero de la Plaga',8,  8, 15, '../assets/cards/caballero_plaga.png'),
+('Caballero de la Plaga', 8,  8, 15, '../assets/cards/caballero_plaga.png'),
 
 -- raras
 ('Hechicero Maldito', 9,  9, 16, '../assets/cards/hechicero_maldito.png'),
@@ -53,6 +52,14 @@ INSERT INTO Cards (Card_name, Blood_cost, Damage, HP, Sprite_path) VALUES
 ('Leviatan', 12, 13, 22, '../assets/cards/leviatan.png'),
 ('JB', 12, 12, 22, '../assets/cards/JBcard.png'),
 ('JB el Inmortal', 14, 14, 28, '../assets/cards/JBinmortal.png');
+
+-- Niveles
+
+INSERT INTO Levels (Level_name, Level_number, Enemy_name) VALUES
+('Tutorial', 0, 'Arantza Basica'),
+('Escuela', 1, 'Monique'),
+('Hospital', 2, 'Monique Enojada'),
+('Laboratorio', 3, 'Arantza y Monique');
 
 -- ============================================
 -- LABERINTOS (uno por nivel)
