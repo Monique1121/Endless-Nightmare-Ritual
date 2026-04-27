@@ -280,8 +280,6 @@ const GameState = {
         const API_URL = 'http://localhost:3000/api';
         const playerId = localStorage.getItem('playerId');
         const username = localStorage.getItem('username');
-        const secretsResponse = await fetch(`${API_URL}/player/${playerId}/secrets`);
-        const secretsData = await secretsResponse.json();
         
         if (!playerId) {
             console.warn('No se puede cargar desde servidor: sin playerId');
@@ -302,12 +300,6 @@ const GameState = {
             localData.blood = inventory.blood_current || 100;
             localData.maxBlood = inventory.blood_max || 100;
             localData.stats.secretsDiscovered = inventory.secrets_count || 0;
-
-            localData.inventory.loreCards = secretsData.secrets.map(s => ({
-                id: s.Secret_id,
-                title: s.Secret_name,
-                description: s.Content
-            }))
             
             // Cargar cartas del deck
             localData.inventory.demonCards = inventory.cards.map(card => ({
@@ -318,8 +310,6 @@ const GameState = {
                 damage: card.Damage,
                 hp: card.HP,
                 quantity: 1 // Por ahora no hay cantidades en la BD
-
-            
             }));
             
             this.save(localData);

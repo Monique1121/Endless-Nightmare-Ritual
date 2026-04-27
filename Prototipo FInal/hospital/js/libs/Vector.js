@@ -1,5 +1,8 @@
 /*
  * Vector class used in 2D games
+ *
+ * Gilberto Echeverria
+ * 2026-02-10
  */
 
 // TODO: Complete the methods in this class to be able to perform vector operations
