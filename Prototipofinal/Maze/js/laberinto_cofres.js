@@ -8,9 +8,9 @@
 const worldWidth = 3000;
 const worldHeight = 3000;
 
-const rows = 40;
-const cols = 50;
-const cell_size = 64;
+const rows = 25;
+const cols = 30;
+const cell_size = 30;
 
 let canvasWidth = window.innerWidth;
 let canvasHeight = window.innerHeight;
@@ -278,9 +278,7 @@ class Game {
             [0, -3]     // up
         ];
 
-        if (Math.random() < 0.4) {
         direction.sort(() => Math.random() - 0.5);
-    }
 
         for (let [dr, dc] of direction){
             const newRow = r + dr;
@@ -489,43 +487,6 @@ openChest() {
         });
 }
 
-    saveProgress() {
-        // Guardar todo el progreso temporal solo cuando el jugador completa el laberinto
-        const playerId = localStorage.getItem('playerId');
-        const runId = localStorage.getItem('runId');
-
-        console.log("Guardando progreso...");
-
-        // Guardar cartas
-        for (let card of this.tempCards) {
-            GameState.addDemonCard(card.id, card.name);
-            
-            // Guardar en API
-            if (runId && playerId) {
-                fetch(`http://localhost:3000/api/run/${runId}/card/collect`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ playerId, cardId: card.id })
-                }).catch(console.error);
-            }
-        }
-
-        // Guardar secretos
-        for (let secret of this.tempSecrets) {
-            GameState.addLoreCard(secret.id, secret.name, secret.content);
-            
-            // Guardar en API
-            if (playerId) {
-                fetch(`http://localhost:3000/api/player/${playerId}/secret/${secret.id}/discover`, {
-                    method: 'POST'
-                }).catch(console.error);
-            }
-        }
-
-        console.log(`✅ Progreso guardado: ${this.tempCards.length} cartas, ${this.tempSecrets.length} secretos`);
-        console.log('💾 Guardado automatico completado - Puedes continuar con estos items');
-    }
-
     update(deltaTime) {
 
         if (this.gameOver) return;
@@ -583,8 +544,6 @@ openChest() {
         if (boxOverlap(playerTest, this.exit)) {
             this.gameOver = true;
             this.won = true;
-            // Solo guardar progreso si ganó
-            this.saveProgress();
         }
 
         
@@ -655,36 +614,70 @@ openChest() {
             
             // Redirigir despues de 3 segundos
 if (!this.returnTimeout) {
-    this.returnTimeout = setTimeout(async () => {
-        const playerId = localStorage.getItem("playerId");
-        const runId = localStorage.getItem("runId");
+this.returnTimeout = setTimeout(async () => {
+    const playerId = localStorage.getItem("playerId");
+    const runId = localStorage.getItem("runId");
 
-        
-        if (this.won) {
-           await fetch(`http://localhost:3000/api/run/${runId}/complete`, {
+    console.log("=== INICIO GUARDADO ===");
+    console.log("playerId:", playerId);
+    console.log("runId:", runId);
+    console.log("tempSecrets:", this.tempSecrets);
+    console.log("tempCards:", this.tempCards);
+
+    if (this.won) {
+        // Secretos
+        for (let secret of this.tempSecrets) {
+            try {
+                console.log("Guardando secreto:", secret.id);
+                const r = await fetch(`http://localhost:3000/api/player/${playerId}/secret/${secret.id}/discover`, { method: 'POST' });
+                const data = await r.json();
+                console.log("Secreto guardado:", data);
+                GameState.addLoreCard(secret.id, secret.name, secret.content);
+            } catch (e) {
+                console.error("FALLO secreto:", e);
+            }
+        }
+
+        // Cartas
+        for (let card of this.tempCards) {
+            try {
+                console.log("Guardando carta:", card.id);
+                const r = await fetch(`http://localhost:3000/api/run/${runId}/card/collect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerId, cardId: card.id })
+                });
+                const data = await r.json();
+                console.log("Carta guardada:", data);
+                GameState.addDemonCard(card.id, card.name);
+            } catch (e) {
+                console.error("FALLO carta:", e);
+            }
+        }
+
+        // Complete
+        try {
+            console.log("Completando run...");
+            const r = await fetch(`http://localhost:3000/api/run/${runId}/complete`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    playerId: playerId,
+                    playerId,
                     timeTaken: Math.floor(this.elapsedTime / 1000),
                     secretsFound: this.secretsFound
                 })
             });
-
-            window.location.href = "../../TCG/game.html";
-        } else {
-            await fetch(`http://localhost:3000/api/run/${runId}/fail`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    playerId: playerId
-                })
-            });
-
-            window.location.href = "../../lobby/lobbyV1.html";
+            const data = await r.json();
+            console.log("Run completado:", data);
+        } catch (e) {
+            console.error("FALLO complete:", e);
         }
-    }, 2000);
-}
+
+        console.log("=== REDIRIGIENDO ===");
+        window.location.href = "../../TCG/game.html";
+    }
+}, 2000);
+            }
         }
     }
 
@@ -771,8 +764,8 @@ function main() {
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         if (game && game.camera) {
-            game.camera.viewport.width = canvasWidth;
-            game.camera.viewport.height = canvasHeight;
+            game.camera.viewWidth = canvasWidth;
+            game.camera.viewHeight = canvasHeight;
         }
     });
 

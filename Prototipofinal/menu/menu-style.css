@@ -20,7 +20,7 @@ h1{
 }
 
 canvas {
-    background-image: url("assets/menu.png");
+    background-image: url("assets/menu_2.png");
     background-size: cover;
     background-position: center;
     filter: brightness(0.9) contrast(1.1);

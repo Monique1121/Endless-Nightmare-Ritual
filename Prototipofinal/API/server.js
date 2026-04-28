@@ -13,9 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'C4rl1t0s2023',
+    password: 'nctdream123',
     database: 'endless',
-    // port: '3305'
+    port: '3305'
 };
 const pool = mysql.createPool(dbConfig);
 app.post('/api/register', async (req, res) => {
@@ -302,15 +302,21 @@ app.get('/api/player/:playerId/inventory', async (req, res) => {
 app.post('/api/player/:playerId/secret/:secretId/discover', async (req, res) => {
     const { playerId, secretId } = req.params;
     try {
-        await pool.query(
+        const [result] = await pool.query(
             `INSERT IGNORE INTO Player_Secrets (Player_id, Secret_id) VALUES (?, ?)`,
             [playerId, secretId]
         );
-        await pool.query(
-            `UPDATE Player SET Secrets_discovered = Secrets_discovered + 1 WHERE Player_id = ?`,
-            [playerId]
-        );
-        res.json({ success: true });
+ 
+        // affectedRows = 0 si el INSERT fue ignorado (secreto ya descubierto)
+        // Solo sumar si realmente se insertó un registro nuevo
+        if (result.affectedRows > 0) {
+            await pool.query(
+                `UPDATE Player SET Secrets_discovered = Secrets_discovered + 1 WHERE Player_id = ?`,
+                [playerId]
+            );
+        }
+ 
+        res.json({ success: true, wasNew: result.affectedRows > 0 });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -600,60 +606,47 @@ app.post('/api/run/:runId/card/collect', async (req, res) => {
 app.post('/api/run/:runId/complete', async (req, res) => {
     const { runId } = req.params;
     const { playerId, timeTaken, secretsFound } = req.body;
-
+ 
     try {
+        // 1. Marcar el run como completado
         await pool.query(
-            `UPDATE Run 
-             SET Completed = TRUE,
-                 Time_taken = ?,
-                 Secrets_found = ?,
-                 Completed_at = CURRENT_TIMESTAMP
+            `UPDATE Run SET Completed = TRUE, Time_taken = ?, Secrets_found = ?, Completed_at = CURRENT_TIMESTAMP
              WHERE Run_id = ? AND Player_id = ?`,
             [timeTaken || 0, secretsFound || 0, runId, playerId]
         );
-
-        // Obtener cartas temporales del run
+ 
+        // 2. Convertir cartas temporales en permanentes
         const [tempCards] = await pool.query(
-            `SELECT Card_id FROM Deck 
-             WHERE Run_id = ? AND Player_id = ? AND Card_gained = FALSE`,
+            `SELECT Card_id FROM Deck WHERE Run_id = ? AND Player_id = ? AND Card_gained = FALSE`,
             [runId, playerId]
         );
-
+ 
         let cardsGained = 0;
-
-        // Para cada carta temporal, verificar si el jugador ya la tiene
+ 
         for (const tempCard of tempCards) {
             const [existing] = await pool.query(
-                `SELECT * FROM Deck 
-                 WHERE Player_id = ? AND Card_id = ? AND Card_gained = TRUE AND Run_id != ?`,
+                `SELECT * FROM Deck WHERE Player_id = ? AND Card_id = ? AND Card_gained = TRUE AND Run_id != ?`,
                 [playerId, tempCard.Card_id, runId]
             );
-
+ 
             if (existing.length > 0) {
-                // Ya tiene esta carta, eliminar la temporal
+                // Carta duplicada: eliminar la temporal
                 await pool.query(
-                    `DELETE FROM Deck 
-                     WHERE Run_id = ? AND Player_id = ? AND Card_id = ? AND Card_gained = FALSE`,
+                    `DELETE FROM Deck WHERE Run_id = ? AND Player_id = ? AND Card_id = ? AND Card_gained = FALSE`,
                     [runId, playerId, tempCard.Card_id]
                 );
-                console.log(`Carta duplicada eliminada: ${tempCard.Card_id}`);
             } else {
-                // No la tiene, marcar como permanente
+                // Nueva carta: marcar como permanente
                 await pool.query(
-                    `UPDATE Deck 
-                     SET Card_gained = TRUE 
-                     WHERE Run_id = ? AND Player_id = ? AND Card_id = ? AND Card_gained = FALSE`,
+                    `UPDATE Deck SET Card_gained = TRUE WHERE Run_id = ? AND Player_id = ? AND Card_id = ? AND Card_gained = FALSE`,
                     [runId, playerId, tempCard.Card_id]
                 );
                 cardsGained++;
             }
         }
-
-        res.json({ 
-            success: true, 
-            message: 'Laberinto completado',
-            cardsGained: cardsGained
-        });
+ 
+        res.json({ success: true, message: 'Laberinto completado', cardsGained });
+ 
     } catch (error) {
         console.error('Error al completar run:', error);
         res.status(500).json({ success: false, message: error.message });
