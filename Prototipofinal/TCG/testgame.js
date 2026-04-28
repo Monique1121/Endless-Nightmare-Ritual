@@ -167,7 +167,7 @@ class OpponentPlayer extends Player {
     const hasBench = this.bench.some(c => c !== null);
     if (
       this.activeCard &&
-      this.canAfford(15) &&
+      this.canAfford(10) &&
       !this.sacrificeUsedThisTurn &&
       hasBench &&
       this.blood > 25 &&
@@ -177,12 +177,12 @@ class OpponentPlayer extends Player {
       if (idx !== -1) {
         const sacrificed = this.bench[idx];
         this.bench[idx]  = null;
-        this.spend(15);
+        this.spend(10);
         this.activeCard.atk       += 3;
         this.activeCard.currentHP += 2;
         this.sacrificeUsedThisTurn = true;
         this.compactBench();
-        log('Rival sacrificó ' + sacrificed.name + ' (-15 sangre)');
+        log('Rival sacrificó ' + sacrificed.name + ' (-10 sangre)');
         log('Su carta activa gana +3 ATK y +2 HP');
       }
     }
@@ -834,7 +834,7 @@ class Game {
     if (state.turn !== 'player' || state.phase !== 'main') { log('No es tu turno'); return; }
     if (player.sacrificeUsedThisTurn) { log('Ya usaste el sacrificio este turno'); return; }
     if (!player.activeCard)           { log('No tienes carta activa'); return; }
-    if (!player.canAfford(15))        { log('No tienes suficiente sangre (necesitas 15)'); return; }
+    if (!player.canAfford(10))        { log('No tienes suficiente sangre (necesitas 10)'); return; }
  
     const idx = player.bench.findIndex(c => c !== null);
     if (idx === -1) { log('No tienes cartas en el banco para sacrificar'); return; }
@@ -843,15 +843,15 @@ class Game {
     const activeCardHpBefore = player.activeCard.currentHP;
     
     player.bench[idx]  = null;
-    player.spend(15);
-    this.bloodSpentThisTurn += 15;
+    player.spend(10);
+    this.bloodSpentThisTurn += 10;
     
     player.activeCard.atk += 3;
     player.activeCard.currentHP += 2;
     player.sacrificeUsedThisTurn = true;
     player.compactBench();
  
-    log('Sacrificaste ' + sacrificed.name + ' (-15 sangre)');
+    log('Sacrificaste ' + sacrificed.name + ' (-10 sangre)');
     log('Tu carta activa gana +3 ATK y +2 HP');
     
     // Registrar acción de sacrificio en BD

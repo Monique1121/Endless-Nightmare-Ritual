@@ -269,7 +269,7 @@ const GameState = {
             });
             
             if (response.ok) {
-                console.log('✅ Estado sincronizado con el servidor');
+                console.log('Estado sincronizado con el servidor');
                 return true;
             } else {
                 console.error('Error al sincronizar:', response.statusText);

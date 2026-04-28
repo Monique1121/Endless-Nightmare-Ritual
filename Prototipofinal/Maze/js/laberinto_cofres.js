@@ -153,16 +153,29 @@ class Game {
         this.chestImage = new Image();
         this.chestImage.src = "../assets/cofre.png";
         this.isolatedCells = new Set();
+        
+        // Inicializar arrays antes de cargar
+        this.chests = [];
+        this.maze = [];
+        this.deadEnds = [];
+        this.actors = [];
+        
+        // Flag para indicar que el juego está listo
+        this.isReady = false;
 
-        // Temporizador de 2 minutos (120000 ms)
-        this.timeLimit = 120000;
+        // Temporizador (se cargará desde la BD)
+        this.timeLimit = 120000; // Default: 2 minutos
         this.elapsedTime = 0;
         this.gameOver = false;
         this.won = false;
+        
+        // Datos del laberinto y enemigo
+        this.labyrinthData = null;
+        this.enemyData = null;
 
         this.createEventListeners();
         this.initObjects();
-        this.generateMaze();
+        this.loadLabyrinthData(); // Cargar datos antes de generar el laberinto
         this.chestImage = new Image();
         this.chestImage.src = "../assets/cofre.png";
 
@@ -175,7 +188,7 @@ class Game {
         this.lightMask.onload = () => { this.lightMaskLoaded = true; };
 
         this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/mascara_6.png";
+        this.darknessMask.src = "../assets/mascara_5.png";
 
         this.mouse = new Vector(0, 0);
 
@@ -185,7 +198,63 @@ class Game {
         this.tempCards = [];
         this.tempSecrets = [];
         this.tempChestsData = []; // Para guardar los datos de API
+    }
+    
+    async loadLabyrinthData() {
+        const runId = localStorage.getItem('runId');
         
+        if (!runId) {
+            console.error('No hay runId - debes entrar desde Hospital o Laboratorio');
+            alert('ERROR: Debes entrar al laberinto desde el Hospital o Laboratorio.\n\nRegresando al lobby...');
+            window.location.href = '../../lobby/lobbyV1.html';
+            return;
+        }
+        
+        try {
+            // Obtener información del run para saber qué laberinto es
+            const runResponse = await fetch(`http://localhost:3000/api/run/${runId}/info`);
+            if (!runResponse.ok) {
+                throw new Error('Error al obtener info del run');
+            }
+            
+            const runData = await runResponse.json();
+            const labyrinthId = runData.run.Labyrinth_id;
+            const levelId = runData.run.Level_id;
+            
+            // Guardar datos del run para el TCG
+            localStorage.setItem('currentRunData', JSON.stringify(runData.run));
+            
+            // Cargar datos del laberinto
+            const labResponse = await fetch(`http://localhost:3000/api/labyrinth/${labyrinthId}`);
+            if (labResponse.ok) {
+                const labData = await labResponse.json();
+                this.labyrinthData = labData.labyrinth;
+                this.timeLimit = this.labyrinthData.Time_limit * 1000; // Convertir segundos a ms
+                console.log(`Tiempo limite: ${this.labyrinthData.Time_limit} segundos`);
+                console.log(`Nivel: ${this.labyrinthData.Level_name}`);
+            }
+            
+            // Cargar datos del enemigo
+            const enemyResponse = await fetch(`http://localhost:3000/api/enemy/level/${levelId}`);
+            if (enemyResponse.ok) {
+                const enemyData = await enemyResponse.json();
+                this.enemyData = enemyData.enemy;
+                console.log(`Enemigo: ${this.enemyData.Enemy_name}`);
+                console.log(`Sangre del enemigo: ${this.enemyData.Blood_pool}`);
+                
+                // Guardar datos del enemigo en localStorage para el TCG
+                localStorage.setItem('enemyData', JSON.stringify(this.enemyData));
+            }
+            
+        } catch (error) {
+            console.error('Error cargando datos del laberinto:', error);
+        }
+        
+        // Generar el laberinto después de cargar los datos
+        this.generateMaze();
+        
+        // Marcar que el juego está listo para ejecutarse
+        this.isReady = true;
     }
 
     findDeadEnds() {
@@ -403,7 +472,7 @@ class Game {
             cell_size, "red", 3, playerMotion);
         this.player.halfSize = new Vector(cell_size / 2, cell_size / 2);
         this.player.setSprite("../assets/gracias.png", new Rect(0, 0, 143, 145));
-        this.player.setCollider(cell_size * 0.65, cell_size * 0.65);
+        this.player.setCollider(cell_size * 0.50, cell_size * 0.50);
         this.player.setSpeed(playerSpeed);
 
         this.entrance = new Door(cell_size, 0, cell_size, cell_size * 2, "../assets/puerta.png");
@@ -522,11 +591,13 @@ openChest() {
             }
         }
 
-        console.log(`✅ Progreso guardado: ${this.tempCards.length} cartas, ${this.tempSecrets.length} secretos`);
-        console.log('💾 Guardado automatico completado - Puedes continuar con estos items');
+        console.log(`Progreso guardado: ${this.tempCards.length} cartas, ${this.tempSecrets.length} secretos`);
+        console.log('Guardado automatico completado - Puedes continuar con estos items');
     }
 
     update(deltaTime) {
+        // No actualizar hasta que el juego esté completamente inicializado
+        if (!this.isReady) return;
 
         if (this.gameOver) return;
         
@@ -591,6 +662,16 @@ openChest() {
     }
 
     draw(ctx) {
+        // No dibujar hasta que el juego esté completamente inicializado
+        if (!this.isReady) {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "20px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Cargando laberinto...", canvasWidth / 2, canvasHeight / 2);
+            return;
+        }
 
         ctx.save();
         ctx.translate(-this.camera.position.x, -this.camera.position.y);
@@ -757,6 +838,12 @@ function closeChestPopup() {
 
 function main() {
     const canvas = document.getElementById("canvas");
+    
+    if (!canvas) {
+        console.error('Canvas no encontrado - esperando DOM...');
+        setTimeout(main, 100);
+        return;
+    }
 
     // Ajustar canvas a pantalla completa
     canvasWidth = window.innerWidth;

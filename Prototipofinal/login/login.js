@@ -121,10 +121,12 @@ loginForm.addEventListener('submit', async function(event) {
       if (deckResponse.ok) {
         const deckData = await deckResponse.json();
         if (deckData.success && deckData.deck) {
-          // Crear o actualizar GameState con las cartas
-          let playerData = localStorage.getItem('playerData');
+          // Misma clave que usa GameState en el resto de escenas
+          const storageKey = `playerData_${playerId}`;
+          let playerData = localStorage.getItem(storageKey);
           if (!playerData) {
             playerData = {
+              Player_id: playerId,
               username: username,
               blood: 100,
               maxBlood: 100,
@@ -135,6 +137,10 @@ loginForm.addEventListener('submit', async function(event) {
             };
           } else {
             playerData = JSON.parse(playerData);
+            // Asegurar que tiene Player_id
+            if (!playerData.Player_id) {
+              playerData.Player_id = playerId;
+            }
           }
           
           // Sincronizar cartas de demonio
@@ -145,7 +151,7 @@ loginForm.addEventListener('submit', async function(event) {
             quantity: 1
           }));
           
-          localStorage.setItem('playerData', JSON.stringify(playerData));
+          localStorage.setItem(storageKey, JSON.stringify(playerData));
         }
       }
     } catch (e) {

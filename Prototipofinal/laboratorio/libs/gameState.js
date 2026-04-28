@@ -110,7 +110,7 @@ const GameState = {
             });
             
             if (response.ok) {
-                console.log('✅ Progreso guardado en el servidor');
+                console.log('Progreso guardado en el servidor');
                 return true;
             } else {
                 console.error('Error al guardar:', response.statusText);

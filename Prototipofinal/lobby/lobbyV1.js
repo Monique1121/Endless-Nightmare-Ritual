@@ -349,33 +349,60 @@ class Game {
         if (this.inSchoolZone) {
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.fillRect(canvasWidth / 2 - 150, 50, 300, 60);
-            ctx.fillStyle = "white";
+            ctx.fillStyle = "#00ff00";
             ctx.font = "bold 18px Arial";
             ctx.textAlign = "center";
             ctx.fillText("E - ENTRAR", canvasWidth / 2, 75);
+            ctx.fillStyle = "white";
             ctx.fillText("ESCUELA", canvasWidth / 2, 95);
             ctx.textAlign = "left";
         }
         
         if (this.inHospitalZone) {
+            const isUnlocked = GameState.isAreaUnlocked('hospital');
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.fillRect(canvasWidth / 2 - 150, 50, 300, 60);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 18px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText("E - ENTRAR", canvasWidth / 2, 75);
-            ctx.fillText("HOSPITAL", canvasWidth / 2, 95);
+            ctx.fillRect(canvasWidth / 2 - 150, 50, 300, 80);
+            
+            if (isUnlocked) {
+                ctx.fillStyle = "#00ff00";
+                ctx.font = "bold 18px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("E - ENTRAR", canvasWidth / 2, 75);
+                ctx.fillStyle = "white";
+                ctx.fillText("HOSPITAL", canvasWidth / 2, 95);
+            } else {
+                ctx.fillStyle = "#ff4444";
+                ctx.font = "bold 20px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("BLOQUEADO", canvasWidth / 2, 75);
+                ctx.fillStyle = "#888888";
+                ctx.font = "12px Arial";
+                ctx.fillText("Completa la ESCUELA primero", canvasWidth / 2, 95);
+            }
             ctx.textAlign = "left";
         }
         
         if (this.inLabZone) {
+            const isUnlocked = GameState.isAreaUnlocked('laboratory');
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.fillRect(canvasWidth / 2 - 150, 50, 300, 60);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 18px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText("E - ENTRAR", canvasWidth / 2, 75);
-            ctx.fillText("LABORATORIO", canvasWidth / 2, 95);
+            ctx.fillRect(canvasWidth / 2 - 150, 50, 300, 80);
+            
+            if (isUnlocked) {
+                ctx.fillStyle = "#00ff00";
+                ctx.font = "bold 18px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("E - ENTRAR", canvasWidth / 2, 75);
+                ctx.fillStyle = "white";
+                ctx.fillText("LABORATORIO", canvasWidth / 2, 95);
+            } else {
+                ctx.fillStyle = "#ff4444";
+                ctx.font = "bold 20px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("BLOQUEADO", canvasWidth / 2, 75);
+                ctx.fillStyle = "#888888";
+                ctx.font = "12px Arial";
+                ctx.fillText("Completa el HOSPITAL primero", canvasWidth / 2, 95);
+            }
             ctx.textAlign = "left";
         }
     }
@@ -449,11 +476,21 @@ class Game {
                 
                 // Entrar al Hospital
                 if (this.inHospitalZone) {
+                    // Verificar si tiene el Hospital desbloqueado
+                    if (!GameState.isAreaUnlocked('hospital')) {
+                        alert('HOSPITAL BLOQUEADO\n\nDebes completar el laberinto de la ESCUELA primero.');
+                        return;
+                    }
                     window.location.href = "../hospital/hospital.html";
                 }
                 
                 // Entrar al Laboratorio
                 if (this.inLabZone) {
+                    // Verificar si tiene el Laboratorio desbloqueado
+                    if (!GameState.isAreaUnlocked('laboratory')) {
+                        alert('LABORATORIO BLOQUEADO\n\nDebes completar el laberinto del HOSPITAL primero.');
+                        return;
+                    }
                     window.location.href = "../laboratorio/laboratorio.html";
                 }
             }
@@ -495,7 +532,7 @@ async function main() {
     // Inicializar GameState con el usuario logueado
     const username = localStorage.getItem('username') || 'Jugador';
     GameState.init(username);
-    console.log('🎮 Cargando inventario desde el servidor...');
+    console.log('Cargando inventario desde el servidor...');
     await GameState.loadFromServer();
     
     // Verificar si es una nueva partida

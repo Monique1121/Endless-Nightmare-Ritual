@@ -113,6 +113,7 @@ class Game {
         
         this.colliders = [];
         this.inExitZone = false;
+        this.inLabyrinthZone = false;
     }
 
     update(deltaTime) {
@@ -124,6 +125,9 @@ class Game {
         let py = this.player.position.y;
         
         this.inExitZone = (px <= 300 && py >= 1850 && py <= 2048);
+        
+        // Detectar zona de entrada al laberinto del laboratorio (centro del mapa)
+        this.inLabyrinthZone = (px >= 900 && px <= 1150 && py >= 900 && py <= 1150);
 
         for (let actor of this.actors) {
             if (actor.updateFrame) {
@@ -178,16 +182,63 @@ class Game {
             ctx.fillText("E - SALIR", canvasWidth / 2, 85);
             ctx.textAlign = "left";
         }
+        
+        // Mostrar indicador de entrada al laberinto
+        if (this.inLabyrinthZone) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(canvasWidth / 2 - 150, 120, 300, 80);
+            ctx.fillStyle = "#ff4444";
+            ctx.font = "bold 18px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("E - ENTRAR", canvasWidth / 2, 145);
+            ctx.fillStyle = "white";
+            ctx.fillText("LABERINTO LAB", canvasWidth / 2, 175);
+            ctx.font = "12px Arial";
+            ctx.fillText("(60 segundos - DIFICIL)", canvasWidth / 2, 190);
+            ctx.textAlign = "left";
+        }
     }
 }
 
-function handleKeyDown(event) {
+async function handleKeyDown(event) {
     let key = event.key;
     
-    // Manejar tecla E para salir
+    // Manejar tecla E para salir o entrar al laberinto
     if (key === 'e' || key === 'E') {
         if (game.inExitZone) {
             showExitModal();
+            return;
+        }
+        
+        if (game.inLabyrinthZone) {
+            try {
+                console.log("Entrando al laberinto del laboratorio...");
+                const playerId = localStorage.getItem("playerId");
+
+                const res = await fetch("http://localhost:3000/api/run/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        playerId: playerId,
+                        labyrinthId: 4,  // Laboratorio
+                        levelId: 3
+                    })
+                });
+
+                const data = await res.json();
+                console.log("Run creado:", data);
+
+                if (data.success) {
+                    localStorage.setItem("runId", data.runId);
+                    window.location.href = "../Maze/html/laberinto_cofres.html";
+                } else {
+                    alert("No se pudo iniciar el laberinto: " + (data.message || "Error desconocido"));
+                }
+            } catch (error) {
+                console.error("Error al iniciar run:", error);
+                alert("Error de conexión. ¿Está el servidor corriendo?");
+            }
+            return;
         }
         return;
     }
@@ -258,12 +309,12 @@ function hideExitModal() {
 }
 
 async function exitAndSave() {
-    console.log('💾 Guardando progreso antes de salir...');
+    console.log('Guardando progreso antes de salir...');
     
     // Guardar progreso en el servidor
     await GameState.sync();
     
-    console.log('✅ Progreso guardado. Regresando al lobby...');
+    console.log('Progreso guardado. Regresando al lobby...');
     window.location.href = "../lobby/lobbyV1.html";
 }
 

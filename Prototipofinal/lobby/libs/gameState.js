@@ -47,6 +47,12 @@ const GameState = {
                 chestsOpened: 0
             },
             
+            areasUnlocked: {
+                school: true,
+                hospital: false,
+                laboratory: false
+            },
+            
             currentLevel: "escuela",
             chestsOpened: [] // IDs de cofres ya abiertos
         };
@@ -269,7 +275,7 @@ const GameState = {
             });
             
             if (response.ok) {
-                console.log('✅ Estado sincronizado con el servidor');
+                console.log('Estado sincronizado con el servidor');
                 return true;
             } else {
                 console.error('Error al sincronizar:', response.statusText);
@@ -336,14 +342,42 @@ const GameState = {
                 description: secret.Content
             }));
             
+            // Cargar estado de áreas desbloqueadas desde el servidor
+            try {
+                const statsResponse = await fetch(`${API_URL}/player/${playerId}/stats`);
+                if (statsResponse.ok) {
+                    const { stats } = await statsResponse.json();
+                    localData.areasUnlocked = {
+                        school: stats.School_unlocked || false,
+                        hospital: stats.Hospital_unlocked || false,
+                        laboratory: stats.Laboratory_unlocked || false
+                    };
+                    console.log('Areas desbloqueadas:', localData.areasUnlocked);
+                }
+            } catch (err) {
+                console.error('Error cargando estado de áreas:', err);
+                localData.areasUnlocked = { school: true, hospital: false, laboratory: false };
+            }
+            
             this.save(localData);
-            console.log(`   Sangre: ${localData.blood}/${localData.maxBlood}`);
-            console.log(`   Cartas: ${inventory.cards.length}`);
-            console.log(`   Secretos: ${inventory.secrets ? inventory.secrets.length : 0}`);
+            console.log(`Sangre: ${localData.blood}/${localData.maxBlood}`);
+            console.log(`Cartas: ${inventory.cards.length}`);
+            console.log(`Secretos: ${inventory.secrets ? inventory.secrets.length : 0}`);
             return true;
         } catch (error) {
             console.error('Error al cargar desde servidor:', error);
             return false;
         }
+    },
+    
+    /**
+     * Verificar si un área está desbloqueada
+     * @param {string} area - 'school', 'hospital' o 'laboratory'
+     * @returns {boolean}
+     */
+    isAreaUnlocked(area) {
+        const data = this.load();
+        if (!data || !data.areasUnlocked) return false;
+        return data.areasUnlocked[area] || false;
     }
 };
