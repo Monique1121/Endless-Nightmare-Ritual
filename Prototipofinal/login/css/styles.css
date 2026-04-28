@@ -33,7 +33,7 @@ body {
 }
 
 .header{
-    color: rgba(221, 186, 165, 0.578);
+    color: rgba(208, 194, 184, 0.451);
     text-align: center;
     margin-top: 20px;
     font-family: 'VT323', monospace;
@@ -43,22 +43,33 @@ body {
 }
 
 .logo {
-    height: 70px;
-    
+    height: 70px; 
 }
 
-#image{
-    width: 60%;
-    text-align: center;
+#image {
+    position: relative;
+    width: 90%;
+    max-width: 1200px;
+}
+
+.base {
+    width: 100%;
     display: block;
-    margin: 0 auto;
-    border-radius: 8px;
-    margin-top: 25px;
 }
 
+.overlay {
+    position: absolute;
+    top: 50%; 
+    left: 50%;          /* mueve horizontal */
+    transform: translate(-50%, -50%); /* centra */
+    
+    width: 50%; /* tamaño de la imagen encima */
+    pointer-events: none; /* opcional */
+}
 
 #headerContainer a {
-    color: rgb(221, 187, 165);
+    color: rgb(231, 215, 204);
+    text-align: center;
     text-decoration: none;
     transition: color 0.3s ease;
 }
@@ -122,183 +133,4 @@ body {
 #backButton:hover {
     background-color: rgb(180, 40, 40);
     transform: scale(1.05);
-}
-
-
-.japon{
-    color: white;
-    text-align: right;
-    margin-top: 20px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 180px;
-    margin-bottom: 15px;
-    background-image: url("https://i.pinimg.com/1200x/c9/0d/b7/c90db7deb5a02200ab82bb862f969f69.jpg");
-    background-size: cover;
-    background-position: center;
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.mangas{
-    color: white;
-    text-align: left;
-    margin-top: 20px;
-    font-family: 'Poppins', sans-serif;
-    margin-top: 20px;
-    font-size: 30px;
-    justify-content: center;
-    align-items: center;
-    justify-items: center;
-    font-weight: bold;
-
-}
-
-.linea {
-    border-right: 2px solid rgb(224, 59, 59);
-    height: 80%;
-
-}
-
-#m1{
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1px;
-    border-bottom: 2px solid white;
-}
-
-#m2{
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1px;
-    border-bottom: 2px solid white;
-}
-
-#m3{
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1px;
-    border-bottom: 2px solid white;
-}
-
-#m4{
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1px;
-    border-bottom: 2px solid white;
-}
-
-#m5{
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1px;
-    border-bottom: 2px solid white;
-}
-
-#m6{
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1px;
-    border-bottom: 2px solid white;
-}
-
-.id{
-    font-family: 'Poppins', sans-serif;
-    color: white;
-    font-size: 15px;
-    text-align: left;
-    margin-top: 25px;
-}
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.info h3:hover {
-  color: rgb(224, 59, 59);
-}
-
-.menu{
-    color: white;
-    text-align: center;
-    margin-top: 70px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 70px;
-    border-bottom: 2px solid rgb(224, 59, 59);
-    border-top: 2px solid rgb(224, 59, 59);
-    padding: 60px 0;
-    margin-top: 70px;
-
-}
-
-.text3 {
-    color: white;
-    text-align: center;
-    margin-top: 50px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 20px;
-    justify-content: center;
-    align-items: center;
-    justify-items: center;
-}
-
-.ramen{
-    color: rgb(179, 30, 30);
-    text-align: right;
-    margin-top: 20px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 180px;
-    margin-bottom: 15px;
-    background-image: url("https://i.pinimg.com/1200x/90/0f/41/900f41ce544b44bdf2abef55b53a0098.jpg");
-    background-size: cover;
-    background-position: center;
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.dias{
-    color: white;
-    text-align: center;
-    margin-top: 20px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 40px;
-    margin-bottom: 15px;
-    cursor: pointer;
-
-}
-
-.dias:hover{
-    
-    border-bottom: 2px solid rgb(224, 59, 59);
-}
-
-.platillo {
-    position: relative;
-    cursor: pointer;
-    margin-bottom: 10px;
-    font-size: 35px;
-    text-align: left;
-    display: flex;
-}
-
-.img-hover {
-    display: none;
-    width: 200px;
-    border-radius: 10px;
-    margin-left: 300px;
-    position: absolute;
-    top: 0; 
-    left: 10%;
-}
-
-.platillo:hover .img-hover {
-    display: block;
-}
-
-.footer{
-    color: white;
-    text-align: left;
-    margin-bottom: 50px;
-    font-family: "Times New Roman", Times, serif;
-    font-size: large;
-    margin-top: 70px;
 }
