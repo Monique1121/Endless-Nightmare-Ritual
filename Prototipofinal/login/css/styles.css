@@ -334,7 +334,7 @@ a {
 }
 
 .text4 {
-    color: rgb(204, 7, 7);
+    color: rgb(238, 219, 206);
     text-align: left;
     font-family: 'VT323', monospace;
     font-size: 180px;
@@ -348,7 +348,7 @@ a {
 }
 
 .text5 {
-    color: rgb(224, 197, 179);
+    color: rgb(195, 23, 23);
     text-align: left;
     font-family: 'VT323', monospace;
     font-size: 50px;
@@ -359,17 +359,6 @@ a {
     
 }
 
-.text6 {
-    color: rgb(224, 197, 179);
-    text-align: left;
-    font-family: 'VT323', monospace;
-    font-size: 40px;
-    justify-content: center;
-    align-items: center;
-    justify-items: center;
-    margin-top: 0;
-    
-}
 
 .cuaderno {
     position: relative;
@@ -382,7 +371,7 @@ a {
     aspect-ratio: 1/1;
     height: 100vh;
     padding: 5% 15%;
-
+    border-top: 3px solid rgb(224, 197, 179);
 }
 
 .cuaderno-img {
@@ -399,8 +388,16 @@ a {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     /*line-height: 0.5ch;*/
+}
+
+.content img {
+    display: block;
+    margin: 0 auto;
+    width: 800px;
+    height: auto;
+    top: 20%;
 }
 
 .tutorial-info {
@@ -413,11 +410,14 @@ a {
     font-size: 100px;
     color: rgb(74, 12, 12);
     top: 0;
+    align-self: center;
 }
 
 .tutorial-info h1 {
+    top: 5%;
     font-size: 60px;
     color: rgb(41, 18, 5);
+    text-align: left;
 }
 
 .tutorial-info p {
@@ -450,6 +450,43 @@ a {
 .flecha:hover {
     color: rgb(255, 255, 255);
     transform: translateY(-50%) scale(1.2);
+}
+
+.guia {
+    padding-top: 10%;
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+
+.aviso {
+    color: rgb(74, 12, 12);
+    font-size: 40px;
+
+    
+}
+
+.campo {
+    font-size: 70px;
+}
+
+.centrar {
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+
+.central {
+    display: block;
+    text-align: center !important;;
+    width: 100%;
+}
+
+
+.roba {
+    color: rgb(74, 12, 12);
+    font-size: 50px;
+
 }
 
 
