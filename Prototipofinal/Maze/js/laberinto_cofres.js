@@ -27,6 +27,7 @@ let oldTime = 0;
 
 let playerSpeed = 0.5;
 
+let globalAngle = 0;
 
 const keyDirections = {
     w: "up",
@@ -331,9 +332,12 @@ class Game {
     drawDarkness(ctx) {
 
         const size = 3000;
-        const dx = this.mouse.x - this.player.position.x;
-        const dy = this.mouse.y - this.player.position.y;
-        const angle = Math.atan2(dy, dx);
+        // const dx = this.mouse.x - this.player.position.x;
+        // const dy = this.mouse.y - this.player.position.y;
+        // const angle = Math.atan2(dy, dx);
+        // globalAngle = angle;
+
+        let angle = globalAngle;
 
         ctx.save();
 
@@ -582,7 +586,9 @@ openChest() {
         ctx.fillStyle = totalSeconds <= 10 ? "red" : "white";
         ctx.font = "bold 24px Arial";
         ctx.textAlign = "center";
-        ctx.fillText("Tiempo: " + timeString, canvasWidth / 2, 38);
+        //ctx.fillText("Tiempo: " + timeString, canvasWidth / 2, 38);
+                ctx.fillText(`Angulo: ${globalAngle * 180 / Math.PI}`, canvasWidth / 2, 38);
+
         ctx.textAlign = "left";
         
         // Mostrar mensaje de fin de juego
@@ -711,6 +717,10 @@ this.returnTimeout = setTimeout(async () => {
             this.mouse.x = mouseX + this.camera.position.x;
             this.mouse.y = mouseY + this.camera.position.y;
 
+                    const dx = this.mouse.x - this.player.position.x;
+        const dy = this.mouse.y - this.player.position.y;
+        const angle = Math.atan2(dy, dx);
+        globalAngle = angle;
         });
     }
 

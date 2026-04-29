@@ -43,22 +43,25 @@ body {
 }
 
 .logo {
-    height: 70px; 
+    height: 70px;
+    filter: 
+        drop-shadow(0 0 3px rgb(211, 12, 12));
+    transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-#image {
-    width: 100%;
+.logo-link:hover {
+    border-bottom: none !important;
+    color: inherit !important;
 }
 
-#image img {
-    width: 100%;
-    height: 90vh;
-    object-fit: cover;
-    image-rendering: pixelated;
+.logo-link:hover .logo {
+    filter:
+        drop-shadow(0 0 10px rgb(195, 23, 23));
+    transform: scale(1.05);
 }
 
 #headerContainer a {
-    color: rgb(231, 215, 204);
+    color: rgb(224, 197, 179);
     text-align: center;
     text-decoration: none;
     transition: color 0.3s ease;
@@ -67,6 +70,41 @@ body {
 #headerContainer a:hover {
   border-bottom: 2px solid rgb(224, 59, 59);
   color: rgb(224, 59, 59);
+  
+}
+
+.contenedor {
+    position: relative;
+    width: 100%;
+}
+
+
+.fondo {
+    width: 100%;
+    height: 90vh;
+    object-fit: cover;
+    display: block;
+}
+
+.titulo-img {
+    position: absolute;
+    top: 33%;
+    left: 50%;
+    transform: translate(-115%, -50%);
+    width: 40%; 
+    max-width: 700px;
+    height: auto;
+    filter: 
+        drop-shadow(0 0 5px rgb(150, 14, 14));
+}
+
+
+.texto-overlay {
+    position: absolute;
+    top: 70%;
+    left: 2%;
+    transform: translateY(-50%);
+    max-width: 1000px;
 }
 
 .row {
@@ -79,65 +117,346 @@ body {
 }
 
 .text1 {
-    color: white;
+    color: rgb(224, 197, 179);
     text-align: left;
-    margin-top: 20px;
-    font-family: 'Bebas Neue', sans-serif;
-    margin-top: 20px;
-    font-size: 50px;
+    font-family: 'VT323', monospace;
+    font-size: 35px;
     justify-content: center;
     align-items: center;
     justify-items: center;
+    width: 600px;
 }
 
-.text2 {
-    color: white;
-    text-align: left;
-    margin-top: 20px;
-    font-family: 'Poppins', sans-serif;
-    margin-top: 20px;
-    font-size: 20px;
-    justify-content: center;
-    align-items: center;
-    justify-items: center;
+.rojo {
+    color: rgb(202, 11, 11);
 }
 
 
 
 #backButton {
-    justify-content: center;
-    align-items: center;
-    justify-items: center;
-    background-color: rgb(224, 59, 59);
-    font-family: 'Bebas Neue', sans-serif;
-    color: white;
-    font-size: 25px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 12px; 
-    cursor: pointer; 
-    margin-top: 20px;
-    transition: all 0.3s ease;
+    background: linear-gradient(
+        180deg,
+        rgb(149, 20, 20),
+        rgb(120, 20, 20)
+    );
+    color: rgb(255,255,255,0.9);
+    font-family: 'VT323', monospace;
+    font-size: 28px;
+    padding: 5px 40px;
+    display: block;
+    margin-left: 0px;
+    margin-top: 30px;
+    border: 2px solid rgb(80, 10, 10);
+    border-radius: 6px;
+    cursor: pointer;
+    
+
+    letter-spacing: 3px;
+    transition-duration: 0.4s;
 }
 
 #backButton:hover {
-    background-color: rgb(180, 40, 40);
-    transform: scale(1.05);
+
+    color: rgb(73, 12, 12);
+    background: rgb(241, 239, 239);
+    border: 2px solid rgb(255, 255, 255);
 }
 
-.inicio{
-    color: white;
-    text-align: right;
-    margin-top: 20px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 180px;
-    margin-bottom: 15px;
-    background-image: url("https://i.pinimg.com/736x/e0/b1/46/e0b146a29d0dfc36afb9184b288882f9.jpg");
-    background-size: cover;
-    background-position: center;
-    width: 100%;
-    height: 100vh;
-    display: flex;
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.descubre {
+    border-bottom: 3px solid rgb(224, 197, 179);
+}
+
+.espera {
+    color: rgb(224, 197, 179);
+    text-align: center;
+    font-family: 'VT323', monospace;
+    font-size: 70px;
     justify-content: center;
     align-items: center;
+    justify-items: center;
+    margin-top: 80px;
+    border-bottom: 5px solid rgb(224, 197, 179);
+    margin-bottom: 20px;
 }
+
+.espera p {
+    margin-bottom: 0px;
+}
+
+
+
+.iconos {
+    margin-top: 10px;
+    margin: 0 auto 10px;
+    width: 150px;
+    height: auto;
+    display: block;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    animation: flotar 3s ease-in-out infinite;
+}
+
+@keyframes flotar {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+
+.iconos:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 10px red);
+}
+
+.titulo-seccion {
+    color: rgb(167, 18, 18);
+    text-align: center;
+    font-family: 'VT323', monospace;
+    font-size: 45px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    margin-top: 20px;
+
+}
+
+.texto-seccion {
+    color: rgb(224, 197, 179);
+    text-align: center;
+    font-family: 'VT323', monospace;
+    font-size: 30px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    margin-top: 20px;
+    padding: 0 50px;
+    
+}
+
+.text2 {
+    color: rgb(209, 7, 7);
+    text-align: left;
+    font-family: 'VT323', monospace;
+    font-size: 35px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    border-bottom: 3px solid rgb(231, 1, 1);
+}
+
+.text3 {
+    color: rgb(224, 197, 179);
+    text-align: left;
+    font-family: 'VT323', monospace;
+    font-size: 25px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+
+}
+
+.texto-capa {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    width: 100%;
+}
+
+
+
+#conoceButton {
+    background: linear-gradient(
+        180deg,
+        rgb(0, 0, 0),
+        rgb(14, 7, 7)
+    );
+    color: rgb(224, 197, 179);;
+    font-family: 'VT323', monospace;
+    font-size: 25px;
+    padding: 5px 40px;
+    display: block;
+    margin-left: 40px;
+    margin-top: 5px;
+    border: 1px solid rgb(224, 197, 179);;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 3px;
+    transition-duration: 0.4s;
+}
+
+#conoceButton:hover {
+
+    color: rgb(73, 12, 12);
+    background: rgb(241, 239, 239);
+    border: 2px solid rgb(255, 255, 255);
+}
+
+.atreves {
+    color: rgb(180, 15, 15);
+    text-align: center;
+    font-family: 'VT323', monospace;
+    font-size: 50px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    margin-top: 60px;
+    margin-bottom: 20px;
+}
+
+.atreves p {
+    margin-bottom: 0px;
+}
+
+.puerta {
+    top: 0;
+    margin-top: 0px;
+    margin: 0 auto 10px;
+    width: 500px;
+    height: auto;
+    display: block;
+}
+
+.texto-capas {
+    position: absolute;
+    top: 22%;
+    left: 7%;
+    width: 35%;
+}
+
+.text4 {
+    color: rgb(204, 7, 7);
+    text-align: left;
+    font-family: 'VT323', monospace;
+    font-size: 180px;
+    margin-bottom: 5px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    left: 10%;
+    filter:
+        drop-shadow(0 0 15px rgb(195, 23, 23));
+}
+
+.text5 {
+    color: rgb(224, 197, 179);
+    text-align: left;
+    font-family: 'VT323', monospace;
+    font-size: 50px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    margin-top: 0;
+    
+}
+
+.text6 {
+    color: rgb(224, 197, 179);
+    text-align: left;
+    font-family: 'VT323', monospace;
+    font-size: 40px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    margin-top: 0;
+    
+}
+
+.cuaderno {
+    position: relative;
+    width: 80%;
+    margin: 80px auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    aspect-ratio: 1/1;
+    height: 100vh;
+    padding: 5% 15%;
+
+}
+
+.cuaderno-img {
+    width: 100%;
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+}
+
+.content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    /*line-height: 0.5ch;*/
+}
+
+.tutorial-info {
+    width: 100%;
+    color: rgb(35, 25, 20);
+    font-family: 'VT323', monospace;
+}
+
+.tutorial-info h2 {
+    font-size: 100px;
+    color: rgb(74, 12, 12);
+    top: 0;
+}
+
+.tutorial-info h1 {
+    font-size: 60px;
+    color: rgb(41, 18, 5);
+}
+
+.tutorial-info p {
+    color: rgb(41, 18, 5);
+    font-size: 40px;
+}
+
+
+.flecha {
+    position: absolute;
+    bottom: 0;
+    transform: translateY(-50%);
+    font-size: 50px;
+    background: transparent;
+    border: none;
+    color: rgb(74, 12, 12);
+    cursor: pointer;
+    z-index: 10;
+    transition: 0.2s;
+}
+
+#anterior {
+    left: 20%;
+}
+
+#siguiente {
+    right: 15%;
+}
+
+.flecha:hover {
+    color: rgb(255, 255, 255);
+    transform: translateY(-50%) scale(1.2);
+}
+
+
+
+
+
+
+
+
+
