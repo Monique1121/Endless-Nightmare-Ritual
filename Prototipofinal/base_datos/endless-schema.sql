@@ -1,13 +1,3 @@
--- =====================================================
--- BASE DE DATOS UNIFICADA - ENDLESS NIGHTMARE RITUAL
--- =====================================================
--- Esquema alineado con la API (Prototipofinal/API/server.js) y
--- con el frontend (login, menu, lobby, hospital, laboratorio,
--- Maze y TCG), pero manteniendo piezas del SQL anterior que
--- seguian formando parte del juego: tablas auxiliares, posiciones
--- de cofres, seeds mas amplios y triggers de compatibilidad.
--- =====================================================
-
 DROP DATABASE IF EXISTS endless;
 CREATE DATABASE endless;
 USE endless;
@@ -303,13 +293,13 @@ CREATE TABLE Player_Achievements (
 
 INSERT INTO Levels (Level_id, Level_name, Level_number, Enemy_name) VALUES
 (1, 'Escuela', 1, 'Arantza'),
-(2, 'Hospital', 2, 'Monique'),
-(3, 'Laboratorio', 3, 'Arantza y Monique');
+(2, 'Laboratorio', 2, 'Monique'),
+(3, 'Hospital', 3, 'Arantza y Monique');
 
 INSERT INTO Labyrinth (Labyrinth_id, Level_id, Labyrinth_name, Time_limit) VALUES
-(1, 1, 'Laberinto de la Escuela', 240),
-(3, 2, 'Laberinto del Hospital', 90),
-(4, 3, 'Laberinto del Laboratorio', 60);
+(1, 1, 'Laberinto de la Escuela', 150),
+(3, 3, 'Laberinto del Hospital', 120),
+(4, 2, 'Laberinto del Laboratorio', 105);
 
 INSERT INTO Enemy (Enemy_id, Level_id, Enemy_name, Blood_pool, Knockouts_to_win) VALUES
 (1, 1, 'Arantza', 50, 6),

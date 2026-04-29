@@ -8,8 +8,8 @@
 const worldWidth = 3000;
 const worldHeight = 3000;
 
-const rows = 40;
-const cols = 50;
+const rows = 32;
+const cols = 40;
 const cell_size = 64;
 
 let canvasWidth = window.innerWidth;
@@ -26,6 +26,8 @@ let game;
 let oldTime = 0;
 
 let playerSpeed = 0.5;
+
+let globalAngle = 0;
 
 
 const keyDirections = {
@@ -188,7 +190,7 @@ class Game {
         this.lightMask.onload = () => { this.lightMaskLoaded = true; };
 
         this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/mascara_5.png";
+        this.darknessMask.src = "../assets/mascara_6.png";
 
         this.mouse = new Vector(0, 0);
 
@@ -402,9 +404,7 @@ class Game {
     drawDarkness(ctx) {
 
         const size = 3000;
-        const dx = this.mouse.x - this.player.position.x;
-        const dy = this.mouse.y - this.player.position.y;
-        const angle = Math.atan2(dy, dx);
+        const angle = globalAngle;
 
         ctx.save();
 
@@ -798,6 +798,10 @@ if (!this.returnTimeout) {
 
             this.mouse.x = mouseX + this.camera.position.x;
             this.mouse.y = mouseY + this.camera.position.y;
+
+            const dx = this.mouse.x - this.player.position.x;
+            const dy = this.mouse.y - this.player.position.y;
+            globalAngle = Math.atan2(dy, dx);
 
         });
     }

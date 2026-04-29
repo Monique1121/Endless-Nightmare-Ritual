@@ -5,7 +5,6 @@
 "use strict";
 
 function boxOverlap(obj1, obj2) {
-    // TODO: define variables
     const L1 = obj1.position.x - obj1.halfSize.x;
     const R1 = obj1.position.x + obj1.halfSize.x;
     const T1 = obj1.position.y - obj1.halfSize.y;
@@ -16,8 +15,6 @@ function boxOverlap(obj1, obj2) {
     const T2 = obj2.position.y - obj2.halfSize.y;
     const B2 = obj2.position.y + obj2.halfSize.y;
 
-    // Compare the values to determine if the boxes overlap
-    // TODO: use the correct condition
     return (L1 < R2 && R1 > L2 && T1 < B2 && B1 > T2);
 }
 

@@ -10,6 +10,7 @@ let ctx;
 let game;
 let oldTime = 0;
 let playerSpeed = 0.50;
+let playerVisualScale = 1.45;
 
 const keyDirections = {
     w: "up",
@@ -93,7 +94,7 @@ class Game {
         this.playerImage.src = "../lobby/assets/sprites/gracias.png";
 
         this.player = new AnimatedPlayer(
-            new Vector(92, 1945),
+            new Vector(990, 1897),
             60,
             60,
             "blue",
@@ -105,6 +106,8 @@ class Game {
             "../lobby/assets/sprites/gracias.png",
             new Rect(0, 0, 143, 145)
         );
+
+        this.player.setScale(playerVisualScale);
         
         this.player.setSpeed(playerSpeed);
 
@@ -148,8 +151,8 @@ class Game {
         
         this.inExitZone = (px <= 200 && py >= 1850 && py <= 2000);
         
-        // Detectar zona de entrada al laberinto del hospital (centro del mapa)
-        this.inLabyrinthZone = (px >= 900 && px <= 1150 && py >= 900 && py <= 1150);
+        // Detectar zona de entrada al laberinto del hospital (puerta principal)
+        this.inLabyrinthZone = (px >= 1350 && px <= 1495 && py >= 720 && py <= 860);
 
         for (let actor of this.actors) {
             if (actor.updateFrame) {
@@ -181,6 +184,20 @@ class Game {
         }
     }
 
+    drawCoordinates(ctx) {
+        const x = Math.round(this.player.position.x);
+        const y = Math.round(this.player.position.y);
+        const panelWidth = 170;
+        const panelX = canvasWidth - panelWidth - 15;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillRect(panelX, 15, panelWidth, 48);
+        ctx.fillStyle = "white";
+        ctx.font = "14px monospace";
+        ctx.fillText(`X: ${x}`, panelX + 13, 35);
+        ctx.fillText(`Y: ${y}`, panelX + 13, 54);
+    }
+
     draw(ctx) {
         ctx.save();
         ctx.translate(-this.camera.position.x, -this.camera.position.y);
@@ -193,6 +210,7 @@ class Game {
         }
 
         ctx.restore();
+        this.drawCoordinates(ctx);
         
         // Mostrar indicador de salida
         if (this.inExitZone) {
@@ -251,7 +269,7 @@ async function handleKeyDown(event) {
                     body: JSON.stringify({
                         playerId: playerId,
                         labyrinthId: 3,  // Hospital
-                        levelId: 2
+                        levelId: 3
                     })
                 });
 

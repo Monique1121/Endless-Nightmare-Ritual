@@ -526,6 +526,7 @@ class Draw {
   drawGameOver(state) {
     const ctx = this.ctx;
     const won = state.winner === 'player';
+    const isFinalVictory = won && Number(globalGame?.combatData?.level_id) === 3;
  
     ctx.fillStyle = 'rgba(0,0,0,0.8)';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -542,7 +543,7 @@ class Draw {
       : `Perdiste ${state.knockoutsToWin} cartas`;
     ctx.fillText(knockoutText, this.canvas.width / 2, this.canvas.height / 2 + 20);
     ctx.font = '28px Arial';
-    ctx.fillText('Regresando al lobby...', this.canvas.width / 2, this.canvas.height / 2 + 100);
+    ctx.fillText(isFinalVictory ? 'TERMINASTE EL JUEGO' : 'Regresando al lobby...', this.canvas.width / 2, this.canvas.height / 2 + 100);
     ctx.textAlign = 'left';
   }
 
@@ -1108,12 +1109,8 @@ window.onload = async function () {
     let playerBlood = 100;
     let playerName = 'Jugador';
     
-    console.log('=== INICIANDO TCG ===');
-    console.log('Player ID:', playerId);
-    console.log('PlayerData:', playerData);
-    
     if (!playerId) {
-        console.error('FALTA PLAYER_ID - No se podran cargar datos de la BD');
+      console.error('No se encontro playerId para cargar datos del jugador');
     }
     
     // Obtener datos actualizados del jugador desde la API
@@ -1124,7 +1121,6 @@ window.onload = async function () {
             if (playerStats.success) {
                 playerBlood = playerStats.stats.Blood_current || 100;
                 playerName = playerStats.stats.Player_name || 'Jugador';
-                console.log(`Jugador cargado: ${playerName} (${playerBlood}/${playerStats.stats.Blood_max} HP)`);
             }
         } catch (error) {
             console.error('Error al cargar stats del jugador:', error);
@@ -1145,7 +1141,6 @@ window.onload = async function () {
             enemyName = enemyData.Enemy_name || "Enemigo";
             enemyId = enemyData.Enemy_id;
             knockoutsToWin = enemyData.Knockouts_to_win || 6;
-            console.log(`Enemigo cargado: ${enemyName} (${enemyBlood} HP, ${knockoutsToWin} KOs para ganar)`);
         } else {
             console.warn('No se encontraron datos del enemigo, usando valores por defecto');
         }
@@ -1170,7 +1165,6 @@ window.onload = async function () {
     // Iniciar combate en la base de datos
     let combatData = null;
     if (playerId && enemyId) {
-        console.log('Iniciando combate en BD...');
         try {
             const response = await fetch('http://localhost:3000/api/combat/start', {
                 method: 'POST',
@@ -1189,9 +1183,9 @@ window.onload = async function () {
                     combat_id: data.combat_id,
                     player_id: playerId,
                     enemy_id: enemyId,
-                    enemy_blood: enemyBlood
+                  enemy_blood: enemyBlood,
+                  level_id: levelId
                 };
-                console.log('Combate iniciado en BD:', data.combat_id);
             }
         } catch (error) {
             console.error('Error al iniciar combate:', error);

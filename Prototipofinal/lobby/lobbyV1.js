@@ -17,6 +17,7 @@ let game;
 let oldTime = 0;
 
 let playerSpeed = 0.50;
+let playerVisualScale = 1.45;
 
 
 const keyDirections = {
@@ -104,7 +105,7 @@ class Game {
         
         // Cargar imagen del mapa completo
         this.mapImage = new Image();
-        this.mapImage.src = "assets/sprites/bosqueescuela.png";
+        this.mapImage.src = "assets/sprites/bosqueescuela2.png";
         
         this.inventoryOpen = false;
         this.viewingSecrets = false;
@@ -181,7 +182,6 @@ class Game {
                 cardDiv.className = "inventory-card";
                 
                 const img = document.createElement("img");
-                console.log("CARD IMAGE:", card.name, card.image);
                 img.src = card.image;
                 img.alt = card.name;
                 img.className = "inventory-card-png";
@@ -234,7 +234,7 @@ class Game {
 
     initObjects() {
         this.player = new AnimatedPlayer(
-            new Vector(this.world.width / 2, this.world.height - 150),
+            new Vector(715, 1992),
             60,
             60,
             "red",
@@ -247,6 +247,8 @@ class Game {
     "assets/sprites/gracias.png",
     new Rect(0, 0, 143, 145)
 );
+
+        this.player.setScale(playerVisualScale);
 
         this.player.setSpeed(playerSpeed);
 
@@ -278,19 +280,19 @@ class Game {
         let py = this.player.position.y;
         
         // Detectar zonas sin entrar automáticamente
-        if (px > 2017 && py >= 995 && py <= 1024) {
+        if (px >= 1460 && px <= 1600 && py >= 610 && py <= 740) {
             this.inHospitalZone = true;
         } else {
             this.inHospitalZone = false;
         }
         
-        if (px <= 30 && py >= 900 && py <= 1100) {
+        if (px >= 520 && px <= 640 && py >= 560 && py <= 700) {
             this.inLabZone = true;
         } else {
             this.inLabZone = false;
         }
         
-        if (px >= 1000 && px <= 1050 && py >= 990 && py <= 1041) {
+        if (px >= 975 && px <= 1055 && py >= 810 && py <= 930) {
             this.inSchoolZone = true;
         } else {
             this.inSchoolZone = false;
@@ -326,6 +328,20 @@ class Game {
         }
     }
 
+    drawCoordinates(ctx) {
+        const x = Math.round(this.player.position.x);
+        const y = Math.round(this.player.position.y);
+        const panelWidth = 170;
+        const panelX = canvasWidth - panelWidth - 15;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillRect(panelX, 15, panelWidth, 48);
+        ctx.fillStyle = "white";
+        ctx.font = "14px monospace";
+        ctx.fillText(`X: ${x}`, panelX + 13, 35);
+        ctx.fillText(`Y: ${y}`, panelX + 13, 54);
+    }
+
     draw(ctx) {
         ctx.save();
 
@@ -344,6 +360,7 @@ class Game {
         }
 
         ctx.restore();
+        this.drawCoordinates(ctx);
         
         // Mostrar indicadores según la zona
         if (this.inSchoolZone) {
@@ -377,7 +394,7 @@ class Game {
                 ctx.fillText("BLOQUEADO", canvasWidth / 2, 75);
                 ctx.fillStyle = "#888888";
                 ctx.font = "12px Arial";
-                ctx.fillText("Completa la ESCUELA primero", canvasWidth / 2, 95);
+                ctx.fillText("Completa el LABORATORIO primero", canvasWidth / 2, 95);
             }
             ctx.textAlign = "left";
         }
@@ -401,7 +418,7 @@ class Game {
                 ctx.fillText("BLOQUEADO", canvasWidth / 2, 75);
                 ctx.fillStyle = "#888888";
                 ctx.font = "12px Arial";
-                ctx.fillText("Completa el HOSPITAL primero", canvasWidth / 2, 95);
+                ctx.fillText("Completa la ESCUELA primero", canvasWidth / 2, 95);
             }
             ctx.textAlign = "left";
         }
@@ -445,9 +462,7 @@ class Game {
                 // Entrar a la Escuela
                 if (this.inSchoolZone) {
                     try {
-                        console.log("Intentando entrar a la escuela...");
                         const playerId = localStorage.getItem("playerId");
-                        console.log("Player ID:", playerId);
 
                         const res = await fetch("http://localhost:3000/api/run/create", {
                             method: "POST",
@@ -460,7 +475,6 @@ class Game {
                         });
 
                         const data = await res.json();
-                        console.log("Respuesta del servidor:", data);
 
                         if (data.success) {
                             localStorage.setItem("runId", data.runId);
@@ -478,7 +492,7 @@ class Game {
                 if (this.inHospitalZone) {
                     // Verificar si tiene el Hospital desbloqueado
                     if (!GameState.isAreaUnlocked('hospital')) {
-                        alert('HOSPITAL BLOQUEADO\n\nDebes completar el laberinto de la ESCUELA primero.');
+                        alert('HOSPITAL BLOQUEADO\n\nDebes completar el laberinto del LABORATORIO primero.');
                         return;
                     }
                     window.location.href = "../hospital/hospital.html";
@@ -488,7 +502,7 @@ class Game {
                 if (this.inLabZone) {
                     // Verificar si tiene el Laboratorio desbloqueado
                     if (!GameState.isAreaUnlocked('laboratory')) {
-                        alert('LABORATORIO BLOQUEADO\n\nDebes completar el laberinto del HOSPITAL primero.');
+                        alert('LABORATORIO BLOQUEADO\n\nDebes completar el laberinto de la ESCUELA primero.');
                         return;
                     }
                     window.location.href = "../laboratorio/laboratorio.html";
@@ -532,14 +546,11 @@ async function main() {
     // Inicializar GameState con el usuario logueado
     const username = localStorage.getItem('username') || 'Jugador';
     GameState.init(username);
-    console.log('Cargando inventario desde el servidor...');
     await GameState.loadFromServer();
     
     // Verificar si es una nueva partida
     const isNewGame = localStorage.getItem('isNewGame');
     if (isNewGame === 'true') {
-        console.log('Nueva partida iniciada - Progreso guardado automaticamente');
-        console.log('Puedes usar "Continuar" para seguir con estas cartas');
         localStorage.removeItem('isNewGame'); // Limpiar flag
     }
     

@@ -10,6 +10,7 @@ let ctx;
 let game;
 let oldTime = 0;
 let playerSpeed = 0.50;
+let playerVisualScale = 1.45;
 
 const keyDirections = {
     w: "up",
@@ -93,7 +94,7 @@ class Game {
         this.playerImage.src = "../lobby/assets/sprites/gracias.png";
 
         this.player = new AnimatedPlayer(
-            new Vector(189, 1968),
+            new Vector(655, 2018),
             60,
             60,
             "blue",
@@ -105,6 +106,8 @@ class Game {
             "../lobby/assets/sprites/gracias.png",
             new Rect(0, 0, 143, 145)
         );
+
+        this.player.setScale(playerVisualScale);
         
         this.player.setSpeed(playerSpeed);
 
@@ -114,20 +117,42 @@ class Game {
         this.colliders = [];
         this.inExitZone = false;
         this.inLabyrinthZone = false;
+        this.labyrinthData = {
+            Labyrinth_name: "LABERINTO LAB",
+            Time_limit: 105,
+        };
+
+        this.loadLabyrinthData();
+    }
+
+    async loadLabyrinthData() {
+        try {
+            const response = await fetch("http://localhost:3000/api/labyrinth/4");
+            if (!response.ok) {
+                throw new Error("No se pudo cargar el laberinto del laboratorio");
+            }
+
+            const data = await response.json();
+            if (data.success && data.labyrinth) {
+                this.labyrinthData = data.labyrinth;
+            }
+        } catch (error) {
+            console.error("Error cargando datos del laboratorio:", error);
+        }
     }
 
     update(deltaTime) {
         this.player.update(deltaTime, this.world, this.colliders);
         this.camera.follow(this.player);
 
-        // Detectar zona de salida del laboratorio (cerca del punto de entrada)
+        // Detectar zona de salida del laboratorio (puerta lateral)
         let px = this.player.position.x;
         let py = this.player.position.y;
         
-        this.inExitZone = (px <= 300 && py >= 1850 && py <= 2048);
+        this.inExitZone = (px >= 360 && px <= 510 && py >= 760 && py <= 900);
         
-        // Detectar zona de entrada al laberinto del laboratorio (centro del mapa)
-        this.inLabyrinthZone = (px >= 900 && px <= 1150 && py >= 900 && py <= 1150);
+        // Detectar zona de entrada al laberinto del laboratorio (puerta principal)
+        this.inLabyrinthZone = (px >= 1240 && px <= 1385 && py >= 760 && py <= 900);
 
         for (let actor of this.actors) {
             if (actor.updateFrame) {
@@ -159,6 +184,20 @@ class Game {
         }
     }
 
+    drawCoordinates(ctx) {
+        const x = Math.round(this.player.position.x);
+        const y = Math.round(this.player.position.y);
+        const panelWidth = 170;
+        const panelX = canvasWidth - panelWidth - 15;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillRect(panelX, 15, panelWidth, 48);
+        ctx.fillStyle = "white";
+        ctx.font = "14px monospace";
+        ctx.fillText(`X: ${x}`, panelX + 13, 35);
+        ctx.fillText(`Y: ${y}`, panelX + 13, 54);
+    }
+
     draw(ctx) {
         ctx.save();
         ctx.translate(-this.camera.position.x, -this.camera.position.y);
@@ -171,6 +210,7 @@ class Game {
         }
 
         ctx.restore();
+        this.drawCoordinates(ctx);
         
         // Mostrar indicador de salida
         if (this.inExitZone) {
@@ -185,6 +225,14 @@ class Game {
         
         // Mostrar indicador de entrada al laberinto
         if (this.inLabyrinthZone) {
+            const labyrinthName = (this.labyrinthData?.Labyrinth_name || "LABERINTO LAB").toUpperCase();
+            const timeLimit = Number(this.labyrinthData?.Time_limit || 105);
+            const minutes = Math.floor(timeLimit / 60);
+            const seconds = timeLimit % 60;
+            const timeLabel = seconds === 0
+                ? `${minutes} minuto${minutes === 1 ? "" : "s"}`
+                : `${minutes} minuto${minutes === 1 ? "" : "s"} y ${seconds} segundos`;
+
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.fillRect(canvasWidth / 2 - 150, 120, 300, 80);
             ctx.fillStyle = "#ff4444";
@@ -192,9 +240,9 @@ class Game {
             ctx.textAlign = "center";
             ctx.fillText("E - ENTRAR", canvasWidth / 2, 145);
             ctx.fillStyle = "white";
-            ctx.fillText("LABERINTO LAB", canvasWidth / 2, 175);
+            ctx.fillText(labyrinthName, canvasWidth / 2, 175);
             ctx.font = "12px Arial";
-            ctx.fillText("(60 segundos - DIFICIL)", canvasWidth / 2, 190);
+            ctx.fillText(`(${timeLabel})`, canvasWidth / 2, 190);
             ctx.textAlign = "left";
         }
     }
@@ -221,7 +269,7 @@ async function handleKeyDown(event) {
                     body: JSON.stringify({
                         playerId: playerId,
                         labyrinthId: 4,  // Laboratorio
-                        levelId: 3
+                        levelId: 2
                     })
                 });
 

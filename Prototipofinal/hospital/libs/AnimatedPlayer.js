@@ -100,10 +100,11 @@ class AnimatedPlayer extends AnimatedObject {
 
 
     startMovement(direction) {
-        // forzar cambiar animacion siempre que se presiona una tecla
         const dirData = this.motion[direction];
-        dirData.status = true;
-        this.setAnimation(...dirData.moveFrames, dirData.repeat, dirData.duration);
+        if (!dirData.status) {
+            dirData.status = true;
+            this.setAnimation(...dirData.moveFrames, dirData.repeat, dirData.duration);
+        }
     }
 
     stopMovement(direction) {

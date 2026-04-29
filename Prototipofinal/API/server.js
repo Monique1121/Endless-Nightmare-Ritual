@@ -60,6 +60,38 @@ const CARD_SPRITE_ALIASES = {
     36: 'pablo.png'
 };
 
+async function normalizePlayerUnlocks(player) {
+    const playerId = player.Player_id;
+    const [completedRuns] = await pool.query(
+        `SELECT DISTINCT Labyrinth_id
+         FROM Run
+         WHERE Player_id = ? AND Completed = TRUE AND Labyrinth_id IN (1, 3, 4)`,
+        [playerId]
+    );
+
+    const completedLabyrinths = new Set(completedRuns.map(run => Number(run.Labyrinth_id)));
+    const laboratoryUnlocked = completedLabyrinths.has(1) || completedLabyrinths.has(4) || completedLabyrinths.has(3);
+    const hospitalUnlocked = completedLabyrinths.has(4) || completedLabyrinths.has(3);
+
+    if (
+        Number(player.Laboratory_unlocked) !== Number(laboratoryUnlocked) ||
+        Number(player.Hospital_unlocked) !== Number(hospitalUnlocked)
+    ) {
+        await pool.query(
+            `UPDATE Player
+             SET Laboratory_unlocked = ?, Hospital_unlocked = ?
+             WHERE Player_id = ?`,
+            [laboratoryUnlocked, hospitalUnlocked, playerId]
+        );
+    }
+
+    return {
+        ...player,
+        Laboratory_unlocked: laboratoryUnlocked,
+        Hospital_unlocked: hospitalUnlocked,
+    };
+}
+
 function buildCardSpriteUrl(fileName) {
     return `http://localhost:${PORT}/assets/cards/${fileName}`;
 }
@@ -205,9 +237,11 @@ app.get('/api/player/:userId', async (req, res) => {
             });
         }
 
+        const normalizedPlayer = await normalizePlayerUnlocks(player[0]);
+
         res.json({ 
             success: true, 
-            player: player[0] 
+            player: normalizedPlayer 
         });
 
     } catch (error) {
@@ -900,7 +934,8 @@ app.get('/api/player/:playerId/stats', async (req, res) => {
         if (rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Jugador no encontrado' });
         }
-        res.json({ success: true, stats: rows[0] });
+        const normalizedStats = await normalizePlayerUnlocks(rows[0]);
+        res.json({ success: true, stats: normalizedStats });
     } catch (error) {
         console.error('Error al obtener stats:', error);
         res.status(500).json({ success: false, message: 'Error en el servidor', error: error.message });
@@ -1142,9 +1177,9 @@ app.post('/api/run/:runId/card/collect', async (req, res) => {
 // Helper: desbloquea la siguiente area segun el laberinto recien completado
 async function unlockNextArea(conn, playerId, labyrinthId) {
     if (labyrinthId == 1) {
-        await conn.query('UPDATE Player SET Hospital_unlocked = TRUE WHERE Player_id = ?', [playerId]);
-    } else if (labyrinthId == 3) {
         await conn.query('UPDATE Player SET Laboratory_unlocked = TRUE WHERE Player_id = ?', [playerId]);
+    } else if (labyrinthId == 4) {
+        await conn.query('UPDATE Player SET Hospital_unlocked = TRUE WHERE Player_id = ?', [playerId]);
     }
 }
 

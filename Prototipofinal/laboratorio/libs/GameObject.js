@@ -41,10 +41,6 @@ class GameObject {
 
     setSprite(imagePath, rect) {
         this.spriteImage = new Image();
-        // agregado para debug - ver si carga el sprite
-        this.spriteImage.onload = () => {
-            console.log(`Sprite cargado exitosamente: ${imagePath}`);
-        };
         this.spriteImage.onerror = () => {
             console.error(`Error al cargar sprite: ${imagePath}`);
         };
@@ -59,9 +55,6 @@ class GameObject {
     }
 
     setCollider(width, height) {
-        // The top left corner of the collider is offset by half of its size
-        // TODO: Provide the correct values for the collider rectangle
-        // Use the scale as well
         this.xOffset = 0;
         this.yOffset = 0;
         this.colliderWidth = 10;
@@ -70,9 +63,6 @@ class GameObject {
     }
 
     updateCollider() {
-        // Adjust the Rect of the object with its position
-        // TODO: Center the collider around the object position
-        // Use the scale as well
         this.collider = new Rect(5,
                                  5,
                                  15,
