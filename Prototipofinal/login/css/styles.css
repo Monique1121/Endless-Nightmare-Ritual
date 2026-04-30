@@ -408,6 +408,7 @@ a {
     font-family: 'VT323', monospace;
 }
 
+
 .info {
     position: absolute;
     top: 0;
@@ -612,7 +613,7 @@ a {
     color: rgb(224, 197, 179);
     text-align: left;
     font-family: 'VT323', monospace;
-    font-size: 50px;
+    font-size: 30px;
     margin-bottom: 5px;
     justify-content: center;
     align-items: center;
@@ -621,6 +622,55 @@ a {
 
 }
 
+.imagen-historia {
+    width: 90%;
+    max-width: none;
+}
+
+.rojos {
+    color: rgb(202, 11, 11);
+    font-size: 40px;
+}
+
+.personajes {
+    margin-top: 10px;
+    margin: 0 auto 10px;
+    width: 300px;
+    height: auto;
+    display: block;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    animation: flotar 3s ease-in-out infinite;
+}
+
+@keyframes flotar {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+
+.personajes:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 10px rgb(117, 10, 10));
+}
+
+.col-md-4 {
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.titulo-seccion {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    white-space: nowrap;
+     
+}
 
 
 
