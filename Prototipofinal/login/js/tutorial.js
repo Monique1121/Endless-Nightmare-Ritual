@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
     let actual = 1;
-    let total = 11;
+    let total = 13;
 
     $(".info").hide();
     $("#id1").show();
