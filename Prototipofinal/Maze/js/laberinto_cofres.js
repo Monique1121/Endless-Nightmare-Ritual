@@ -17,7 +17,7 @@ const cell_size = 64;
 
 let canvasWidth = window.innerWidth;
 let canvasHeight = window.innerHeight;
-const wall = "white";
+const wall = "black";
 const path = "white";
 
 let ctx;
