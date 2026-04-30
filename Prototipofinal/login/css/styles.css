@@ -370,9 +370,9 @@ a {
     align-items: center;
     margin-top: 30px;
     margin-bottom: 200px;
-    padding: 5% 15%; /* QUITA el padding */
-    min-height: auto; /* quita el 100vh */
-    aspect-ratio: auto; /* quita esto también */
+    padding: 5% 15%;
+    min-height: auto;
+    aspect-ratio: auto;
 }
 
 .cuaderno-img {
@@ -474,7 +474,7 @@ a {
 }
 
 .linea {
-    color: rgb(111, 11, 11);
+    color: rgb(176, 32, 32);
     text-align: center;
     font-family: 'VT323', monospace;
     font-size: 70px;
@@ -483,16 +483,11 @@ a {
     justify-items: center;
     margin-top: 80px;
     margin-bottom: 0;
+    filter: 
+        drop-shadow(0 0 6px rgb(211, 12, 12));
 }
 
-.cartas {
-    clear: both;
-    margin-top: 80px;
-    text-align: center;
-    color: rgb(180, 15, 15);
-    font-family: 'VT323', monospace;
-    font-size: 60px;
-}
+
 
 
 
@@ -530,10 +525,101 @@ a {
 
 .flecha:hover {
     color: rgb(255, 255, 255);
-    transform: scale(1.2);
+}
+
+.cartas {
+
+    margin-top: 150px;
+    text-align: center;
+    color: rgb(176, 32, 32);
+    font-family: 'VT323', monospace;
+    font-size: 100px;
+    display: flex;
+    justify-content: center;
+    filter: 
+        drop-shadow(0 0 2px rgb(176, 32, 32));
+}
+
+.cartas p {
+    margin-bottom: 0;
+    white-space: nowrap;
+    width: 100%;
+    text-align: center;
+}
+
+.cartas2 {
+
+    margin-top: 30px;
+    margin-bottom: 50px;;
+    text-align: center;
+    color: rgb(176, 32, 32);
+    font-family: 'VT323', monospace;
+    font-size: 60px;
+    display: flex;
+    justify-content: center;
+    filter: 
+        drop-shadow(0 0 2px rgb(211, 12, 12));
+}
+
+.cartas3 {
+
+    margin-top: 30px;
+    margin-bottom: 50px;;
+    text-align: center;
+    color: rgb(176, 32, 32);
+    font-family: 'VT323', monospace;
+    font-size: 70px;
+    display: flex;
+    justify-content: center;
+    filter: 
+        drop-shadow(0 0 2px rgb(211, 12, 12));
+}
+
+.cartas3 p {
+    margin-bottom: 0;
+    margin-top: 30px;
+    white-space: nowrap;
+    width: 100%;
+    text-align: center;
 }
 
 
+
+.cartas-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 150px;
+    justify-items: center;
+    
+}
+
+.cartas-grid img {
+    width: 240px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    aspect-ratio: 2 / 3;
+    object-fit: contain;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+.cartas-grid img:hover {
+    transform: scale(1.05);
+    filter: 
+        drop-shadow(0 0 6px rgb(211, 12, 12));
+}
+
+.text6 {
+    color: rgb(224, 197, 179);
+    text-align: left;
+    font-family: 'VT323', monospace;
+    font-size: 50px;
+    margin-bottom: 5px;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    left: 10%;
+
+}
 
 
 
