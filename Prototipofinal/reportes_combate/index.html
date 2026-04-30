@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes de Combate</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Endless Nightmare Ritual</p>
+                <h1>Centro de Reportes de Combate</h1>
+                <p class="hero-copy">Consulta resumenes, distribuciones y el timeline detallado de cada combate guardado en la base de datos.</p>
+            </div>
+            <div class="hero-badge">
+                <span>API</span>
+                <strong id="api-status">Lista para consultar</strong>
+            </div>
+        </header>
+
+        <section class="control-panel panel">
+            <div class="control-group">
+                <label for="player-id">Filtrar por jugador</label>
+                <input id="player-id" type="number" min="1" placeholder="Opcional: Player_id">
+            </div>
+            <div class="control-group">
+                <label for="combat-id">Combat_id</label>
+                <input id="combat-id" type="number" min="1" placeholder="Ej. 12">
+            </div>
+            <div class="control-actions">
+                <button id="load-stats-btn" class="primary-btn">Cargar estadisticas</button>
+                <button id="load-log-btn" class="secondary-btn">Cargar log</button>
+            </div>
+        </section>
+
+        <section id="feedback" class="feedback hidden"></section>
+
+        <section class="summary-grid" id="summary-grid">
+            <article class="metric-card panel">
+                <span class="metric-label">Combates</span>
+                <strong id="total-combats">0</strong>
+            </article>
+            <article class="metric-card panel accent-win">
+                <span class="metric-label">Victorias</span>
+                <strong id="victories">0</strong>
+            </article>
+            <article class="metric-card panel accent-loss">
+                <span class="metric-label">Derrotas</span>
+                <strong id="defeats">0</strong>
+            </article>
+            <article class="metric-card panel accent-neutral">
+                <span class="metric-label">Win rate</span>
+                <strong id="win-rate">0%</strong>
+            </article>
+            <article class="metric-card panel">
+                <span class="metric-label">Prom. turnos</span>
+                <strong id="avg-turns">0</strong>
+            </article>
+            <article class="metric-card panel">
+                <span class="metric-label">Prom. sangre</span>
+                <strong id="avg-blood">0</strong>
+            </article>
+        </section>
+
+        <section class="dashboard-grid">
+            <article class="panel chart-panel">
+                <div class="panel-heading">
+                    <h2>Distribucion por nivel</h2>
+                    <span>Combates y victorias</span>
+                </div>
+                <div id="level-chart" class="bar-list"></div>
+            </article>
+
+            <article class="panel chart-panel">
+                <div class="panel-heading">
+                    <h2>Distribucion por enemigo</h2>
+                    <span>Frecuencia y promedio</span>
+                </div>
+                <div id="enemy-chart" class="bar-list"></div>
+            </article>
+
+            <article class="panel chart-panel wide-panel">
+                <div class="panel-heading">
+                    <h2>Tipos de accion</h2>
+                    <span>Uso y dano total</span>
+                </div>
+                <div id="action-chart" class="bar-list compact"></div>
+            </article>
+        </section>
+
+        <section class="panel table-panel">
+            <div class="panel-heading">
+                <h2>Combates recientes</h2>
+                <span>Selecciona uno para abrir su log</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Jugador</th>
+                            <th>Nivel</th>
+                            <th>Enemigo</th>
+                            <th>Resultado</th>
+                            <th>Turnos</th>
+                            <th>Sangre</th>
+                            <th>Duracion</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-combats-body">
+                        <tr>
+                            <td colspan="9" class="empty-state">Todavia no se han cargado combates.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="combat-log-grid">
+            <article class="panel detail-panel">
+                <div class="panel-heading">
+                    <h2>Resumen del combate</h2>
+                    <span id="combat-title">Sin combate seleccionado</span>
+                </div>
+                <div id="combat-summary" class="combat-summary empty-state">Carga un combate para ver su detalle.</div>
+            </article>
+
+            <article class="panel detail-panel">
+                <div class="panel-heading">
+                    <h2>Timeline por turnos</h2>
+                    <span id="timeline-caption">Esperando seleccion</span>
+                </div>
+                <div id="turn-timeline" class="timeline empty-state">No hay datos para mostrar.</div>
+            </article>
+        </section>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>

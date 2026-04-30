@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Endless Nightmare Ritual</title>
+
+        <link rel="stylesheet" href="menu-style.css">
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <script src="../assets/backgroundMusic.js"></script>
+        <script src="menu.js"></script>
+    </head>
+
+    <body>
+
+        <div id="gameContainer">
+
+        
+        <canvas id="canvas"></canvas>
+        <script> main(); </script>
+
+        <h1 id="title">Endless Nightmare Ritual</h1>
+        <p id="roleBadge" class="role-badge"></p>
+
+        <div id = "menu">
+
+            <button class = "button" id="btnNuevaPartida">Nueva partida</button>
+            <button class = "button" id="btnContinuar">Continuar</button>
+            <button class="button" id="buttonConfig">Ajustes</button>
+
+        </div>
+
+
+        <div id="config" class="settings">
+
+        <h2>Ajustes</h2>
+
+        <label for="volumeMusic">Musica del juego</label>
+        <div class="volume-row">
+            <input type="range" min="0" max="100" id="volumeMusic" />
+            <span id="musicVolumeValue" class="setting-value">45%</span>
+        </div>
+
+        <button class="button" id="backButton">Volver</button>
+
+        </div>
+
+        </div>
+
+    </body>
+</html>

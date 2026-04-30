@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="../js/inicio.js"></script>
+    <script src="../js/estadisticas.js" defer></script>
+    <link rel="stylesheet" href="../css/styles.css">
+
+    <title>Endless Nightmare Ritual | Estadísticas</title>
+
+</head>
+
+<body class="stats-page">
+
+    <div id="headerContainer" class="d-flex justify-content-between align-items-center px-5">
+        <a href="inicio.html" class="logo-link">
+            <img src="../assets/logo_2.png" alt="Hexcore Studios" class="logo" >
+        </a>
+        <h1>|</h1>
+        <a href="historia.html">HISTORIA</a>
+        <h1>|</h1>
+        <a href="tutorial.html">TUTORIAL</a>
+        <h1>|</h1>
+        <a href="jugar.html">JUGAR</a>
+        <h1>|</h1>
+        <a href="estadisticas.html" class="current-link">ESTADÍSTICAS</a>
+        <h1>|</h1>
+        <a href="creditos.html">CRÉDITOS</a>
+        <h1>|</h1>
+    </div>
+
+    <main class="admin-stats-shell">
+        <section class="admin-hero-panel">
+            <p class="admin-eyebrow">ESTADÍSTICAS</p>
+            <h1 class="admin-title">Registro del Ritual</h1>
+            <p class="admin-copy">Aquí se muestran las gráficas generales del juego. Si entras como admin, también podrás borrar usuarios desde esta misma vista.</p>
+            <p id="admin-session-label" class="admin-session-text">Cargando estadísticas...</p>
+        </section>
+
+        <section id="admin-locked" class="admin-locked-panel hidden">
+            <h2>No se pudieron cargar las estadísticas</h2>
+            <p>Revisa que la API esté corriendo y que la base de datos esté disponible.</p>
+            <p class="admin-locked-note">Si entras con Esteban, Gilberto o Angel, también se habilita el borrado de usuarios.</p>
+        </section>
+
+        <section id="admin-dashboard" class="hidden">
+            <div class="admin-summary-grid">
+                <article class="admin-summary-card">
+                    <span>Usuarios activos</span>
+                    <strong id="summary-active-users">0</strong>
+                </article>
+                <article class="admin-summary-card accent-card">
+                    <span>Jugadores</span>
+                    <strong id="summary-players">0</strong>
+                </article>
+                <article class="admin-summary-card">
+                    <span>Runs totales</span>
+                    <strong id="summary-runs">0</strong>
+                </article>
+                <article class="admin-summary-card accent-card">
+                    <span>Runs completados</span>
+                    <strong id="summary-completed-runs">0</strong>
+                </article>
+                <article class="admin-summary-card">
+                    <span>Combates</span>
+                    <strong id="summary-combats">0</strong>
+                </article>
+                <article class="admin-summary-card accent-card">
+                    <span>Win rate combate</span>
+                    <strong id="summary-win-rate">0%</strong>
+                </article>
+            </div>
+
+            <div class="admin-chart-grid">
+                <article class="admin-panel">
+                    <div class="admin-panel-heading">
+                        <h2>Progreso de jugadores</h2>
+                        <span>Perfiles y zonas desbloqueadas</span>
+                    </div>
+                    <div id="player-progress-chart" class="ritual-bar-list"></div>
+                </article>
+
+                <article class="admin-panel">
+                    <div class="admin-panel-heading">
+                        <h2>Estado de runs</h2>
+                        <span>Completados, fallidos y activos</span>
+                    </div>
+                    <div id="run-status-chart" class="ritual-bar-list"></div>
+                </article>
+
+                <article class="admin-panel wide-panel">
+                    <div class="admin-panel-heading">
+                        <h2>Runs por nivel</h2>
+                        <span>Total, completados, fallidos y tiempo promedio</span>
+                    </div>
+                    <div id="runs-by-level-chart" class="ritual-bar-list"></div>
+                </article>
+
+                <article class="admin-panel">
+                    <div class="admin-panel-heading">
+                        <h2>Combates por nivel</h2>
+                        <span>Victorias y derrotas registradas</span>
+                    </div>
+                    <div id="combat-by-level-chart" class="ritual-bar-list"></div>
+                </article>
+
+                <article class="admin-panel">
+                    <div class="admin-panel-heading">
+                        <h2>Recursos del ritual</h2>
+                        <span>Secretos, cofres, cartas y logros</span>
+                    </div>
+                    <div id="resource-totals-chart" class="ritual-bar-list"></div>
+                </article>
+
+                <article class="admin-panel wide-panel">
+                    <div class="admin-panel-heading">
+                        <h2>Top jugadores</h2>
+                        <span>Runs completados, cartas, secretos y tiempo</span>
+                    </div>
+                    <div id="top-players-chart" class="ritual-bar-list"></div>
+                </article>
+            </div>
+
+            <article class="admin-panel admin-management-panel">
+                <div class="admin-panel-heading">
+                    <h2>Usuarios registrados</h2>
+                    <span id="users-management-caption">Vista pública</span>
+                </div>
+                <div id="users-management-list" class="users-management-list"></div>
+            </article>
+        </section>
+    </main>
+
+</body>
+
+</html>
