@@ -368,9 +368,11 @@ a {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    aspect-ratio: 1/1;
-    height: 100vh;
-    padding: 5% 15%;
+    margin-top: 30px;
+    margin-bottom: 200px;
+    padding: 5% 15%; /* QUITA el padding */
+    min-height: auto; /* quita el 100vh */
+    aspect-ratio: auto; /* quita esto también */
 }
 
 .cuaderno-img {
@@ -400,9 +402,17 @@ a {
 }
 
 .tutorial-info {
+    position: relative;
     width: 100%;
-    color: rgb(35, 25, 20);
+    height: 650px;
     font-family: 'VT323', monospace;
+}
+
+.info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
 }
 
 .tutorial-info h2 {
@@ -425,31 +435,6 @@ a {
 }
 
 
-.flecha {
-    position: absolute;
-    bottom: 0;
-    transform: translateY(-50%);
-    font-size: 50px;
-    background: transparent;
-    border: none;
-    color: rgb(74, 12, 12);
-    cursor: pointer;
-    z-index: 10;
-    transition: 0.2s;
-}
-
-#anterior {
-    left: 20%;
-}
-
-#siguiente {
-    right: 15%;
-}
-
-.flecha:hover {
-    color: rgb(255, 255, 255);
-    transform: translateY(-50%) scale(1.2);
-}
 
 .guia {
     padding-top: 10%;
@@ -500,7 +485,53 @@ a {
     margin-bottom: 0;
 }
 
+.cartas {
+    clear: both;
+    margin-top: 80px;
+    text-align: center;
+    color: rgb(180, 15, 15);
+    font-family: 'VT323', monospace;
+    font-size: 60px;
+}
 
+
+
+.controles-cuaderno {
+    position: absolute;
+    left: 5%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20%;
+    z-index: 100;
+    bottom: 0;
+}
+
+.flecha {
+    font-family: 'VT323', monospace;
+    font-size: 45px;
+    background: transparent;
+    border: none;
+    color: rgb(74, 12, 12);
+    cursor: pointer;
+    transition: 0.2s;
+    line-height: 1;
+    bottom: 0;
+}
+
+
+#anterior {
+    left: 10%;
+}
+
+#siguiente {
+    right: 60%;
+}
+
+.flecha:hover {
+    color: rgb(255, 255, 255);
+    transform: scale(1.2);
+}
 
 
 
