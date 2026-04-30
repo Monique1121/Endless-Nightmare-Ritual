@@ -1,7 +1,7 @@
 "use strict";
 
 const API_URL = 'http://localhost:3000/api';
-// Este login es el que usa el juego para dejar listo usuario, player y deck.
+// Este login web hace casi lo mismo que el del juego, pero aqui termina mandando al wrapper de jugar.
 document.body.classList.toggle('embedded-mode', window.self !== window.top);
 let loginForm = document.getElementById('loginForm');
 let usernameInput = document.getElementById('username');
@@ -33,7 +33,7 @@ async function attemptLogin(username, password) {
   }
 }
 
-// Si el usuario si existe pero todavia no tiene Player, aqui se crea al vuelo.
+// Si el usuario ya existe pero le falta su Player, aqui se completa ese paso.
 // Función para crear jugador si no existe
 async function createPlayerIfNeeded(userId, username) {
   try {
@@ -106,7 +106,7 @@ loginForm.addEventListener('submit', async function(event) {
       playerId = await createPlayerIfNeeded(result.userId, username);
     }
     
-    // Esta parte deja el inventario minimo listo para que menu, lobby y juego no arranquen vacios.
+    // Esto deja el deck base listo para que la parte web no entre vacia.
     // Asegurar que el jugador tenga 5 cartas iniciales
     errorMessage.textContent = 'Inicializando...';
     try {
@@ -125,8 +125,7 @@ loginForm.addEventListener('submit', async function(event) {
       if (deckResponse.ok) {
         const deckData = await deckResponse.json();
         if (deckData.success && deckData.deck) {
-          // Aqui armamos el playerData local para que las escenas sigan leyendo lo mismo.
-          // Misma clave que usa GameState en el resto de escenas
+          // Guardamos una copia local para que el resto de pantallas lean el mismo estado.
           const storageKey = `playerData_${playerId}`;
           let playerData = localStorage.getItem(storageKey);
           if (!playerData) {
@@ -142,13 +141,11 @@ loginForm.addEventListener('submit', async function(event) {
             };
           } else {
             playerData = JSON.parse(playerData);
-            // Asegurar que tiene Player_id
             if (!playerData.Player_id) {
               playerData.Player_id = playerId;
             }
           }
           
-          // Sincronizar cartas de demonio
           playerData.inventory.demonCards = deckData.deck.map(card => ({
             id: card.Card_id,
             name: card.Card_name,
@@ -163,14 +160,12 @@ loginForm.addEventListener('submit', async function(event) {
       console.error('Error sincronizando inventario:', e);
     }
     
+    // Aqui ya dejamos la sesion minima guardada para brincar al wrapper del juego.
     // Guardar datos en localStorage
-    const userRole = result.userRole || (result.isAdmin ? 'admin' : 'ejecutivo');
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('username', username);
     localStorage.setItem('userId', result.userId);
     localStorage.setItem('playerId', playerId);
-    localStorage.setItem('userRole', userRole);
-    localStorage.setItem('isAdmin', userRole === 'admin' ? 'true' : 'false');
     
     // Mensaje de exito
     errorMessage.textContent = 'BIENVENIDO';
@@ -178,7 +173,7 @@ loginForm.addEventListener('submit', async function(event) {
     
     // Redirigir al menú después de 500ms
     setTimeout(() => {
-      window.location.href = '../menu/menu.html';
+      window.location.href = 'html/jugar.html';
     }, 500);
     
   } catch (error) {

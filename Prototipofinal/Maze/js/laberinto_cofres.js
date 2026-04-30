@@ -1,5 +1,8 @@
 "use strict";
 
+// Este es el laberinto base donde se mezclan timer, cofres y luego el salto al TCG.
+// Aqui casi todo depende del run activo porque de ahi sale tiempo, nivel y enemigo.
+
 
 // const canvasWidth = 800;
 // const canvasHeight = 600;
@@ -196,12 +199,14 @@ class Game {
 
         this.secretsFound = 0;
 
+        // Todo esto se queda temporal hasta que el run termine bien o mal.
         // Almacenamiento temporal (solo se guarda al completar)
         this.tempCards = [];
         this.tempSecrets = [];
         this.tempChestsData = []; // Para guardar los datos de API
     }
     
+    // Aqui cargamos el run activo y con eso jalamos laberinto + enemigo antes de generar todo.
     async loadLabyrinthData() {
         const runId = localStorage.getItem('runId');
         
@@ -278,6 +283,8 @@ class Game {
     }
 
     generateMaze(){
+
+        // Primero se arma la matriz y luego se convierten muros, cofres y salida.
 
         this.maze = Array(rows).fill().map(() => Array(cols). fill(1));
 
@@ -402,6 +409,8 @@ class Game {
     }
 
     drawDarkness(ctx) {
+
+        // Esta mascara va siguiendo al jugador para que el laberinto no se vea todo regalado.
 
         const size = 3000;
         const angle = globalAngle;

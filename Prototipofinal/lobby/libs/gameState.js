@@ -248,6 +248,7 @@ const GameState = {
      * Envía el estado actual de localStorage a la base de datos
      */
     async sync() {
+        // Aqui mandamos a la API el estado que se fue moviendo localmente en la escena.
         const API_URL = 'http://localhost:3000/api';
         const playerId = localStorage.getItem('playerId');
         
@@ -292,6 +293,7 @@ const GameState = {
      * Sobrescribe localStorage con los datos de la BD
      */
     async loadFromServer() {
+        // Y aqui hacemos el viaje al reves para refrescar localStorage con lo que quedo en BD.
         const API_URL = 'http://localhost:3000/api';
         const playerId = localStorage.getItem('playerId');
         const username = localStorage.getItem('username');

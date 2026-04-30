@@ -8,6 +8,7 @@
 const GameState = {
     
     /**
+        // Aqui mandamos a la API el estado que se fue moviendo localmente en la escena.
      * Obtener clave de almacenamiento única por jugador
      * @returns {string} Clave de localStorage
      */
@@ -15,6 +16,7 @@ const GameState = {
         const playerId = localStorage.getItem('playerId');
         return playerId ? `playerData_${playerId}` : 'playerData';
     },
+        // Y aqui hacemos el viaje al reves para refrescar localStorage con lo que quedo en BD.
     
     /**
      * Inicializar datos del jugador

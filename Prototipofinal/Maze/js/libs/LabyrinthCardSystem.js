@@ -1,7 +1,5 @@
-// ============================================================
-// SISTEMA SIMPLE DE CARTAS PARA LABERINTOS
-// Uso básico para recolección de cartas
-// ============================================================
+// Este helper se hizo para no revolver la recoleccion de cartas con toda la logica del laberinto.
+// Aqui solo se resuelve deck, run activo y lo que se gana o se pierde en cofres.
 
 class LabyrinthCardSystem {
     constructor(apiUrl = 'http://localhost:3000/api') {
@@ -45,6 +43,7 @@ class LabyrinthCardSystem {
     // PASO 2: Iniciar laberinto (llamar al entrar)
     async startRun(labyrinthId) {
         try {
+            // Aqui se abre el run antes de entrar al laberinto para que todo quede ligado al player.
             const response = await fetch(`${this.apiUrl}/run/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -71,6 +70,7 @@ class LabyrinthCardSystem {
         }
 
         try {
+            // La carta se guarda en temporal hasta que el run se complete de verdad.
             const response = await fetch(`${this.apiUrl}/run/${this.currentRunId}/card/collect`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

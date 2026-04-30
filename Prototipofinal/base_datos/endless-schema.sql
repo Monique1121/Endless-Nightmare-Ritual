@@ -10,6 +10,7 @@ CREATE TABLE Users (
     User_id INT AUTO_INCREMENT PRIMARY KEY,
     Username VARCHAR(45) NOT NULL UNIQUE,
     Password_user VARCHAR(100) NOT NULL,
+    User_role ENUM('admin', 'ejecutivo') NOT NULL DEFAULT 'ejecutivo',
     Is_active BOOLEAN NOT NULL DEFAULT TRUE,
     Created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Last_login TIMESTAMP NULL,
@@ -474,15 +475,15 @@ INSERT INTO Achievements (Achievements_name, Achievements_description) VALUES
 -- USUARIOS BASE DE PRUEBA
 -- =====================================================
 
-INSERT INTO Users (User_id, Username, Password_user, Is_active) VALUES
-(1, 'Juan', 'JCLuzudemy', TRUE),
-(2, 'Julian', '12345', TRUE),
-(3, 'monikkkkk', '1234', TRUE),
-(4, 'arantzamonique', '1234', TRUE),
-(5, 'Juan Carlos', 'night', TRUE),
-(6, 'Esteban', 'mysql', TRUE),
-(7, 'Gilberto', 'delta', TRUE),
-(8, 'Angel', 'html', TRUE);
+INSERT INTO Users (User_id, Username, Password_user, User_role, Is_active) VALUES
+(1, 'Juan', 'JCLuzudemy', 'ejecutivo', TRUE),
+(2, 'Julian', '12345', 'ejecutivo', TRUE),
+(3, 'monikkkkk', '1234', 'ejecutivo', TRUE),
+(4, 'arantzamonique', '1234', 'ejecutivo', TRUE),
+(5, 'Juan Carlos', 'night', 'ejecutivo', TRUE),
+(6, 'Esteban', 'mysql', 'admin', TRUE),
+(7, 'Gilberto', 'delta', 'admin', TRUE),
+(8, 'Angel', 'html', 'admin', TRUE);
 
 INSERT INTO Player (Player_id, User_id, Player_name) VALUES
 (1, 1, 'Juan'),
@@ -505,10 +506,133 @@ INSERT INTO Deck (Player_id, Card_id, Card_gained) VALUES
 (8, 1, TRUE), (8, 2, TRUE), (8, 7, TRUE), (8, 9, TRUE), (8, 11, TRUE);
 
 -- =====================================================
--- TRIGGERS DE COMPATIBILIDAD
+-- RUTINAS Y TRIGGERS DE COMPATIBILIDAD
 -- =====================================================
 
 DELIMITER $$
+
+CREATE FUNCTION fn_total_completed_runs(p_player_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE v_total INT DEFAULT 0;
+
+    SELECT COUNT(*)
+    INTO v_total
+    FROM Run
+    WHERE Player_id = p_player_id
+      AND Completed = TRUE;
+
+    RETURN v_total;
+END$$
+
+CREATE FUNCTION fn_player_combat_win_rate(p_player_id INT)
+RETURNS DECIMAL(5,2)
+DETERMINISTIC
+BEGIN
+    DECLARE v_total_combats INT DEFAULT 0;
+    DECLARE v_total_wins INT DEFAULT 0;
+
+    SELECT COUNT(*),
+           SUM(CASE WHEN Result = 'victory' THEN 1 ELSE 0 END)
+    INTO v_total_combats, v_total_wins
+    FROM Combat
+    WHERE Player_id = p_player_id;
+
+    IF v_total_combats = 0 THEN
+        RETURN 0;
+    END IF;
+
+    RETURN ROUND((COALESCE(v_total_wins, 0) / v_total_combats) * 100, 2);
+END$$
+
+CREATE PROCEDURE sp_refresh_player_unlocks(IN p_player_id INT)
+BEGIN
+    UPDATE Player
+    SET School_unlocked = TRUE,
+        Laboratory_unlocked = EXISTS(
+            SELECT 1
+            FROM Run
+            WHERE Player_id = p_player_id
+              AND Completed = TRUE
+              AND Labyrinth_id IN (1, 3, 4)
+        ),
+        Hospital_unlocked = EXISTS(
+            SELECT 1
+            FROM Run
+            WHERE Player_id = p_player_id
+              AND Completed = TRUE
+              AND Labyrinth_id IN (3, 4)
+        ),
+        Level = COALESCE((
+            SELECT MAX(Level_id)
+            FROM Run
+            WHERE Player_id = p_player_id
+              AND Completed = TRUE
+        ), 0)
+    WHERE Player_id = p_player_id;
+END$$
+
+CREATE PROCEDURE sp_finalize_run(
+    IN p_run_id INT,
+    IN p_completed BOOLEAN,
+    IN p_time_taken INT,
+    IN p_blood_recovered INT,
+    IN p_cards_found INT,
+    IN p_secrets_found INT
+)
+BEGIN
+    DECLARE v_player_id INT DEFAULT NULL;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT Player_id
+    INTO v_player_id
+    FROM Run
+    WHERE Run_id = p_run_id
+    LIMIT 1;
+
+    UPDATE Run
+    SET Completed = p_completed,
+        Time_taken = COALESCE(p_time_taken, Time_taken),
+        Blood_recovered = COALESCE(p_blood_recovered, Blood_recovered),
+        Cards_found = COALESCE(p_cards_found, Cards_found),
+        Secrets_found = COALESCE(p_secrets_found, Secrets_found),
+        Completed_at = NOW()
+    WHERE Run_id = p_run_id;
+
+    IF v_player_id IS NOT NULL THEN
+        CALL sp_refresh_player_unlocks(v_player_id);
+    END IF;
+
+    COMMIT;
+END$$
+
+CREATE TRIGGER trg_normalize_user_role_before_insert
+BEFORE INSERT ON Users
+FOR EACH ROW
+BEGIN
+    SET NEW.User_role = CASE
+        WHEN LOWER(TRIM(COALESCE(NEW.User_role, ''))) = 'admin' THEN 'admin'
+        ELSE 'ejecutivo'
+    END;
+END$$
+
+CREATE TRIGGER trg_normalize_user_role_before_update
+BEFORE UPDATE ON Users
+FOR EACH ROW
+BEGIN
+    SET NEW.User_role = CASE
+        WHEN LOWER(TRIM(COALESCE(NEW.User_role, ''))) = 'admin' THEN 'admin'
+        ELSE 'ejecutivo'
+    END;
+END$$
 
 CREATE TRIGGER trg_update_last_login
 AFTER INSERT ON Player

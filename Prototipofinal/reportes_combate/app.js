@@ -1,5 +1,8 @@
 const API_URL = 'http://localhost:3000/api';
 
+// Este panel jala resumenes de combate y luego deja abrir el detalle por turnos.
+
+// Guardamos el DOM arriba para no estar buscando nodos a cada rato.
 const elements = {
     apiStatus: document.getElementById('api-status'),
     playerId: document.getElementById('player-id'),
@@ -188,6 +191,7 @@ function renderCombatSummary(combat, summary) {
     `;
 }
 
+// Aqui se pinta el historial por turnos para ver rapido quien hizo que en el combate.
 function renderTimeline(turns) {
     elements.turnTimeline.innerHTML = '';
     elements.turnTimeline.classList.remove('empty-state');
@@ -237,6 +241,7 @@ function renderTimeline(turns) {
     }
 }
 
+// Centralizamos fetch + error para que todos los paneles fallen parecido y no cada uno por su lado.
 async function fetchJson(url) {
     const response = await fetch(url);
     const data = await response.json();
@@ -246,6 +251,7 @@ async function fetchJson(url) {
     return data;
 }
 
+// Esta carga mezcla resumen, tabla y listas del modulo de reportes.
 async function loadStats() {
     clearFeedback();
     setApiStatus('Cargando estadisticas...');

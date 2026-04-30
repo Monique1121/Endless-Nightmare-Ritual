@@ -1,5 +1,8 @@
 "use strict";
 
+// Esta escena hace lo mismo que laboratorio pero para la ruta del hospital.
+// Aqui se carga el mapa interior y desde la puerta principal brinca al laberinto correcto.
+
 const canvasWidth = 800;
 const canvasHeight = 600;
 
@@ -125,6 +128,7 @@ class Game {
         this.loadLabyrinthData();
     }
 
+    // Aqui pedimos los datos del laberinto para que nombre y tiempo salgan desde BD.
     async loadLabyrinthData() {
         try {
             const response = await fetch("http://localhost:3000/api/labyrinth/3");
@@ -260,6 +264,7 @@ async function handleKeyDown(event) {
         
         if (game.inLabyrinthZone) {
             try {
+                // Igual aqui primero se crea el run del hospital y ya luego manda al Maze.
                 console.log("Entrando al laberinto del hospital...");
                 const playerId = localStorage.getItem("playerId");
 

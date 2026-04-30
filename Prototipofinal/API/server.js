@@ -20,6 +20,8 @@ const dbConfig = {
 };
 
 const pool = mysql.createPool(dbConfig);
+const USER_ROLES = new Set(['admin', 'ejecutivo']);
+const DEFAULT_USER_ROLE = 'ejecutivo';
 
 const CARD_SPRITE_ALIASES = {
     1: '1.png',
@@ -60,6 +62,8 @@ const CARD_SPRITE_ALIASES = {
     36: 'pablo.png'
 };
 
+// Aqui github nos ayudo a dejar bien los desbloqueos para que lobby,
+// juego y estadisticas lean lo mismo desde la BD.
 async function normalizePlayerUnlocks(player) {
     const playerId = player.Player_id;
     const [completedRuns] = await pool.query(
@@ -96,6 +100,8 @@ function buildCardSpriteUrl(fileName) {
     return `http://localhost:${PORT}/assets/cards/${fileName}`;
 }
 
+// Esta parte nos ayudo github a empatarla para que rutas viejas y nuevas de sprites
+// siguieran jalando sin romper otras vistas.
 function normalizeCardSprite(card) {
     if (!card) {
         return card;
@@ -125,17 +131,97 @@ function normalizeCombatActor(actor) {
     return actor === 'opponent' ? 'enemy' : actor;
 }
 
+function normalizeUsername(username) {
+    return String(username || '').trim().toLowerCase();
+}
+
+function normalizeUserRole(role) {
+    const normalizedRole = String(role || '').trim().toLowerCase();
+    return USER_ROLES.has(normalizedRole) ? normalizedRole : DEFAULT_USER_ROLE;
+}
+
+function isAdminRole(role) {
+    return normalizeUserRole(role) === 'admin';
+}
+
+// Aqui github nos echo la mano para mover admin y ejecutivo al rol real en BD
+// y ya no depender del puro nombre del usuario.
+async function resolveSessionUser(req) {
+    const rawUserId = req.query.userId || req.headers['x-user-id'];
+    const userId = Number.parseInt(rawUserId, 10);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+        return null;
+    }
+
+    const [rows] = await pool.query(
+        'SELECT User_id, Username, User_role FROM Users WHERE User_id = ? AND Is_active = TRUE',
+        [userId]
+    );
+
+    if (rows.length === 0) {
+        return null;
+    }
+
+    return {
+        userId: rows[0].User_id,
+        username: rows[0].Username,
+        userRole: normalizeUserRole(rows[0].User_role),
+        isAdmin: isAdminRole(rows[0].User_role)
+    };
+}
+
+async function requireAdminUser(req) {
+    const sessionUser = await resolveSessionUser(req);
+
+    if (!sessionUser) {
+        return {
+            ok: false,
+            status: 401,
+            response: {
+                success: false,
+                message: 'Debes iniciar sesion como administrador.'
+            }
+        };
+    }
+
+    if (!sessionUser.isAdmin) {
+        return {
+            ok: false,
+            status: 403,
+            response: {
+                success: false,
+                message: 'Este panel solo esta disponible para administradores.'
+            }
+        };
+    }
+
+    return {
+        ok: true,
+        userId: sessionUser.userId,
+        username: sessionUser.username
+    };
+}
+
 // =====================================================
 // ENDPOINTS DE AUTENTICACIÓN
 // =====================================================
 
 app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
+    const requestedRole = String(req.body.userRole || DEFAULT_USER_ROLE).trim().toLowerCase();
 
     if (!username || !password) {
         return res.status(400).json({ 
             success: false, 
             message: 'Username y password son requeridos' 
+        });
+    }
+
+    if (!USER_ROLES.has(requestedRole)) {
+        return res.status(400).json({
+            success: false,
+            message: 'El rol debe ser admin o ejecutivo.'
         });
     }
 
@@ -152,15 +238,28 @@ app.post('/api/register', async (req, res) => {
             });
         }
 
+        let assignedRole = requestedRole;
+        if (assignedRole === 'admin') {
+            const adminUser = await requireAdminUser(req);
+            if (!adminUser.ok) {
+                return res.status(adminUser.status).json({
+                    ...adminUser.response,
+                    message: 'Solo un administrador puede crear otro usuario administrador.'
+                });
+            }
+        }
+
         const [result] = await pool.query(
-            'INSERT INTO Users (Username, Password_user, Is_active) VALUES (?, ?, TRUE)',
-            [username, password]
+            'INSERT INTO Users (Username, Password_user, User_role, Is_active) VALUES (?, ?, ?, TRUE)',
+            [username, password, assignedRole]
         );
 
         res.status(201).json({ 
             success: true, 
             message: 'Usuario registrado exitosamente',
-            userId: result.insertId
+            userId: result.insertId,
+            userRole: assignedRole,
+            isAdmin: assignedRole === 'admin'
         });
 
     } catch (error) {
@@ -185,7 +284,7 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const [users] = await pool.query(
-            `SELECT User_id, Username 
+            `SELECT User_id, Username, User_role 
              FROM Users 
              WHERE Username = ? AND Password_user = ? AND Is_active = TRUE`,
             [username, password]
@@ -198,10 +297,17 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
+        await pool.query(
+            'UPDATE Users SET Last_login = NOW() WHERE User_id = ?',
+            [users[0].User_id]
+        );
+
         res.json({ 
             success: true,
             userId: users[0].User_id,
-            username: users[0].Username
+            username: users[0].Username,
+            userRole: normalizeUserRole(users[0].User_role),
+            isAdmin: isAdminRole(users[0].User_role)
         });
 
     } catch (error) {
@@ -640,6 +746,8 @@ app.get('/api/enemy/level/:levelId', async (req, res) => {
 // ENDPOINTS DE COMBATE
 // =====================================================
 
+// Aqui github nos ayudo a empatar nombres de campos porque laberinto,
+// web y TCG estaban mandando cosas medio distintas.
 app.post('/api/combat/start', async (req, res) => {
     const playerId = req.body.playerId || req.body.player_id;
     const enemyId = req.body.enemyId || req.body.enemy_id;
@@ -679,8 +787,8 @@ app.post('/api/combat/start', async (req, res) => {
 
 app.put('/api/combat/:combatId/end', async (req, res) => {
     const { combatId } = req.params;
-    // Aceptar ambas formas (legacy: result/totalTurns/playerKO/enemyKO/bloodUsed,
-    // TCG: winner/total_turns/player_ko/enemy_ko/blood_used)
+    // Aqui igual github nos ayudo para aceptar payloads viejos y nuevos
+    // sin romper lo que ya estaba conectado.
     const winner = req.body.winner;
     let result = req.body.result;
     if (!result && winner) {
@@ -1529,6 +1637,223 @@ app.get('/api/combat/stats', async (req, res) => {
         });
     } catch (error) {
         console.error('Error al obtener estadisticas de combate:', error);
+        res.status(500).json({ success: false, message: 'Error en el servidor', error: error.message });
+    }
+});
+
+// Esta consulta grande del dashboard la armamos con ayuda de github,
+// pero luego la fuimos corrigiendo nosotros para que si cuadrara con los datos reales.
+app.get('/api/admin/dashboard', async (req, res) => {
+    try {
+        const viewerUser = await resolveSessionUser(req);
+
+        const [overviewRows] = await pool.query(`
+            SELECT
+                (SELECT COUNT(*) FROM Users) AS total_users,
+                (SELECT COUNT(*) FROM Users WHERE Is_active = TRUE) AS active_users,
+                (SELECT COUNT(*) FROM Users WHERE Is_active = TRUE AND User_role = 'admin') AS total_admins,
+                (SELECT COUNT(*) FROM Player) AS total_players,
+                (SELECT COUNT(*) FROM Run) AS total_runs,
+                (SELECT COUNT(*) FROM Run WHERE Completed = TRUE) AS completed_runs,
+                (SELECT COUNT(*) FROM Run WHERE Completed = FALSE) AS failed_runs,
+                (SELECT COUNT(*) FROM Run WHERE Completed IS NULL) AS active_runs,
+                COALESCE((SELECT ROUND(AVG(NULLIF(Time_taken, 0)), 2) FROM Run WHERE Completed = TRUE), 0) AS avg_run_time,
+                COALESCE((SELECT ROUND(AVG(Secrets_found), 2) FROM Run), 0) AS avg_secrets_per_run,
+                (SELECT COUNT(*) FROM Combat) AS total_combats,
+                (SELECT COUNT(*) FROM Combat WHERE Result = 'victory') AS combat_victories,
+                (SELECT COUNT(*) FROM Combat WHERE Result = 'defeat') AS combat_defeats,
+                COALESCE((SELECT ROUND(AVG(NULLIF(Total_turns, 0)), 2) FROM Combat), 0) AS avg_combat_turns
+        `);
+
+        const [playerProgressRows] = await pool.query(`
+            SELECT 'Perfiles creados' AS label, COUNT(*) AS total FROM Player
+            UNION ALL
+            SELECT 'Escuela desbloqueada' AS label, COUNT(*) AS total FROM Player WHERE School_unlocked = TRUE
+            UNION ALL
+            SELECT 'Laboratorio desbloqueado' AS label, COUNT(*) AS total FROM Player WHERE Laboratory_unlocked = TRUE
+            UNION ALL
+            SELECT 'Hospital desbloqueado' AS label, COUNT(*) AS total FROM Player WHERE Hospital_unlocked = TRUE
+        `);
+
+        const [runStatusRows] = await pool.query(`
+            SELECT 'Runs completados' AS label, COUNT(*) AS total FROM Run WHERE Completed = TRUE
+            UNION ALL
+            SELECT 'Runs fallidos' AS label, COUNT(*) AS total FROM Run WHERE Completed = FALSE
+            UNION ALL
+            SELECT 'Runs activos' AS label, COUNT(*) AS total FROM Run WHERE Completed IS NULL
+        `);
+
+        const [runsByLevelRows] = await pool.query(`
+            SELECT l.Level_name AS label,
+                   COUNT(r.Run_id) AS total_runs,
+                   SUM(CASE WHEN r.Completed = TRUE THEN 1 ELSE 0 END) AS completed_runs,
+                   SUM(CASE WHEN r.Completed = FALSE THEN 1 ELSE 0 END) AS failed_runs,
+                   COALESCE(ROUND(AVG(NULLIF(r.Time_taken, 0)), 2), 0) AS avg_time
+            FROM Levels l
+            LEFT JOIN Run r ON r.Level_id = l.Level_id
+            GROUP BY l.Level_id, l.Level_name, l.Level_number
+            ORDER BY l.Level_number
+        `);
+
+        const [combatByLevelRows] = await pool.query(`
+            SELECT l.Level_name AS label,
+                   COUNT(c.Combat_id) AS total_combats,
+                   SUM(CASE WHEN c.Result = 'victory' THEN 1 ELSE 0 END) AS victories,
+                   SUM(CASE WHEN c.Result = 'defeat' THEN 1 ELSE 0 END) AS defeats
+            FROM Levels l
+            LEFT JOIN Combat c ON c.Level_id = l.Level_id
+            GROUP BY l.Level_id, l.Level_name, l.Level_number
+            ORDER BY l.Level_number
+        `);
+
+        const [resourceRows] = await pool.query(`
+            SELECT 'Secretos descubiertos' AS label, COALESCE(SUM(Secrets_discovered), 0) AS total FROM Player
+            UNION ALL
+            SELECT 'Cofres abiertos' AS label, COUNT(*) AS total FROM Player_Chest_Opened
+            UNION ALL
+            SELECT 'Cartas obtenidas' AS label, COUNT(*) AS total FROM Deck WHERE Card_gained = TRUE
+            UNION ALL
+            SELECT 'Logros desbloqueados' AS label, COALESCE(SUM(Achievements_unlocked), 0) AS total FROM Player
+        `);
+
+        const [topPlayersRows] = await pool.query(`
+            SELECT p.Player_name AS label,
+                   COALESCE(run_stats.completed_runs, 0) AS completed_runs,
+                   COALESCE(card_stats.total_cards, 0) AS total_cards,
+                   p.Secrets_discovered AS total_secrets,
+                   p.Total_playtime
+            FROM Player p
+            LEFT JOIN (
+                SELECT Player_id,
+                       SUM(CASE WHEN Completed = TRUE THEN 1 ELSE 0 END) AS completed_runs
+                FROM Run
+                GROUP BY Player_id
+            ) run_stats ON run_stats.Player_id = p.Player_id
+            LEFT JOIN (
+                SELECT Player_id,
+                       COUNT(DISTINCT Card_id) AS total_cards
+                FROM Deck
+                WHERE Card_gained = TRUE
+                GROUP BY Player_id
+            ) card_stats ON card_stats.Player_id = p.Player_id
+            ORDER BY completed_runs DESC, total_cards DESC, p.Total_playtime DESC, p.Player_name
+            LIMIT 8
+        `);
+
+        const [userRows] = await pool.query(`
+            SELECT u.User_id,
+                   u.Username,
+                     u.User_role,
+                   u.Is_active,
+                   u.Created_at,
+                   u.Last_login,
+                   p.Player_name,
+                   COALESCE(run_stats.total_runs, 0) AS total_runs,
+                   COALESCE(run_stats.completed_runs, 0) AS completed_runs,
+                   COALESCE(card_stats.total_cards, 0) AS total_cards
+            FROM Users u
+            LEFT JOIN Player p ON p.User_id = u.User_id
+            LEFT JOIN (
+                SELECT Player_id,
+                       COUNT(*) AS total_runs,
+                       SUM(CASE WHEN Completed = TRUE THEN 1 ELSE 0 END) AS completed_runs
+                FROM Run
+                GROUP BY Player_id
+            ) run_stats ON run_stats.Player_id = p.Player_id
+            LEFT JOIN (
+                SELECT Player_id,
+                       COUNT(DISTINCT Card_id) AS total_cards
+                FROM Deck
+                WHERE Card_gained = TRUE
+                GROUP BY Player_id
+            ) card_stats ON card_stats.Player_id = p.Player_id
+            ORDER BY u.Is_active DESC, u.Created_at DESC, u.Username
+        `);
+
+        const overview = overviewRows[0] || {};
+        const totalCombats = Number(overview.total_combats || 0);
+        const combatVictories = Number(overview.combat_victories || 0);
+        const canDeleteUsers = Boolean(viewerUser && viewerUser.isAdmin);
+
+        res.json({
+            success: true,
+            viewer: viewerUser ? {
+                userId: viewerUser.userId,
+                username: viewerUser.username,
+                userRole: viewerUser.userRole,
+                isAdmin: viewerUser.isAdmin
+            } : null,
+            management: {
+                can_delete_users: canDeleteUsers
+            },
+            overview: {
+                ...overview,
+                combat_win_rate: totalCombats > 0
+                    ? Number(((combatVictories / totalCombats) * 100).toFixed(2))
+                    : 0
+            },
+            player_progress: playerProgressRows,
+            run_status: runStatusRows,
+            runs_by_level: runsByLevelRows,
+            combat_by_level: combatByLevelRows,
+            resource_totals: resourceRows,
+            top_players: topPlayersRows,
+            users: userRows.map((row) => ({
+                ...row,
+                user_role: normalizeUserRole(row.User_role),
+                is_admin: isAdminRole(row.User_role)
+            }))
+        });
+    } catch (error) {
+        console.error('Error al obtener dashboard admin:', error);
+        res.status(500).json({ success: false, message: 'Error en el servidor', error: error.message });
+    }
+});
+
+app.delete('/api/admin/users/:userId', async (req, res) => {
+    try {
+        const adminUser = await requireAdminUser(req);
+        if (!adminUser.ok) {
+            return res.status(adminUser.status).json(adminUser.response);
+        }
+
+        const targetUserId = Number.parseInt(req.params.userId, 10);
+        if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+            return res.status(400).json({ success: false, message: 'User_id invalido.' });
+        }
+
+        if (targetUserId === adminUser.userId) {
+            return res.status(400).json({ success: false, message: 'No puedes borrar tu propio usuario admin.' });
+        }
+
+        const [rows] = await pool.query(
+            'SELECT User_id, Username, User_role, Is_active FROM Users WHERE User_id = ?',
+            [targetUserId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+        }
+
+        if (isAdminRole(rows[0].User_role)) {
+            return res.status(403).json({ success: false, message: 'No se pueden borrar usuarios administradores.' });
+        }
+
+        if (!rows[0].Is_active) {
+            return res.json({ success: true, message: 'El usuario ya estaba eliminado.' });
+        }
+
+        await pool.query(
+            'UPDATE Users SET Is_active = FALSE WHERE User_id = ?',
+            [targetUserId]
+        );
+
+        res.json({
+            success: true,
+            message: `Usuario ${rows[0].Username} eliminado correctamente.`
+        });
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
         res.status(500).json({ success: false, message: 'Error en el servidor', error: error.message });
     }
 });

@@ -1,5 +1,26 @@
 "use strict";
 
+// Este menu ya es como el puente rapido antes de entrar al lobby.
+// Aqui dejamos solo lo importante para no meter opciones de mas.
+
+function navigateGame(url) {
+  window.location.href = url;
+}
+
+// Leemos el rol guardado para pintar la etiqueta sin pedirlo otra vez a la API.
+function getStoredUserRole() {
+  const storedRole = String(localStorage.getItem('userRole') || '').trim().toLowerCase();
+  if (storedRole === 'admin') {
+    return 'admin';
+  }
+
+  if (localStorage.getItem('isAdmin') === 'true') {
+    return 'admin';
+  }
+
+  return 'ejecutivo';
+}
+
 function main() {
   // Ajustar canvas a pantalla completa
   const canvas = document.getElementById('canvas');
@@ -16,6 +37,13 @@ function main() {
   
   // Esperar a que el DOM esté listo
   window.addEventListener('DOMContentLoaded', function() {
+    const userRole = getStoredUserRole();
+    const roleBadge = document.getElementById('roleBadge');
+
+    if (roleBadge) {
+      roleBadge.textContent = userRole === 'admin' ? 'Rol: Administrador' : 'Rol: Ejecutivo';
+      roleBadge.classList.toggle('admin-role', userRole === 'admin');
+    }
     
     // Botón Nueva Partida
     let btnNuevaPartida = document.getElementById('btnNuevaPartida');
@@ -28,6 +56,7 @@ function main() {
         }
 
         try {
+          // Aqui se resetea desde servidor para arrancar limpio y con cartas base nuevas.
           // Resetear jugador en el servidor (borra todo y da 5 cartas nuevas)
           const response = await fetch(`http://localhost:3000/api/player/${playerId}/reset`, {
             method: 'POST'
@@ -49,7 +78,7 @@ function main() {
             localStorage.setItem('isNewGame', 'true');
             
             // Redirigir al lobby (alli se cargaran los datos del servidor)
-            window.top.location.href = '../lobby/lobbyV1.html';
+            navigateGame('../lobby/lobbyV1.html');
           } else {
             alert('ERROR - No se pudo resetear');
           }
@@ -72,7 +101,7 @@ function main() {
         
         // Simplemente ir al lobby - el lobby cargara los datos del servidor automaticamente
         console.log('Continuando partida guardada...');
-        window.top.location.href = '../lobby/lobbyV1.html';
+        navigateGame('../lobby/lobbyV1.html');
       });
     }
     
@@ -94,14 +123,6 @@ function main() {
       backButton.addEventListener('click', function() {
         config.style.display = 'none';
         menu.style.display = 'block';
-      });
-    }
-    
-    // Botón Créditos
-    let btnCreditos = document.getElementById('btnCreditos');
-    if (btnCreditos) {
-      btnCreditos.addEventListener('click', function() {
-        alert('ENDLESS NIGHTMARE RITUAL\nProyecto de Construccion de Software');
       });
     }
     

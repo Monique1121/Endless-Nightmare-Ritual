@@ -1,18 +1,147 @@
 "use strict";
 
+// Aqui github nos echo la mano para reacomodar todo este layout.
+// Lo importante es que render y clicks usan esta misma base para que no se descuadre nada.
 const TCG_LAYOUT = {
-  hand: { x: 70, y: 650, width: 120, height: 180, spacing: 140 },
-  playerBench: { x: 80, y: 420, width: 100, height: 130, spacing: 110 },
-  playerActive: { x: 550, y: 380, width: 130, height: 170 },
+  header: { leftX: 72, centerX: 548, rightX: 930, nameY: 36, koY: 68 },
+  hand: {
+    x: 70,
+    areaX: 70,
+    areaWidth: 940,
+    y: 646,
+    width: 138,
+    height: 192,
+    spacing: 148,
+    artX: 12,
+    artY: 10,
+    artWidth: 114,
+    artHeight: 98,
+    dividerY: 110,
+    nameY: 134,
+    costY: 156,
+    atkY: 173,
+    hpY: 188,
+    labelX: 70,
+    labelY: 628
+  },
+  enemyBench: {
+    x: 112,
+    y: 122,
+    width: 114,
+    height: 150,
+    spacing: 126,
+    artX: 10,
+    artY: 12,
+    artWidth: 94,
+    artHeight: 80,
+    dividerY: 103,
+    nameY: 122,
+    atkY: 139,
+    hpY: 155
+  },
+  playerBench: {
+    x: 112,
+    y: 430,
+    width: 114,
+    height: 150,
+    spacing: 126,
+    artX: 10,
+    artY: 12,
+    artWidth: 94,
+    artHeight: 80,
+    dividerY: 103,
+    nameY: 122,
+    atkY: 139,
+    hpY: 155
+  },
+  enemyActive: {
+    x: 628,
+    y: 108,
+    width: 184,
+    height: 236,
+    artX: 12,
+    artY: 14,
+    artWidth: 160,
+    artHeight: 124,
+    dividerY: 152,
+    nameY: 178,
+    atkY: 200,
+    hpY: 222,
+    emptyLine1Y: 126,
+    emptyLine2Y: 147
+  },
+  playerActive: {
+    x: 628,
+    y: 395,
+    width: 184,
+    height: 236,
+    artX: 12,
+    artY: 14,
+    artWidth: 160,
+    artHeight: 124,
+    dividerY: 152,
+    nameY: 178,
+    atkY: 200,
+    hpY: 222,
+    emptyLine1Y: 122,
+    emptyLine2Y: 143
+  },
   buttons: {
-    attack: { x: 700, y: 500, width: 120, height: 35 },
-    endTurn: { x: 700, y: 545, width: 120, height: 35 },
-    sacrifice: { x: 700, y: 590, width: 120, height: 35 }
+    attack: { x: 848, y: 434, width: 172, height: 44 },
+    endTurn: { x: 848, y: 489, width: 172, height: 44 },
+    sacrifice: { x: 848, y: 544, width: 172, height: 44 }
+  },
+  combatLog: {
+    x: 1068,
+    y: 88,
+    width: 458,
+    height: 690,
+    lineHeight: 22,
+    padding: 18,
+    headerHeight: 48,
+    maxLogs: 31,
+    footerHeight: 42
   }
 };
 
 function isPointInsideRect(x, y, rect) {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+}
+
+function getBenchSlotRect(layout, index) {
+  return {
+    x: layout.x + index * layout.spacing,
+    y: layout.y,
+    width: layout.width,
+    height: layout.height
+  };
+}
+
+function getHandSpread(cardCount) {
+  const { hand } = TCG_LAYOUT;
+
+  if (cardCount <= 1) {
+    return { startX: hand.areaX, spacing: hand.spacing };
+  }
+
+  const availableSpacing = Math.floor((hand.areaWidth - hand.width) / (cardCount - 1));
+  const spacing = Math.max(84, Math.min(hand.spacing, availableSpacing));
+  const totalWidth = hand.width + (cardCount - 1) * spacing;
+  const startX = hand.areaX + Math.max(0, Math.floor((hand.areaWidth - totalWidth) / 2));
+
+  return { startX, spacing };
+}
+
+function getHandCardRect(index, cardCount) {
+  const { hand } = TCG_LAYOUT;
+  const { startX, spacing } = getHandSpread(cardCount);
+
+  return {
+    x: startX + index * spacing,
+    y: hand.y,
+    width: hand.width,
+    height: hand.height
+  };
 }
  
 
@@ -204,9 +333,58 @@ class Draw {
     this.canvas.width  = 1600;
     this.canvas.height = 900;
   }
+
+  // Aqui github nos ayudo con el recorte porque varios sprites eran la carta completa
+  // y se veian medio chuecos dentro del espacio del arte.
+  drawCardArtwork(image, x, y, width, height) {
+    if (!image) return;
+
+    const ctx = this.ctx;
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+
+    if (!sourceWidth || !sourceHeight) {
+      ctx.drawImage(image, x, y, width, height);
+      return;
+    }
+
+    let cropX = 0;
+    let cropY = 0;
+    let cropWidth = sourceWidth;
+    let cropHeight = sourceHeight;
+
+    if (sourceHeight > sourceWidth * 1.15) {
+      const safeX = sourceWidth * 0.12;
+      const safeY = sourceHeight * 0.21;
+      const safeWidth = sourceWidth * 0.76;
+      const safeHeight = sourceHeight * 0.44;
+      const targetRatio = width / height;
+      const safeRatio = safeWidth / safeHeight;
+
+      cropX = safeX;
+      cropY = safeY;
+      cropWidth = safeWidth;
+      cropHeight = safeHeight;
+
+      if (safeRatio > targetRatio) {
+        cropWidth = safeHeight * targetRatio;
+        cropX = safeX + (safeWidth - cropWidth) / 2;
+      } else {
+        cropHeight = safeWidth / targetRatio;
+        cropY = safeY + (safeHeight - cropHeight) * 0.2;
+      }
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.clip();
+    ctx.drawImage(image, cropX, cropY, cropWidth, cropHeight, x, y, width, height);
+    ctx.restore();
+  }
  
-  // Convierte coordenadas del click a coordenadas del canvas,
-  // corrigiendo el letterboxing de object-fit: contain
+  // Esta parte tambien la pulimos con github para que el click no se moviera
+  // cuando el canvas dejaba margenes negros por el ajuste de pantalla.
   toCanvasCoords(event) {
     const rect         = this.canvas.getBoundingClientRect();
     const canvasRatio  = this.canvas.width / this.canvas.height;
@@ -249,17 +427,24 @@ class Draw {
  
   drawGameInfo(state) {
     const ctx = this.ctx;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '20px Arial';
+    const { header } = TCG_LAYOUT;
  
     const turnText  = state.turn === 'player' ? 'TU TURNO' : `TURNO ${state.opponent.name.toUpperCase()}`;
     const phaseText = state.phase === 'main'  ? 'Jugar Cartas' : 'Combate';
- 
-    ctx.fillText(turnText + ' - ' + phaseText, 450, 30);
-    ctx.fillText(state.player.name + ': ' + state.player.blood + '/' + state.player.maxBlood, 50, 30);
-    ctx.fillText(state.opponent.name + ': ' + state.opponent.blood + '/' + state.opponent.maxBlood, 950, 30);
-    ctx.fillText('KO: ' + state.player.knockouts   + '/' + state.knockoutsToWin, 50,  60);
-    ctx.fillText('KO: ' + state.opponent.knockouts + '/' + state.knockoutsToWin, 950, 60);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 23px Arial';
+    ctx.fillText(state.player.name + ': ' + state.player.blood + '/' + state.player.maxBlood, header.leftX, header.nameY);
+    ctx.fillText(state.opponent.name + ': ' + state.opponent.blood + '/' + state.opponent.maxBlood, header.rightX, header.nameY);
+
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('KO: ' + state.player.knockouts + '/' + state.knockoutsToWin, header.leftX, header.koY);
+    ctx.fillText('KO: ' + state.opponent.knockouts + '/' + state.knockoutsToWin, header.rightX, header.koY);
+
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 25px Arial';
+    ctx.fillText(turnText + ' - ' + phaseText, header.centerX, header.nameY);
+    ctx.textAlign = 'left';
   }
  
   drawPlayerHand(state, selectedCard) {
@@ -269,7 +454,9 @@ class Draw {
  
     for (let i = 0; i < numCards; i++) {
       const card = state.player.hand[i];
-      const x = hand.x + i * hand.spacing;
+      const rect = getHandCardRect(i, numCards);
+      const x = rect.x;
+      const y = rect.y;
  
       const canAfford = state.player.canAfford(card.cost);
       const isPlayerTurn = state.turn === 'player' && state.phase === 'main';
@@ -283,84 +470,84 @@ class Draw {
       } else {
         ctx.fillStyle = '#5a0000';
       }
-      ctx.fillRect(x, hand.y, hand.width, hand.height);
+      ctx.fillRect(x, y, hand.width, hand.height);
       
       // Borde
       ctx.strokeStyle = isSelected ? '#ffff00' : '#ffffff';
       ctx.lineWidth = isSelected ? 4 : 2;
-      ctx.strokeRect(x, hand.y, hand.width, hand.height);
+      ctx.strokeRect(x, y, hand.width, hand.height);
       
       // Sprite
       if (card.spriteImg) {
-        ctx.drawImage(card.spriteImg, x + 10, 660, 100, 90);
+        this.drawCardArtwork(card.spriteImg, x + hand.artX, y + hand.artY, hand.artWidth, hand.artHeight);
       }
       
       // Línea separadora
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(x, 755, 120, 2);
+      ctx.fillRect(x, y + hand.dividerY, hand.width, 2);
  
       // Nombre
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 15px Arial';
       const name = card.name.length > 11 ? card.name.substring(0, 10) + '...' : card.name;
-      ctx.fillText(name, x + 8, 773);
+      ctx.fillText(name, x + 8, y + hand.nameY);
       
       // Stats
       ctx.font = 'bold 14px Arial';
       ctx.fillStyle = '#ffff00';
-      ctx.fillText('C:' + card.cost, x + 8, 791);
+      ctx.fillText('C:' + card.cost, x + 8, y + hand.costY);
       ctx.fillStyle = '#ff6666';
-      ctx.fillText('ATK:' + card.atk, x + 8, 807);
+      ctx.fillText('ATK:' + card.atk, x + 8, y + hand.atkY);
       ctx.fillStyle = '#00ff00';
-      ctx.fillText('HP:' + card.hp, x + 8, 823);
+      ctx.fillText('HP:' + card.hp, x + 8, y + hand.hpY);
     }
  
     ctx.fillStyle = '#ffff00';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText('Selecciona una carta', 70, 635);
+    ctx.font = 'bold 17px Arial';
+    ctx.fillText('Selecciona una carta', hand.labelX, hand.labelY);
   }
  
   drawOppField(state) {
     const ctx = this.ctx;
     const opponent = state.opponent;
-    const startX = 80;
-    const spacing = 110;
+    const { enemyBench, enemyActive } = TCG_LAYOUT;
  
     for (let i = 0; i < 4; i++) {
-      const x = startX + i * spacing;
+      const slot = getBenchSlotRect(enemyBench, i);
+      const x = slot.x;
       const card = opponent.bench[i];
  
       if (card) {
         // Fondo rojo oscuro
         ctx.fillStyle = '#6a0000';
-        ctx.fillRect(x, 80, 100, 130);
+        ctx.fillRect(slot.x, slot.y, slot.width, slot.height);
         
         ctx.strokeStyle = '#ff3333';
         ctx.lineWidth = 2;
-        ctx.strokeRect(x, 80, 100, 130);
+        ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
         
         if (card.spriteImg) {
-          ctx.drawImage(card.spriteImg, x + 10, 88, 80, 70);
+          this.drawCardArtwork(card.spriteImg, x + enemyBench.artX, slot.y + enemyBench.artY, enemyBench.artWidth, enemyBench.artHeight);
         }
         
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x, 163, 100, 2);
+        ctx.fillRect(slot.x, slot.y + enemyBench.dividerY, slot.width, 2);
         
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 13px Arial';
         const name = card.name.length > 10 ? card.name.substring(0, 9) + '.' : card.name;
-        ctx.fillText(name, x + 6, 178);
+        ctx.fillText(name, x + 6, slot.y + enemyBench.nameY);
         
         ctx.font = 'bold 12px Arial';
         ctx.fillStyle = '#ff6666';
-        ctx.fillText('ATK:' + card.atk, x + 6, 194);
+        ctx.fillText('ATK:' + card.atk, x + 6, slot.y + enemyBench.atkY);
         ctx.fillStyle = '#00ff00';
-        ctx.fillText('HP:' + card.currentHP, x + 6, 206);
+        ctx.fillText('HP:' + card.currentHP, x + 6, slot.y + enemyBench.hpY);
       } else {
         ctx.strokeStyle = '#444444';
         ctx.lineWidth = 1;
         ctx.setLineDash([6, 6]);
-        ctx.strokeRect(x, 80, 100, 130);
+        ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
         ctx.setLineDash([]);
       }
     }
@@ -370,43 +557,43 @@ class Draw {
       
       // Carta activa enemiga
       ctx.fillStyle = '#aa0000';
-      ctx.fillRect(550, 80, 130, 170);
+      ctx.fillRect(enemyActive.x, enemyActive.y, enemyActive.width, enemyActive.height);
       
       ctx.strokeStyle = '#ff0000';
       ctx.lineWidth = 3;
-      ctx.strokeRect(550, 80, 130, 170);
+      ctx.strokeRect(enemyActive.x, enemyActive.y, enemyActive.width, enemyActive.height);
       ctx.strokeStyle = '#ffff00';
       ctx.lineWidth = 1;
-      ctx.strokeRect(553, 83, 124, 164);
+      ctx.strokeRect(enemyActive.x + 3, enemyActive.y + 3, enemyActive.width - 6, enemyActive.height - 6);
       
       if (card.spriteImg) {
-        ctx.drawImage(card.spriteImg, 560, 90, 110, 95);
+        this.drawCardArtwork(card.spriteImg, enemyActive.x + enemyActive.artX, enemyActive.y + enemyActive.artY, enemyActive.artWidth, enemyActive.artHeight);
       }
       
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(550, 190, 130, 2);
+      ctx.fillRect(enemyActive.x, enemyActive.y + enemyActive.dividerY, enemyActive.width, 2);
       
       ctx.fillStyle = '#ffff00';
       ctx.font = 'bold 16px Arial';
       const name = card.name.length > 11 ? card.name.substring(0, 10) : card.name;
-      ctx.fillText(name, 558, 208);
+      ctx.fillText(name, enemyActive.x + 8, enemyActive.y + enemyActive.nameY);
       
       ctx.font = 'bold 14px Arial';
       ctx.fillStyle = '#ff6666';
-      ctx.fillText('ATK:' + card.atk, 558, 226);
+      ctx.fillText('ATK:' + card.atk, enemyActive.x + 8, enemyActive.y + enemyActive.atkY);
       ctx.fillStyle = '#00ff00';
-      ctx.fillText('HP:' + card.currentHP + '/' + card.hp, 558, 242);
+      ctx.fillText('HP:' + card.currentHP + '/' + card.hp, enemyActive.x + 8, enemyActive.y + enemyActive.hpY);
     } else {
       ctx.strokeStyle = '#666666';
       ctx.lineWidth = 2;
       ctx.setLineDash([10, 5]);
-      ctx.strokeRect(550, 80, 130, 170);
+      ctx.strokeRect(enemyActive.x, enemyActive.y, enemyActive.width, enemyActive.height);
       ctx.setLineDash([]);
       
       ctx.fillStyle = '#666666';
       ctx.font = 'bold 14px Arial';
-      ctx.fillText('SIN CARTA', 570, 160);
-      ctx.fillText('ACTIVA', 580, 178);
+      ctx.fillText('SIN CARTA', enemyActive.x + 36, enemyActive.y + enemyActive.emptyLine1Y);
+      ctx.fillText('ACTIVA', enemyActive.x + 46, enemyActive.y + enemyActive.emptyLine2Y);
     }
   }
  
@@ -419,40 +606,41 @@ class Draw {
     ctx.font = '12px Arial';
  
     for (let i = 0; i < 4; i++) {
-      const x = playerBench.x + i * playerBench.spacing;
+      const slot = getBenchSlotRect(playerBench, i);
+      const x = slot.x;
       const card = player.bench[i];
  
       if (card) {
         // Fondo azul
         ctx.fillStyle = '#004488';
-        ctx.fillRect(x, playerBench.y, playerBench.width, playerBench.height);
+        ctx.fillRect(slot.x, slot.y, slot.width, slot.height);
         
         ctx.strokeStyle = '#4499ff';
         ctx.lineWidth = 2;
-        ctx.strokeRect(x, playerBench.y, playerBench.width, playerBench.height);
+        ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
         
         if (card.spriteImg) {
-          ctx.drawImage(card.spriteImg, x + 10, 428, 80, 70);
+          this.drawCardArtwork(card.spriteImg, x + playerBench.artX, slot.y + playerBench.artY, playerBench.artWidth, playerBench.artHeight);
         }
         
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x, 503, 100, 2);
+        ctx.fillRect(slot.x, slot.y + playerBench.dividerY, slot.width, 2);
         
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 13px Arial';
         const name = card.name.length > 10 ? card.name.substring(0, 9) + '.' : card.name;
-        ctx.fillText(name, x + 6, 518);
+        ctx.fillText(name, x + 6, slot.y + playerBench.nameY);
         
         ctx.font = 'bold 12px Arial';
         ctx.fillStyle = '#ff6666';
-        ctx.fillText('ATK:' + card.atk, x + 6, 534);
+        ctx.fillText('ATK:' + card.atk, x + 6, slot.y + playerBench.atkY);
         ctx.fillStyle = '#00ff00';
-        ctx.fillText('HP:' + card.currentHP, x + 6, 546);
+        ctx.fillText('HP:' + card.currentHP, x + 6, slot.y + playerBench.hpY);
       } else {
         ctx.strokeStyle = showHint ? '#00ff00' : '#444444';
         ctx.lineWidth = showHint ? 2 : 1;
         ctx.setLineDash(showHint ? [] : [6, 6]);
-        ctx.strokeRect(x, playerBench.y, playerBench.width, playerBench.height);
+        ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
         ctx.setLineDash([]);
       }
     }
@@ -472,22 +660,22 @@ class Draw {
       ctx.strokeRect(playerActive.x + 3, playerActive.y + 3, playerActive.width - 6, playerActive.height - 6);
       
       if (card.spriteImg) {
-        ctx.drawImage(card.spriteImg, 560, 390, 110, 95);
+        this.drawCardArtwork(card.spriteImg, playerActive.x + playerActive.artX, playerActive.y + playerActive.artY, playerActive.artWidth, playerActive.artHeight);
       }
       
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(550, 490, 130, 2);
+      ctx.fillRect(playerActive.x, playerActive.y + playerActive.dividerY, playerActive.width, 2);
       
       ctx.fillStyle = '#ffff00';
       ctx.font = 'bold 16px Arial';
       const name = card.name.length > 11 ? card.name.substring(0, 10) : card.name;
-      ctx.fillText(name, 558, 508);
+      ctx.fillText(name, playerActive.x + 8, playerActive.y + playerActive.nameY);
       
       ctx.font = 'bold 14px Arial';
       ctx.fillStyle = '#ff6666';
-      ctx.fillText('ATK:' + card.atk, 558, 526);
+      ctx.fillText('ATK:' + card.atk, playerActive.x + 8, playerActive.y + playerActive.atkY);
       ctx.fillStyle = '#00ff00';
-      ctx.fillText('HP:' + card.currentHP + '/' + card.hp, 558, 542);
+      ctx.fillText('HP:' + card.currentHP + '/' + card.hp, playerActive.x + 8, playerActive.y + playerActive.hpY);
     } else {
       ctx.strokeStyle = showHint ? '#00ff00' : '#666666';
       ctx.lineWidth = 2;
@@ -498,12 +686,12 @@ class Draw {
       if (showHint) {
         ctx.fillStyle = '#00ff00';
         ctx.font = 'bold 14px Arial';
-        ctx.fillText('COLOCA CARTA', 560, 460);
+        ctx.fillText('COLOCA CARTA', playerActive.x + 30, playerActive.y + playerActive.emptyLine1Y);
       } else {
         ctx.fillStyle = '#666666';
         ctx.font = 'bold 14px Arial';
-        ctx.fillText('SIN CARTA', 570, 460);
-        ctx.fillText('ACTIVA', 580, 478);
+        ctx.fillText('SIN CARTA', playerActive.x + 39, playerActive.y + playerActive.emptyLine1Y);
+        ctx.fillText('ACTIVA', playerActive.x + 50, playerActive.y + playerActive.emptyLine2Y);
       }
     }
  
@@ -519,8 +707,12 @@ class Draw {
     ctx.strokeStyle = '#cc0000';
     ctx.strokeRect(x, y, width, height);
     ctx.fillStyle   = '#ffffff';
-    ctx.font        = '14px Arial';
-    ctx.fillText(text, x + 10, y + 22);
+    ctx.font        = 'bold 18px Arial';
+    ctx.textAlign   = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x + width / 2, y + height / 2 + 1);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
   }
  
   drawGameOver(state) {
@@ -549,26 +741,21 @@ class Draw {
 
   drawCombatLog(logs) {
     const ctx = this.ctx;
-    const x = 1000;
-    const y = 80;
-    const width = 580;
-    const lineHeight = 22;
-    const padding = 20;
-    const headerHeight = 50;
-    const maxLogs = 35;
+    const { combatLog } = TCG_LAYOUT;
+    const { x, y, width, height, lineHeight, padding, headerHeight, maxLogs, footerHeight } = combatLog;
 
     if (logs.length === 0) return;
 
     // Fondo del panel completo
     ctx.fillStyle = 'rgba(10, 10, 20, 0.95)';
-    ctx.fillRect(x, y, width, 800);
+    ctx.fillRect(x, y, width, height);
     
     // Borde del panel (doble línea roja)
     ctx.strokeStyle = '#ff0000';
     ctx.lineWidth = 3;
-    ctx.strokeRect(x, y, width, 800);
+    ctx.strokeRect(x, y, width, height);
     ctx.lineWidth = 1;
-    ctx.strokeRect(x + 3, y + 3, width - 6, 800 - 6);
+    ctx.strokeRect(x + 3, y + 3, width - 6, height - 6);
     
     // Header con gradiente
     const gradient = ctx.createLinearGradient(x, y, x, y + headerHeight);
@@ -629,8 +816,8 @@ class Draw {
       
       // Truncar mensaje si es muy largo
       let displayMsg = logMsg;
-      if (logMsg.length > 58) {
-        displayMsg = logMsg.substring(0, 55) + '...';
+      if (logMsg.length > 46) {
+        displayMsg = logMsg.substring(0, 43) + '...';
       }
       
       ctx.fillText(displayMsg, x + padding, logY);
@@ -639,12 +826,12 @@ class Draw {
     // Footer con indicador de más logs
     if (logs.length > maxLogs) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.fillRect(x, y + 750, width, 50);
+      ctx.fillRect(x, y + height - footerHeight, width, footerHeight);
       
       ctx.fillStyle = '#888888';
       ctx.font = 'italic 14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`+${logs.length - maxLogs} mensajes anteriores`, x + width/2, y + 780);
+      ctx.fillText(`+${logs.length - maxLogs} mensajes anteriores`, x + width / 2, y + height - 15);
       ctx.textAlign = 'left';
     }
   }
@@ -863,6 +1050,7 @@ class Game {
       return;
     }
 
+    // Aqui github nos ayudo a bajar cada turno a BD sin mover la logica principal del combate.
     try {
       const bloodSpent = activePlayer === 'player' ? 
         (this.state.player.maxBlood - this.state.player.blood) : 
@@ -898,6 +1086,8 @@ class Game {
       return;
     }
 
+    // Igual esta parte nos echo la mano github para guardar jugadas, dano
+    // y si una carta quedo fuera durante el TCG.
     try {
       const response = await fetch(`http://localhost:3000/api/combat/${this.combatData.combat_id}/action`, {
         method: 'POST',
@@ -992,8 +1182,8 @@ class Game {
  
     if (isPlayerMainTurn && y >= hand.y && y <= hand.y + hand.height) {
       for (let i = 0; i < player.hand.length; i++) {
-        const cardX = hand.x + i * hand.spacing;
-        if (x >= cardX && x <= cardX + hand.width) {
+        const cardRect = getHandCardRect(i, player.hand.length);
+        if (isPointInsideRect(x, y, cardRect)) {
           const card = player.hand[i];
           player.canAfford(card.cost)
             ? this.selectHandCard(card)
@@ -1005,8 +1195,8 @@ class Game {
  
     if (this.selectedCard && y >= playerBench.y && y <= playerBench.y + playerBench.height) {
       for (let i = 0; i < 4; i++) {
-        const cardX = playerBench.x + i * playerBench.spacing;
-        if (x >= cardX && x <= cardX + playerBench.width && player.bench[i] === null) {
+        const slot = getBenchSlotRect(playerBench, i);
+        if (isPointInsideRect(x, y, slot) && player.bench[i] === null) {
           this.playCardToField('bench', i);
           return;
         }
@@ -1053,6 +1243,8 @@ async function loadPlayerDeck() {
 
     let finalCards = [];
 
+    // Aqui github nos ayudo a juntar el deck fijo con las cartas temporales del run
+    // para que no se perdieran al entrar al combate.
     // 1. Load permanent deck cards
     const deckRes = await fetch(`${API_URL}/player/${playerId}/deck`);
     const deckData = await deckRes.json();
@@ -1113,6 +1305,8 @@ window.onload = async function () {
       console.error('No se encontro playerId para cargar datos del jugador');
     }
     
+    // Esta carga la fuimos cerrando con github para que el TCG arrancara
+    // con el jugador, enemigo y run correctos desde el inicio.
     // Obtener datos actualizados del jugador desde la API
     if (playerId) {
         try {

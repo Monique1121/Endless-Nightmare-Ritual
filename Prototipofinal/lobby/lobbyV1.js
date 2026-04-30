@@ -1,5 +1,8 @@
 "use strict";
 
+// Este lobby es como el mundo base desde donde brincas a escuela, laboratorio u hospital.
+// Aqui tambien vive el popup de inventario para revisar cartas y secretos sin salir de escena.
+
 
 const canvasWidth = 800;
 const canvasHeight = 600;
@@ -115,6 +118,7 @@ class Game {
         this.initInventoryUI();
     }
     
+    // Aqui agarramos las refs del popup para no buscarlas cada vez que se abre inventario.
     initInventoryUI() {
         this.inventoryPopup = document.getElementById("inventory-popup");
         this.inventoryBlood = document.getElementById("inventory-blood");
@@ -165,6 +169,7 @@ class Game {
         this.secretsSection.classList.remove("hidden");
     }
     
+    // Esta vista lee el GameState local y solo pinta lo que ya trae guardado el jugador.
     updateInventoryDisplay() {
         const playerData = GameState.load();
         if (!playerData) return;
@@ -452,6 +457,7 @@ class Game {
                 this.player.startMovement(keyDirections[event.key]);
             }
             
+            // Desde aqui arrancamos los runs cuando el jugador entra a una zona valida.
             // Tecla E para interactuar con la escuela
             // if (event.key === "e" || event.key === "E") {
             //     if (this.inSchoolZone) {

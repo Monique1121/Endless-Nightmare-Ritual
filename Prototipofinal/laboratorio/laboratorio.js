@@ -1,5 +1,8 @@
 "use strict";
 
+// Esta escena carga el mapa del laboratorio y desde aqui se entra a su laberinto.
+// La idea es dejar separado el recorrido libre y el salto al run que se crea en API.
+
 const canvasWidth = 800;
 const canvasHeight = 600;
 
@@ -125,6 +128,7 @@ class Game {
         this.loadLabyrinthData();
     }
 
+    // Aqui bajamos nombre y tiempo del laberinto para mostrar la entrada con datos reales.
     async loadLabyrinthData() {
         try {
             const response = await fetch("http://localhost:3000/api/labyrinth/4");
@@ -260,6 +264,7 @@ async function handleKeyDown(event) {
         
         if (game.inLabyrinthZone) {
             try {
+                // Cuando pica E aqui se crea el run del laboratorio antes de mandar al Maze.
                 console.log("Entrando al laberinto del laboratorio...");
                 const playerId = localStorage.getItem("playerId");
 

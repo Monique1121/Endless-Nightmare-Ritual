@@ -312,31 +312,6 @@ button:hover {
   margin: 0;
 }
 
-@media (max-width: 900px) {
-  body.login-page.embedded-mode .login-box {
-    min-height: auto;
-    padding: 28px 20px;
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "title"
-      "copy"
-      "form"
-      "error"
-      "back";
-    row-gap: 16px;
-    text-align: center;
-  }
-
-  body.login-page.embedded-mode h1 {
-    font-size: 44px;
-  }
-
-  body.login-page.embedded-mode .login-box > p:first-of-type {
-    font-size: 22px;
-    max-width: none;
-  }
-}
-
 .mini-list li {
   color: #cccccc;
   padding: 8px 10px;
