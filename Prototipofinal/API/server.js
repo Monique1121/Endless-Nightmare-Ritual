@@ -15,8 +15,9 @@ app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'C4rl1t0s2023',
-    database: 'endless'
+    password: 'nctdream123',
+    database: 'endless',
+    port: '3305'
 };
 
 const pool = mysql.createPool(dbConfig);

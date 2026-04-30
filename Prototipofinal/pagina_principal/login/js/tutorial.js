@@ -3,7 +3,7 @@ $(document).ready(function () {
     // Este slider solo va moviendo las pantallas del tutorial sin meter logica rara.
 
     let actual = 1;
-    let total = 11;
+    let total = 13;
 
     $(".info").hide();
     $("#id1").show();
