@@ -104,6 +104,32 @@ const TCG_LAYOUT = {
   }
 };
 
+const TCG_THEME = {
+  fonts: {
+    display: "'Press Start 2P', 'Courier New', monospace",
+    body: "'Cinzel', 'Palatino Linotype', serif",
+    mono: "'Cascadia Code', 'Consolas', monospace"
+  },
+  colors: {
+    ink: '#07090c',
+    inkSoft: '#111217',
+    ritual: '#23080d',
+    ritualSoft: '#55151d',
+    ritualBright: '#d9545f',
+    brass: '#fff0ee',
+    brassSoft: '#8f2832',
+    parchment: '#fff8f6',
+    muted: '#d1c2c7',
+    disabled: '#292b2f',
+    playerStone: '#15191f',
+    enemyStone: '#351118',
+    blood: '#ff858d',
+    life: '#a3c88f',
+    hint: '#d8e0d8',
+    ghost: '#807a86'
+  }
+};
+
 function isPointInsideRect(x, y, rect) {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
 }
@@ -334,6 +360,46 @@ class Draw {
     this.canvas.height = 900;
   }
 
+  font(size, family = TCG_THEME.fonts.body, weight = 700) {
+    return `${weight} ${size}px ${family}`;
+  }
+
+  drawPanel(x, y, width, height, fillStyle, strokeStyle, lineWidth = 2, innerStrokeStyle = null) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = fillStyle;
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lineWidth;
+    ctx.strokeRect(x, y, width, height);
+
+    if (innerStrokeStyle && width > 10 && height > 10) {
+      ctx.strokeStyle = innerStrokeStyle;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 4, y + 4, width - 8, height - 8);
+    }
+    ctx.restore();
+  }
+
+  drawFittedText(text, centerX, y, maxWidth, maxSize, minSize, family = TCG_THEME.fonts.body, weight = 700, color = TCG_THEME.colors.parchment) {
+    const ctx = this.ctx;
+    let size = maxSize;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = color;
+
+    while (size > minSize) {
+      ctx.font = this.font(size, family, weight);
+      if (ctx.measureText(text).width <= maxWidth) break;
+      size -= 1;
+    }
+
+    ctx.font = this.font(size, family, weight);
+    ctx.fillText(text, centerX, y);
+    ctx.restore();
+  }
+
   // Aqui github nos ayudo con el recorte porque varios sprites eran la carta completa
   // y se veian medio chuecos dentro del espacio del arte.
   drawCardArtwork(image, x, y, width, height) {
@@ -411,8 +477,47 @@ class Draw {
   }
  
   clear() {
-    this.ctx.fillStyle = '#000000';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    const ctx = this.ctx;
+
+    const baseGradient = ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+    baseGradient.addColorStop(0, '#07090c');
+    baseGradient.addColorStop(0.46, '#11090c');
+    baseGradient.addColorStop(1, '#040607');
+    ctx.fillStyle = baseGradient;
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    const cornerGlow = ctx.createRadialGradient(210, 120, 30, 210, 120, 430);
+    cornerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+    cornerGlow.addColorStop(0.45, 'rgba(217, 84, 95, 0.16)');
+    cornerGlow.addColorStop(1, 'rgba(4, 6, 7, 0)');
+    ctx.fillStyle = cornerGlow;
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    const ritualGlow = ctx.createRadialGradient(560, 382, 80, 560, 382, 420);
+    ritualGlow.addColorStop(0, 'rgba(196, 86, 96, 0.16)');
+    ritualGlow.addColorStop(0.4, 'rgba(86, 28, 33, 0.08)');
+    ritualGlow.addColorStop(1, 'rgba(4, 6, 7, 0)');
+    ctx.fillStyle = ritualGlow;
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.drawPanel(34, 18, 994, 812, 'rgba(7, 10, 12, 0.42)', 'rgba(217, 84, 95, 0.2)', 1, 'rgba(255, 240, 240, 0.08)');
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(217, 84, 95, 0.16)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(560, 382, 106, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(560, 382, 72, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(454, 382);
+    ctx.lineTo(666, 382);
+    ctx.moveTo(560, 276);
+    ctx.lineTo(560, 488);
+    ctx.stroke();
+    ctx.restore();
   }
  
   render(state, selectedCard, combatLogs = []) {
@@ -428,22 +533,32 @@ class Draw {
   drawGameInfo(state) {
     const ctx = this.ctx;
     const { header } = TCG_LAYOUT;
+    const leftCenterX = 38 + (255 / 2);
+    const centerPanelX = 322 + (454 / 2);
+    const rightCenterX = 794 + (248 / 2);
  
     const turnText  = state.turn === 'player' ? 'TU TURNO' : `TURNO ${state.opponent.name.toUpperCase()}`;
     const phaseText = state.phase === 'main'  ? 'Jugar Cartas' : 'Combate';
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 23px Arial';
-    ctx.fillText(state.player.name + ': ' + state.player.blood + '/' + state.player.maxBlood, header.leftX, header.nameY);
-    ctx.fillText(state.opponent.name + ': ' + state.opponent.blood + '/' + state.opponent.maxBlood, header.rightX, header.nameY);
+    this.drawPanel(38, 14, 255, 64, 'rgba(7, 11, 14, 0.86)', 'rgba(217, 84, 95, 0.58)', 2, 'rgba(255, 240, 240, 0.12)');
+    this.drawPanel(322, 12, 454, 68, 'rgba(23, 10, 13, 0.9)', 'rgba(217, 84, 95, 0.64)', 2, 'rgba(255, 240, 240, 0.14)');
+    this.drawPanel(794, 14, 248, 64, 'rgba(7, 11, 14, 0.86)', 'rgba(217, 84, 95, 0.58)', 2, 'rgba(255, 240, 240, 0.12)');
 
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText('KO: ' + state.player.knockouts + '/' + state.knockoutsToWin, header.leftX, header.koY);
-    ctx.fillText('KO: ' + state.opponent.knockouts + '/' + state.knockoutsToWin, header.rightX, header.koY);
+    this.drawFittedText(`${state.player.name}: ${state.player.blood}/${state.player.maxBlood}`, leftCenterX, header.nameY, 220, 20, 12);
+    this.drawFittedText(`${state.opponent.name}: ${state.opponent.blood}/${state.opponent.maxBlood}`, rightCenterX, header.nameY, 214, 18, 10);
 
     ctx.textAlign = 'center';
-    ctx.font = 'bold 25px Arial';
-    ctx.fillText(turnText + ' - ' + phaseText, header.centerX, header.nameY);
+    ctx.fillStyle = TCG_THEME.colors.muted;
+    ctx.font = this.font(12, TCG_THEME.fonts.display, 400);
+    ctx.fillText('KO: ' + state.player.knockouts + '/' + state.knockoutsToWin, leftCenterX, header.koY);
+    ctx.fillText('KO: ' + state.opponent.knockouts + '/' + state.knockoutsToWin, rightCenterX, header.koY);
+
+    ctx.fillStyle = TCG_THEME.colors.brass;
+    ctx.font = this.font(18, TCG_THEME.fonts.display, 400);
+    ctx.shadowColor = 'rgba(217, 84, 95, 0.48)';
+    ctx.shadowBlur = 18;
+    this.drawFittedText(turnText + ' - ' + phaseText, centerPanelX, header.nameY, 408, 18, 11, TCG_THEME.fonts.display, 400, TCG_THEME.colors.brass);
+    ctx.shadowBlur = 0;
     ctx.textAlign = 'left';
   }
  
@@ -463,19 +578,14 @@ class Draw {
       const isSelected = selectedCard === card;
  
       // Color de fondo simple
-      if (!canAfford || !isPlayerTurn) {
-        ctx.fillStyle = '#2a2a2a';
-      } else if (isSelected) {
-        ctx.fillStyle = '#ffaa00';
-      } else {
-        ctx.fillStyle = '#5a0000';
-      }
-      ctx.fillRect(x, y, hand.width, hand.height);
-      
-      // Borde
-      ctx.strokeStyle = isSelected ? '#ffff00' : '#ffffff';
-      ctx.lineWidth = isSelected ? 4 : 2;
-      ctx.strokeRect(x, y, hand.width, hand.height);
+      const fill = !canAfford || !isPlayerTurn
+        ? 'rgba(41, 43, 47, 0.92)'
+        : isSelected
+          ? 'rgba(100, 26, 35, 0.98)'
+          : 'rgba(53, 19, 25, 0.94)';
+      const stroke = isSelected ? 'rgba(255, 248, 246, 0.92)' : 'rgba(217, 84, 95, 0.74)';
+      const innerStroke = isSelected ? 'rgba(255, 248, 246, 0.22)' : 'rgba(217, 84, 95, 0.14)';
+      this.drawPanel(x, y, hand.width, hand.height, fill, stroke, isSelected ? 3 : 2, innerStroke);
       
       // Sprite
       if (card.spriteImg) {
@@ -483,28 +593,25 @@ class Draw {
       }
       
       // Línea separadora
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = 'rgba(245, 232, 198, 0.72)';
       ctx.fillRect(x, y + hand.dividerY, hand.width, 2);
  
       // Nombre
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px Arial';
+      ctx.fillStyle = TCG_THEME.colors.parchment;
+      ctx.font = this.font(15, TCG_THEME.fonts.body, 700);
       const name = card.name.length > 11 ? card.name.substring(0, 10) + '...' : card.name;
       ctx.fillText(name, x + 8, y + hand.nameY);
       
       // Stats
-      ctx.font = 'bold 14px Arial';
-      ctx.fillStyle = '#ffff00';
+      ctx.font = this.font(14, TCG_THEME.fonts.body, 700);
+      ctx.fillStyle = TCG_THEME.colors.parchment;
       ctx.fillText('C:' + card.cost, x + 8, y + hand.costY);
-      ctx.fillStyle = '#ff6666';
+      ctx.fillStyle = TCG_THEME.colors.blood;
       ctx.fillText('ATK:' + card.atk, x + 8, y + hand.atkY);
-      ctx.fillStyle = '#00ff00';
+      ctx.fillStyle = TCG_THEME.colors.life;
       ctx.fillText('HP:' + card.hp, x + 8, y + hand.hpY);
     }
  
-    ctx.fillStyle = '#ffff00';
-    ctx.font = 'bold 17px Arial';
-    ctx.fillText('Selecciona una carta', hand.labelX, hand.labelY);
   }
  
   drawOppField(state) {
@@ -512,39 +619,39 @@ class Draw {
     const opponent = state.opponent;
     const { enemyBench, enemyActive } = TCG_LAYOUT;
  
+    ctx.textAlign = 'center';
+    ctx.fillStyle = TCG_THEME.colors.muted;
+    ctx.font = this.font(12, TCG_THEME.fonts.display, 400);
+    ctx.fillText('Banca enemiga', enemyBench.x + ((enemyBench.width + (enemyBench.spacing * 3)) / 2), enemyBench.y - 14);
+    ctx.textAlign = 'left';
+
     for (let i = 0; i < 4; i++) {
       const slot = getBenchSlotRect(enemyBench, i);
       const x = slot.x;
       const card = opponent.bench[i];
  
       if (card) {
-        // Fondo rojo oscuro
-        ctx.fillStyle = '#6a0000';
-        ctx.fillRect(slot.x, slot.y, slot.width, slot.height);
-        
-        ctx.strokeStyle = '#ff3333';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
+        this.drawPanel(slot.x, slot.y, slot.width, slot.height, 'rgba(57, 21, 27, 0.96)', 'rgba(217, 84, 95, 0.78)', 2, 'rgba(255, 240, 240, 0.08)');
         
         if (card.spriteImg) {
           this.drawCardArtwork(card.spriteImg, x + enemyBench.artX, slot.y + enemyBench.artY, enemyBench.artWidth, enemyBench.artHeight);
         }
         
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = 'rgba(245, 232, 198, 0.72)';
         ctx.fillRect(slot.x, slot.y + enemyBench.dividerY, slot.width, 2);
         
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 13px Arial';
+        ctx.fillStyle = TCG_THEME.colors.parchment;
+        ctx.font = this.font(13, TCG_THEME.fonts.body, 700);
         const name = card.name.length > 10 ? card.name.substring(0, 9) + '.' : card.name;
         ctx.fillText(name, x + 6, slot.y + enemyBench.nameY);
         
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = '#ff6666';
+        ctx.font = this.font(12, TCG_THEME.fonts.body, 700);
+        ctx.fillStyle = TCG_THEME.colors.blood;
         ctx.fillText('ATK:' + card.atk, x + 6, slot.y + enemyBench.atkY);
-        ctx.fillStyle = '#00ff00';
+        ctx.fillStyle = TCG_THEME.colors.life;
         ctx.fillText('HP:' + card.currentHP, x + 6, slot.y + enemyBench.hpY);
       } else {
-        ctx.strokeStyle = '#444444';
+        ctx.strokeStyle = 'rgba(143, 113, 65, 0.42)';
         ctx.lineWidth = 1;
         ctx.setLineDash([6, 6]);
         ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
@@ -554,46 +661,38 @@ class Draw {
  
     if (opponent.activeCard) {
       const card = opponent.activeCard;
-      
-      // Carta activa enemiga
-      ctx.fillStyle = '#aa0000';
-      ctx.fillRect(enemyActive.x, enemyActive.y, enemyActive.width, enemyActive.height);
-      
-      ctx.strokeStyle = '#ff0000';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(enemyActive.x, enemyActive.y, enemyActive.width, enemyActive.height);
-      ctx.strokeStyle = '#ffff00';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(enemyActive.x + 3, enemyActive.y + 3, enemyActive.width - 6, enemyActive.height - 6);
+      this.drawPanel(enemyActive.x, enemyActive.y, enemyActive.width, enemyActive.height, 'rgba(63, 19, 28, 0.97)', 'rgba(217, 84, 95, 0.92)', 3, 'rgba(255, 240, 240, 0.16)');
       
       if (card.spriteImg) {
         this.drawCardArtwork(card.spriteImg, enemyActive.x + enemyActive.artX, enemyActive.y + enemyActive.artY, enemyActive.artWidth, enemyActive.artHeight);
       }
       
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = 'rgba(245, 232, 198, 0.76)';
       ctx.fillRect(enemyActive.x, enemyActive.y + enemyActive.dividerY, enemyActive.width, 2);
       
-      ctx.fillStyle = '#ffff00';
-      ctx.font = 'bold 16px Arial';
+      ctx.fillStyle = TCG_THEME.colors.brass;
+      ctx.font = this.font(16, TCG_THEME.fonts.body, 700);
       const name = card.name.length > 11 ? card.name.substring(0, 10) : card.name;
       ctx.fillText(name, enemyActive.x + 8, enemyActive.y + enemyActive.nameY);
       
-      ctx.font = 'bold 14px Arial';
-      ctx.fillStyle = '#ff6666';
+      ctx.font = this.font(14, TCG_THEME.fonts.body, 700);
+      ctx.fillStyle = TCG_THEME.colors.blood;
       ctx.fillText('ATK:' + card.atk, enemyActive.x + 8, enemyActive.y + enemyActive.atkY);
-      ctx.fillStyle = '#00ff00';
+      ctx.fillStyle = TCG_THEME.colors.life;
       ctx.fillText('HP:' + card.currentHP + '/' + card.hp, enemyActive.x + 8, enemyActive.y + enemyActive.hpY);
     } else {
-      ctx.strokeStyle = '#666666';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(143, 113, 65, 0.58)';
       ctx.lineWidth = 2;
       ctx.setLineDash([10, 5]);
       ctx.strokeRect(enemyActive.x, enemyActive.y, enemyActive.width, enemyActive.height);
       ctx.setLineDash([]);
       
-      ctx.fillStyle = '#666666';
-      ctx.font = 'bold 14px Arial';
-      ctx.fillText('SIN CARTA', enemyActive.x + 36, enemyActive.y + enemyActive.emptyLine1Y);
-      ctx.fillText('ACTIVA', enemyActive.x + 46, enemyActive.y + enemyActive.emptyLine2Y);
+      ctx.fillStyle = TCG_THEME.colors.ghost;
+      ctx.font = this.font(13, TCG_THEME.fonts.display, 400);
+      ctx.fillText('SIN CARTA', enemyActive.x + (enemyActive.width / 2), enemyActive.y + enemyActive.emptyLine1Y);
+      ctx.fillText('ACTIVA', enemyActive.x + (enemyActive.width / 2), enemyActive.y + enemyActive.emptyLine2Y);
+      ctx.textAlign = 'left';
     }
   }
  
@@ -603,7 +702,11 @@ class Draw {
     const showHint = selectedCard && state.turn === 'player' && state.phase === 'main';
     const { playerBench, playerActive, buttons } = TCG_LAYOUT;
  
-    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = TCG_THEME.colors.muted;
+    ctx.font = this.font(12, TCG_THEME.fonts.display, 400);
+    ctx.fillText('Banca del jugador', playerBench.x + ((playerBench.width + (playerBench.spacing * 3)) / 2), playerBench.y - 14);
+    ctx.textAlign = 'left';
  
     for (let i = 0; i < 4; i++) {
       const slot = getBenchSlotRect(playerBench, i);
@@ -611,33 +714,27 @@ class Draw {
       const card = player.bench[i];
  
       if (card) {
-        // Fondo azul
-        ctx.fillStyle = '#004488';
-        ctx.fillRect(slot.x, slot.y, slot.width, slot.height);
-        
-        ctx.strokeStyle = '#4499ff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
+        this.drawPanel(slot.x, slot.y, slot.width, slot.height, 'rgba(24, 33, 38, 0.96)', 'rgba(217, 84, 95, 0.5)', 2, 'rgba(255, 240, 240, 0.06)');
         
         if (card.spriteImg) {
           this.drawCardArtwork(card.spriteImg, x + playerBench.artX, slot.y + playerBench.artY, playerBench.artWidth, playerBench.artHeight);
         }
         
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = 'rgba(245, 232, 198, 0.72)';
         ctx.fillRect(slot.x, slot.y + playerBench.dividerY, slot.width, 2);
         
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 13px Arial';
+        ctx.fillStyle = TCG_THEME.colors.parchment;
+        ctx.font = this.font(13, TCG_THEME.fonts.body, 700);
         const name = card.name.length > 10 ? card.name.substring(0, 9) + '.' : card.name;
         ctx.fillText(name, x + 6, slot.y + playerBench.nameY);
         
-        ctx.font = 'bold 12px Arial';
-        ctx.fillStyle = '#ff6666';
+        ctx.font = this.font(12, TCG_THEME.fonts.body, 700);
+        ctx.fillStyle = TCG_THEME.colors.blood;
         ctx.fillText('ATK:' + card.atk, x + 6, slot.y + playerBench.atkY);
-        ctx.fillStyle = '#00ff00';
+        ctx.fillStyle = TCG_THEME.colors.life;
         ctx.fillText('HP:' + card.currentHP, x + 6, slot.y + playerBench.hpY);
       } else {
-        ctx.strokeStyle = showHint ? '#00ff00' : '#444444';
+        ctx.strokeStyle = showHint ? 'rgba(154, 180, 136, 0.9)' : 'rgba(143, 113, 65, 0.42)';
         ctx.lineWidth = showHint ? 2 : 1;
         ctx.setLineDash(showHint ? [] : [6, 6]);
         ctx.strokeRect(slot.x, slot.y, slot.width, slot.height);
@@ -647,52 +744,44 @@ class Draw {
  
     if (player.activeCard) {
       const card = player.activeCard;
-      
-      // Carta activa jugador
-      ctx.fillStyle = '#0066cc';
-      ctx.fillRect(playerActive.x, playerActive.y, playerActive.width, playerActive.height);
-      
-      ctx.strokeStyle = '#00aaff';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(playerActive.x, playerActive.y, playerActive.width, playerActive.height);
-      ctx.strokeStyle = '#ffff00';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(playerActive.x + 3, playerActive.y + 3, playerActive.width - 6, playerActive.height - 6);
+      this.drawPanel(playerActive.x, playerActive.y, playerActive.width, playerActive.height, 'rgba(22, 29, 33, 0.97)', 'rgba(217, 84, 95, 0.62)', 3, 'rgba(255, 240, 240, 0.1)');
       
       if (card.spriteImg) {
         this.drawCardArtwork(card.spriteImg, playerActive.x + playerActive.artX, playerActive.y + playerActive.artY, playerActive.artWidth, playerActive.artHeight);
       }
       
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = 'rgba(245, 232, 198, 0.76)';
       ctx.fillRect(playerActive.x, playerActive.y + playerActive.dividerY, playerActive.width, 2);
       
-      ctx.fillStyle = '#ffff00';
-      ctx.font = 'bold 16px Arial';
+      ctx.fillStyle = TCG_THEME.colors.brass;
+      ctx.font = this.font(16, TCG_THEME.fonts.body, 700);
       const name = card.name.length > 11 ? card.name.substring(0, 10) : card.name;
       ctx.fillText(name, playerActive.x + 8, playerActive.y + playerActive.nameY);
       
-      ctx.font = 'bold 14px Arial';
-      ctx.fillStyle = '#ff6666';
+      ctx.font = this.font(14, TCG_THEME.fonts.body, 700);
+      ctx.fillStyle = TCG_THEME.colors.blood;
       ctx.fillText('ATK:' + card.atk, playerActive.x + 8, playerActive.y + playerActive.atkY);
-      ctx.fillStyle = '#00ff00';
+      ctx.fillStyle = TCG_THEME.colors.life;
       ctx.fillText('HP:' + card.currentHP + '/' + card.hp, playerActive.x + 8, playerActive.y + playerActive.hpY);
     } else {
-      ctx.strokeStyle = showHint ? '#00ff00' : '#666666';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = showHint ? 'rgba(154, 180, 136, 0.96)' : 'rgba(143, 113, 65, 0.58)';
       ctx.lineWidth = 2;
       ctx.setLineDash([10, 5]);
       ctx.strokeRect(playerActive.x, playerActive.y, playerActive.width, playerActive.height);
       ctx.setLineDash([]);
       
       if (showHint) {
-        ctx.fillStyle = '#00ff00';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText('COLOCA CARTA', playerActive.x + 30, playerActive.y + playerActive.emptyLine1Y);
+        ctx.fillStyle = TCG_THEME.colors.hint;
+        ctx.font = this.font(13, TCG_THEME.fonts.display, 400);
+        ctx.fillText('COLOCA CARTA', playerActive.x + (playerActive.width / 2), playerActive.y + playerActive.emptyLine1Y);
       } else {
-        ctx.fillStyle = '#666666';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText('SIN CARTA', playerActive.x + 39, playerActive.y + playerActive.emptyLine1Y);
-        ctx.fillText('ACTIVA', playerActive.x + 50, playerActive.y + playerActive.emptyLine2Y);
+        ctx.fillStyle = TCG_THEME.colors.ghost;
+        ctx.font = this.font(13, TCG_THEME.fonts.display, 400);
+        ctx.fillText('SIN CARTA', playerActive.x + (playerActive.width / 2), playerActive.y + playerActive.emptyLine1Y);
+        ctx.fillText('ACTIVA', playerActive.x + (playerActive.width / 2), playerActive.y + playerActive.emptyLine2Y);
       }
+      ctx.textAlign = 'left';
     }
  
     this.drawButton('ATACAR', buttons.attack.x, buttons.attack.y, buttons.attack.width, buttons.attack.height);
@@ -702,15 +791,20 @@ class Draw {
  
   drawButton(text, x, y, width, height) {
     const ctx = this.ctx;
-    ctx.fillStyle   = '#2a0000';
-    ctx.fillRect(x, y, width, height);
-    ctx.strokeStyle = '#cc0000';
-    ctx.strokeRect(x, y, width, height);
-    ctx.fillStyle   = '#ffffff';
-    ctx.font        = 'bold 18px Arial';
+    const gradient = ctx.createLinearGradient(x, y, x, y + height);
+    gradient.addColorStop(0, 'rgba(112, 28, 36, 0.98)');
+    gradient.addColorStop(1, 'rgba(57, 14, 20, 0.98)');
+
+    this.drawPanel(x, y, width, height, gradient, 'rgba(217, 84, 95, 0.82)', 2, 'rgba(255, 248, 246, 0.14)');
+
+    ctx.fillStyle   = TCG_THEME.colors.parchment;
+    ctx.font        = this.font(13, TCG_THEME.fonts.display, 400);
     ctx.textAlign   = 'center';
     ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+    ctx.shadowBlur = 10;
     ctx.fillText(text, x + width / 2, y + height / 2 + 1);
+    ctx.shadowBlur = 0;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
   }
@@ -720,21 +814,21 @@ class Draw {
     const won = state.winner === 'player';
     const isFinalVictory = won && Number(globalGame?.combatData?.level_id) === 3;
  
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillStyle = 'rgba(5, 6, 8, 0.84)';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
  
-    ctx.fillStyle = won ? '#00ff00' : '#ff0000';
-    ctx.font      = 'bold 72px Arial';
+    ctx.fillStyle = won ? TCG_THEME.colors.brass : TCG_THEME.colors.ritualBright;
+    ctx.font      = this.font(52, TCG_THEME.fonts.display, 400);
     ctx.textAlign = 'center';
     ctx.fillText(won ? 'VICTORIA!' : 'DERROTA', this.canvas.width / 2, this.canvas.height / 2 - 60);
  
-    ctx.fillStyle = 'white';
-    ctx.font      = '36px Arial';
+    ctx.fillStyle = TCG_THEME.colors.parchment;
+    ctx.font      = this.font(28, TCG_THEME.fonts.body, 700);
     const knockoutText = won 
       ? `Noqueaste ${state.knockoutsToWin} cartas de ${state.opponent.name}` 
       : `Perdiste ${state.knockoutsToWin} cartas`;
     ctx.fillText(knockoutText, this.canvas.width / 2, this.canvas.height / 2 + 20);
-    ctx.font = '28px Arial';
+    ctx.font = this.font(22, TCG_THEME.fonts.body, 700);
     ctx.fillText(isFinalVictory ? 'TERMINASTE EL JUEGO' : 'Regresando al lobby...', this.canvas.width / 2, this.canvas.height / 2 + 100);
     ctx.textAlign = 'left';
   }
@@ -746,33 +840,24 @@ class Draw {
 
     if (logs.length === 0) return;
 
-    // Fondo del panel completo
-    ctx.fillStyle = 'rgba(10, 10, 20, 0.95)';
-    ctx.fillRect(x, y, width, height);
-    
-    // Borde del panel (doble línea roja)
-    ctx.strokeStyle = '#ff0000';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x, y, width, height);
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + 3, y + 3, width - 6, height - 6);
+    this.drawPanel(x, y, width, height, 'rgba(8, 12, 15, 0.96)', 'rgba(217, 84, 95, 0.74)', 3, 'rgba(255, 240, 240, 0.08)');
     
     // Header con gradiente
     const gradient = ctx.createLinearGradient(x, y, x, y + headerHeight);
-    gradient.addColorStop(0, '#cc0000');
-    gradient.addColorStop(1, '#880000');
+    gradient.addColorStop(0, '#7a2430');
+    gradient.addColorStop(1, '#341117');
     ctx.fillStyle = gradient;
     ctx.fillRect(x, y, width, headerHeight);
     
     // Título del header
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px Arial';
+    ctx.fillStyle = TCG_THEME.colors.parchment;
+    ctx.font = this.font(16, TCG_THEME.fonts.display, 400);
     ctx.textAlign = 'center';
     ctx.fillText('REGISTRO DE COMBATE', x + width/2, y + 32);
     ctx.textAlign = 'left';
     
     // Línea separadora brillante
-    ctx.strokeStyle = '#ff3333';
+    ctx.strokeStyle = 'rgba(217, 84, 95, 0.44)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x, y + headerHeight);
@@ -780,7 +865,7 @@ class Draw {
     ctx.stroke();
 
     // Logs con scroll
-    ctx.font = '15px Consolas';
+    ctx.font = this.font(15, TCG_THEME.fonts.mono, 600);
     const recentLogs = logs.slice(-maxLogs);
     const startY = y + headerHeight + padding + 8;
     
@@ -789,29 +874,29 @@ class Draw {
       
       // Color y estilo según tipo de mensaje
       if (logMsg.includes('===')) {
-        ctx.fillStyle = '#ffff00';
-        ctx.font = 'bold 16px Consolas';
+        ctx.fillStyle = TCG_THEME.colors.brass;
+        ctx.font = this.font(15, TCG_THEME.fonts.mono, 700);
       } else if (logMsg.includes('---') || logMsg.includes('TURNO')) {
-        ctx.fillStyle = '#ffff00';
-        ctx.font = 'bold 15px Consolas';
+        ctx.fillStyle = TCG_THEME.colors.brass;
+        ctx.font = this.font(14, TCG_THEME.fonts.mono, 700);
       } else if (logMsg.includes('[JUGADOR]')) {
-        ctx.fillStyle = '#00ff00';
-        ctx.font = '15px Consolas';
+        ctx.fillStyle = TCG_THEME.colors.life;
+        ctx.font = this.font(14, TCG_THEME.fonts.mono, 600);
       } else if (logMsg.includes('[ENEMIGO]')) {
-        ctx.fillStyle = '#ff6666';
-        ctx.font = '15px Consolas';
+        ctx.fillStyle = TCG_THEME.colors.blood;
+        ctx.font = this.font(14, TCG_THEME.fonts.mono, 600);
       } else if (logMsg.includes('ATAQUE') || logMsg.includes('Ataque')) {
-        ctx.fillStyle = '#ff9900';
-        ctx.font = 'bold 15px Consolas';
+        ctx.fillStyle = TCG_THEME.colors.brass;
+        ctx.font = this.font(14, TCG_THEME.fonts.mono, 700);
       } else if (logMsg.includes('MUERTA') || logMsg.includes('Destruyo')) {
-        ctx.fillStyle = '#ff0000';
-        ctx.font = 'bold 15px Consolas';
+        ctx.fillStyle = TCG_THEME.colors.ritualBright;
+        ctx.font = this.font(14, TCG_THEME.fonts.mono, 700);
       } else if (logMsg.includes('VICTORIA') || logMsg.includes('DERROTA')) {
-        ctx.fillStyle = '#ffff00';
-        ctx.font = 'bold 18px Consolas';
+        ctx.fillStyle = TCG_THEME.colors.brass;
+        ctx.font = this.font(16, TCG_THEME.fonts.mono, 700);
       } else {
-        ctx.fillStyle = '#cccccc';
-        ctx.font = '15px Consolas';
+        ctx.fillStyle = '#d1c9b6';
+        ctx.font = this.font(14, TCG_THEME.fonts.mono, 600);
       }
       
       // Truncar mensaje si es muy largo
@@ -828,8 +913,8 @@ class Draw {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(x, y + height - footerHeight, width, footerHeight);
       
-      ctx.fillStyle = '#888888';
-      ctx.font = 'italic 14px Arial';
+      ctx.fillStyle = TCG_THEME.colors.ghost;
+      ctx.font = this.font(13, TCG_THEME.fonts.body, 600);
       ctx.textAlign = 'center';
       ctx.fillText(`+${logs.length - maxLogs} mensajes anteriores`, x + width / 2, y + height - 15);
       ctx.textAlign = 'left';
@@ -1287,6 +1372,8 @@ async function loadPlayerDeck() {
 }
 
 window.onload = async function () {
+  BackgroundMusic.createSceneMusic('../musica/Dark%20Drone.flac');
+
     const cardPool = await loadPlayerDeck();
 
     if (cardPool.length === 0) {

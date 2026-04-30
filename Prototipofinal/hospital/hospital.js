@@ -330,6 +330,8 @@ function main() {
         return;
     }
 
+    BackgroundMusic.createSceneMusic('../musica/Jes%C3%BAs%20Lastra%20-%20Abandoned.mp3');
+
     ctx = canvas.getContext("2d");
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;

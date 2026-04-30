@@ -1,11 +1,43 @@
 "use strict";
 
 const API_URL = 'http://localhost:3000/api';
+document.body.classList.toggle('embedded-mode', window.self !== window.top);
 
 // Esta es la portada publica donde solo enseñamos un resumen rapido del juego.
 
+function hasActiveSession() {
+  return localStorage.getItem('isLoggedIn') === 'true' && !!localStorage.getItem('playerId');
+}
+
+function updateEntryState() {
+  const playButton = document.getElementById('play-now-btn');
+  const welcomeStatus = document.getElementById('welcome-status');
+  const welcomeCopy = document.getElementById('welcome-copy');
+  const hasSession = hasActiveSession();
+
+  if (!playButton || !welcomeStatus || !welcomeCopy) {
+    return;
+  }
+
+  if (hasSession) {
+    playButton.textContent = 'CONTINUAR PARTIDA';
+    welcomeCopy.textContent = 'Tu sesión ya está lista para volver al ritual.';
+    welcomeStatus.textContent = 'Entrarás directo al menú principal del juego.';
+    return;
+  }
+
+  playButton.textContent = 'ENTRAR AL RITUAL';
+  welcomeCopy.textContent = 'El ritual te espera en la oscuridad...';
+  welcomeStatus.textContent = 'Primero identifica tu usuario para entrar al menú del juego.';
+}
+
 // Desde aqui mandamos al login cuando el usuario ya quiere entrar de verdad.
 function goToLogin() {
+  if (hasActiveSession()) {
+    window.location.href = '../menu/menu.html';
+    return;
+  }
+
   window.location.href = 'index.html';
 }
 
@@ -113,6 +145,7 @@ async function loadTopPlaytime() {
 
 // Apenas abre la pagina jalamos los tres tops para llenar la portada.
 window.addEventListener('DOMContentLoaded', function() {
+  updateEntryState();
   loadTopCards();
   loadTopSecrets();
   loadTopPlaytime();

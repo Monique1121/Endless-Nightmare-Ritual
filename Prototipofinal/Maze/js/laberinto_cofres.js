@@ -193,7 +193,7 @@ class Game {
         this.lightMask.onload = () => { this.lightMaskLoaded = true; };
 
         this.darknessMask = new Image();
-        this.darknessMask.src = "../assets/mascara_6.png";
+        this.darknessMask.src = "../assets/mascara_7.png";
 
         this.mouse = new Vector(0, 0);
 
@@ -850,6 +850,8 @@ function closeChestPopup() {
 
 
 function main() {
+    BackgroundMusic.createSceneMusic('../../musica/my_white_noiz_.ogg');
+
     const canvas = document.getElementById("canvas");
     
     if (!canvas) {

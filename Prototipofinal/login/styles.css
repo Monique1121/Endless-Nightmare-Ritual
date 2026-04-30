@@ -30,6 +30,10 @@ body.login-page.embedded-mode {
   background: transparent;
 }
 
+body.main-page.embedded-mode {
+  background: transparent;
+}
+
 .container {
   width: min(920px, 100%);
   padding: 20px;
@@ -143,6 +147,21 @@ button:hover {
 }
 
 .back-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: rgb(224, 197, 179);
+  text-decoration: none;
+  font-size: 22px;
+  border-bottom: 1px solid transparent;
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.back-link:hover {
+  color: rgb(195, 23, 23);
+  border-color: rgb(195, 23, 23);
+}
+
+body.login-page.embedded-mode .back-link {
   display: none;
 }
 
@@ -183,6 +202,13 @@ button:hover {
   gap: 30px;
 }
 
+body.main-page.embedded-mode .main-container {
+  background: transparent;
+  min-height: 100vh;
+  padding: 10px;
+  gap: 16px;
+}
+
 .welcome-section {
   text-align: center;
   padding: 40px;
@@ -192,6 +218,13 @@ button:hover {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8), 0 0 20px rgba(139, 0, 0, 0.3);
   max-width: 600px;
   width: 100%;
+}
+
+body.main-page.embedded-mode .welcome-section,
+body.main-page.embedded-mode .stats-section {
+  max-width: none;
+  width: 100%;
+  box-shadow: none;
 }
 
 .welcome-section h1 {
@@ -206,6 +239,13 @@ button:hover {
   color: #cccccc;
   margin-bottom: 30px;
   font-style: italic;
+}
+
+.welcome-status {
+  color: rgb(224, 197, 179);
+  font-size: 20px;
+  margin: 14px 0 0;
+  font-style: normal;
 }
 
 .play-btn {

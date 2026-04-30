@@ -540,6 +540,8 @@ class Game {
 
 
 async function main() {
+    BackgroundMusic.createSceneMusic('../musica/Jes%C3%BAs%20Lastra%20-%20Abandoned.mp3');
+
     // Verificar autenticación antes de iniciar el juego
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     

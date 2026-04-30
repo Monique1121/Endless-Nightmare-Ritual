@@ -37,6 +37,12 @@ function main() {
   
   // Esperar a que el DOM esté listo
   window.addEventListener('DOMContentLoaded', function() {
+    const musicController = BackgroundMusic.createSceneMusic('../musica/Jes%C3%BAs%20Lastra%20-%20Abandoned.mp3');
+    const volumeMusic = document.getElementById('volumeMusic');
+
+    BackgroundMusic.bindMusicSlider(volumeMusic);
+    musicController.syncVolume();
+
     const userRole = getStoredUserRole();
     const roleBadge = document.getElementById('roleBadge');
 
