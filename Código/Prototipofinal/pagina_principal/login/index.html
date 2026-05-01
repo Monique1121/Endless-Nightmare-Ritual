@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Endless Nightmare Ritual</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="login-page">
+  <div class="container">
+    <div class="login-box">
+      <h1>ENDLESS NIGHTMARE RITUAL</h1>
+      <p>El ritual te espera... Identificate para jugar</p>
+      
+      <form id="loginForm">
+        <div class="input-group">
+          <label for="username">Usuario:</label>
+          <input type="text" id="username" required placeholder="Mínimo 3 caracteres">
+        </div>
+        
+        <div class="input-group">
+          <label for="password">Contrasena:</label>
+          <input type="password" id="password" required placeholder="Mínimo 4 caracteres">
+        </div>
+        
+        <button type="submit">INICIAR RITUAL</button>
+      </form>
+      
+      <p id="error-message"></p>
+    </div>
+  </div>
+  
+  <script src="login.js"></script>
+</body>
+</html>

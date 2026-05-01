@@ -1,0 +1,267 @@
+*{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+body {
+    background-color: black;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+}
+
+h1{
+    margin: 0px;
+}
+
+canvas {
+    background-image: url("assets/menu.png");
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.9) contrast(1.1);
+}
+
+#canvas {
+    width: 100vw;
+    height: 100vh;
+    background-image: url("assets/menu.png");
+    background-size: cover;
+    background-position: center;
+    grid-area: main;
+    filter: brightness(0.9) contrast(1.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+#gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    filter: drop-shadow(0 0 30px rgba(180, 0, 0, 0.3));
+}
+
+#title {
+    position: absolute;
+    top: 30px;
+    left: 3%;
+    color: white;
+    font-size: 55px;
+    letter-spacing: 3px;
+    font-family: 'Press Start 2P', cursive;
+    text-shadow: 
+        0 0 100px #ff0000,
+        0 0 50px #ff0000,
+        0 0 20px #ff0000,
+        3px 3px 0 rgba(0, 0, 0, 0.8);
+    animation: myAnimation 2s infinite, titleFloat 3s ease-in-out infinite;
+}
+
+.role-badge {
+    position: absolute;
+    top: 38px;
+    right: 4%;
+    margin: 0;
+    padding: 10px 16px;
+    border: 2px solid rgba(150, 30, 30, 0.85);
+    border-radius: 999px;
+    background: rgba(8, 8, 8, 0.82);
+    color: rgb(255, 240, 240);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 16px rgba(180, 0, 0, 0.25);
+}
+
+.role-badge.admin-role {
+    border-color: rgba(220, 50, 50, 0.95);
+    box-shadow: 0 0 20px rgba(220, 50, 50, 0.35);
+}
+
+@keyframes myAnimation {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        opacity: 1;
+        text-shadow: 
+            0 0 100px #ff0000,
+            0 0 50px #ff0000,
+            0 0 20px #ff0000,
+            3px 3px 0 rgba(0, 0, 0, 0.8);
+    }
+    20%, 24%, 55% {
+        opacity: 0.4;
+        text-shadow: 
+            0 0 50px #ff0000,
+            0 0 20px #ff0000,
+            3px 3px 0 rgba(0, 0, 0, 0.8);
+    }
+}
+
+@keyframes titleFloat {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+#menu {
+    position: absolute;
+    top: 35%;
+    left: 5%;
+    animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.button{
+    display: block;
+    width: 220px;
+    height: 50px;
+    background: linear-gradient(135deg, rgb(99, 24, 24), rgb(80, 15, 15));
+    font-family: 'Press Start 2P', cursive;
+    color: white;
+    font-size: 15px;
+    padding: 10px 20px;
+    border: 2px solid rgba(150, 30, 30, 0.8);
+    border-radius: 12px; 
+    cursor: pointer; 
+    margin-top: 20px;
+    text-shadow: 
+        0 0 25px white,
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+    box-shadow: 
+        0 0 15px rgb(107, 24, 24),
+        inset 0 -2px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.button:hover {
+    background: linear-gradient(135deg, rgb(255, 248, 248), rgb(240, 230, 230));
+    color: rgb(73, 12, 12);
+    border-color: rgba(200, 50, 50, 1);
+    box-shadow: 
+        0 0 25px rgb(241, 239, 239),
+        0 4px 15px rgba(255, 100, 100, 0.5),
+        inset 0 -2px 10px rgba(100, 0, 0, 0.3);
+    transform: translateY(-3px) scale(1.05);
+}
+
+.button:hover::before {
+    left: 100%;
+}
+
+.button:active {
+    transform: translateY(0) scale(1);
+    box-shadow: 
+        0 0 10px rgb(107, 24, 24),
+        inset 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.settings {
+    display: none;
+}
+
+#config {
+    position: absolute;
+    top: 30%;
+    left: 35%;
+    background: linear-gradient(135deg, rgba(99, 24, 24, 0.95), rgba(80, 15, 15, 0.95));
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid rgba(150, 30, 30, 0.8);
+    box-shadow: 
+        0 0 30px rgb(107, 24, 24),
+        inset 0 -3px 15px rgba(0, 0, 0, 0.5);
+    font-family: 'Press Start 2P', cursive;
+    animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+#config h2 {
+    color: white;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 
+        0 0 25px white,
+        0 0 50px #ff0000;
+    animation: myAnimation 2s infinite;
+}
+
+#config label {
+    display: block;
+    color: white;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 14px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#config input[type="range"] {
+    width: 100%;
+    margin-bottom: 10px;
+    accent-color: rgb(200, 50, 50);
+}
+
+.volume-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.volume-row input[type="range"] {
+    margin-bottom: 0;
+}
+
+.setting-value {
+    min-width: 52px;
+    text-align: right;
+    color: white;
+    font-size: 12px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#backButton {
+    margin-top: 20px;
+    width: 100%;
+}

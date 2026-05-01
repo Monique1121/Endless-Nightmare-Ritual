@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hospital - Endless Nightmare Ritual</title>
+        <link rel="stylesheet" href="styles.css">
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <script src="../assets/backgroundMusic.js"></script>
+        <script src="libs/game_functions.js"></script>
+        <script src="libs/Rect.js"></script>
+        <script src="libs/Vector.js"></script>
+        <script src="libs/GameObject.js"></script>
+        <script src="libs/AnimatedObject.js"></script>
+        <script src="libs/AnimatedPlayer.js"></script>
+        <script src="libs/gameState.js"></script>
+        <script src="hospital.js"></script>
+    </head>
+
+    <body>
+        <canvas id="canvas" width="800" height="600" tabindex="0"></canvas>
+        
+        <!-- BOTON DE SALIR -->
+        <div class="exit-button" id="exitButton" title="Volver al lobby">
+            <span>&#x2190;</span>
+            <span class="exit-text">ESC</span>
+        </div>
+        
+        <!-- MODAL DE CONFIRMACION DE SALIDA -->
+        <div id="exit-modal" class="modal-overlay hidden">
+            <div class="modal-box">
+                <h2>SALIR</h2>
+                <p>Progreso guardado</p>
+                <p>Volver al lobby?</p>
+                <div class="modal-buttons">
+                    <button class="btn-cancel" id="btnCancelExit">NO</button>
+                    <button class="btn-confirm" id="btnConfirmExit">SI</button>
+                </div>
+            </div>
+        </div>
+        
+        <script> main(); </script>
+    </body>           
+</html>
