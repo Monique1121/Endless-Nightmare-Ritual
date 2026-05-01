@@ -160,13 +160,9 @@ DB_PASSWORD=tu_contraseña
 DB_NAME=endless
 DB_PORT=3306
 
-Corre el siguiente comando:
-
-node server.js
-
 6. Inicia el servidor:
 
-npm run dev
+node server.js
 
 El cliente del juego está en: Código/pagina_principal/html/index.html
 
