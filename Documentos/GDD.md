@@ -1,5 +1,11 @@
 **Endless Nigthmare Ritual**
 
+Integrantes:
+
+- Arantza Monique Mercado Moreno
+- Julián Berges Navarrete
+- Juan Carlos Luz Gallardo
+
 ## _Documento de Diseño de Juego_
 ##
 ## _Index_
@@ -45,7 +51,7 @@ Este juego de suspenso tipo TCG y roguelite, consiste en la historia de un detec
 
 ### **Jugabilidad**
 
-El juego toma lugar 20 años después de la época actual, donde la humanidad se enfrenta a demonios que fueron originados por una catástrofe ocurrida tiempo atrás. El jugador toma el papel de un detective, el cual debe buscar el origen de los demonios y la catástrofe que lo inició todo. Para lograrlo, el jugador deberá recorrer 
+El juego toma lugar en el año 2005, donde la humanidad se enfrenta a demonios que fueron originados por una catástrofe ocurrida tiempo atrás. El jugador toma el papel de un detective, el cual debe buscar el origen de los demonios y la catástrofe que lo inició todo. Para lograrlo, el jugador deberá recorrer 
 distintos mapas de lugares abandonados donde se enfrentará a miembros de un culto que quieren impedir que el jugador descubra la verdad de todo.
 
 La meta del juego es que el jugador avance en tres mapas diferentes y pelee para ir descubriendo secretos. Para enfrentar a los miembros del culto que quieren
@@ -75,7 +81,7 @@ tener prisa de terminar el laberinto de forma rápida dado que en este se encont
 
 Para crear la temática de terror, implementamos una lámpara la cual será la única luz dentro del laberinto, esto crea una sensación de impotencia y con el tiempo presionando se crea más suspenso y una adrenalina para acabar el laberinto sin perder.  
 
-## _Tecnico_
+## _Técnico_
 
 ---
 
@@ -98,8 +104,9 @@ Pantalla inicial del juego donde el jugador accede a las opciones principales.
 - **Créditos**  
   Muestra información sobre los desarrolladores del juego.
 
-Ejemplo del menu
-![Ejemplo de menú](menu.png)
+Ejemplo del menú:
+
+![Ejemplo de menú](menu.jpeg)
 
 ---
 
@@ -131,7 +138,7 @@ Accesible desde el lobby. Permite al jugador revisar sus cartas y secretos.
 
 Ejemplo de las cartas en el inventario
 
-![Ejemplo de inventario cartas](cartasINV.png)
+![Ejemplo de inventario cartas](cartasINV.jpeg)
 
 **B. Secretos**
 - Muestra los secretos de historia desbloqueados
@@ -146,7 +153,7 @@ Ejemplo de los secretos en el inventario
 ## 3. Laberinto (Exploración)
 
 ### 3.1 Laberinto Base
-- El laberinto se genera con DFA de manera alaetoria cada run  
+- El laberinto se genera con un DFS (Depth Fisrt Search) de manera alaetoria cada run. 
 - Contiene:
   - Caminos y paredes
   - Zona de entrada
@@ -155,7 +162,7 @@ Ejemplo de los secretos en el inventario
 
 Imagen del jugador adentro del laberinto
 
-![Ejemplo laberinto](laberinto.png)
+![Ejemplo laberinto](laberinto.jpeg)
 
 
 ### 3.2 Cofres del Laberinto
@@ -238,7 +245,6 @@ El lobby funciona como un hub central donde el jugador puede moverse libremente.
   - Hospital abandonado
   - Laboratorio abandonado
 - Desde aquí también se puede acceder al inventario.
-
 
 
 
@@ -692,8 +698,6 @@ _(example)_
 ## _Schedule_
 
 ---
-
-_(define the main activities and the expected dates when they should be finished. This is only a reference, and can change as the project is developed)_
 
 1. develop base classes
     1. base entity
