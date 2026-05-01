@@ -166,6 +166,11 @@ node server.js
 
 El cliente del juego está en: Código/pagina_principal/html/index.html
 
+Una vez iniciado el juego, ingresar con cualquiera de estos usuarios:
+Usuario: Esteban | Contraseña: mysql
+Usuario: Gilberto | Contraseña: delta
+Usuario: Angel | Contraseña: html
+
 ## Flujo de juego actual
 
 1. Pantalla de título / página principal
