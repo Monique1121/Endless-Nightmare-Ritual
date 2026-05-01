@@ -7,11 +7,16 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["api", "mysql", "express"],
+  "keywords": [
+    "api",
+    "mysql",
+    "express"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.18.2",
     "mysql2": "^3.6.5"
   },
