@@ -13,6 +13,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
 
+// =====================================================
+// RUTAS PÚBLICAS - Accesibles sin autenticación
+// Sirve la página web pública (inicio, historia, tutorial,
+// estadísticas y créditos) desde pagina_principal/login/.
+// =====================================================
+app.use('/web', express.static(path.join(__dirname, '..', 'pagina_principal', 'login')));
+
+// Ruta raíz: redirige a la página de inicio de la página web pública.
+app.get('/', (req, res) => {
+    res.redirect('/web/html/inicio.html');
+});
+
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -206,7 +218,7 @@ async function requireAdminUser(req) {
 }
 
 // =====================================================
-// ENDPOINTS DE AUTENTICACIÓN
+// ENDPOINTS DE AUTENTICACIÓN - PÚBLICOS (sin autenticación)
 // =====================================================
 
 app.post('/api/register', async (req, res) => {
@@ -983,7 +995,8 @@ app.post('/api/chest/:chestId/open', async (req, res) => {
 });
 
 // =====================================================
-// LEADERBOARDS
+// LEADERBOARDS - PÚBLICOS (sin autenticación)
+// Usados por la página web pública para mostrar rankings.
 // =====================================================
 
 app.get('/api/leaderboard/cards', async (req, res) => {
@@ -1683,8 +1696,8 @@ app.get('/api/combat/stats', async (req, res) => {
     }
 });
 
-// Esta consulta grande del dashboard la armamos con ayuda de github,
-// pero luego la fuimos corrigiendo nosotros para que si cuadrara con los datos reales.
+// Dashboard de estadísticas - PÚBLICO: devuelve datos para todos los usuarios.
+// Si se envía userId, y el usuario es admin, habilita gestión de usuarios.
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
         const viewerUser = await resolveSessionUser(req);
@@ -1923,5 +1936,18 @@ app.listen(PORT, () => {
     console.log(`  Puerto: ${PORT}`);
     console.log(`  Base de datos: ${dbConfig.database}`);
     console.log(`  Estado: ACTIVO\n`);
+    console.log(`  Página web pública:`);
+    console.log(`  http://localhost:${PORT}/web/html/inicio.html\n`);
+    console.log(`  Rutas públicas (sin autenticación):`);
+    console.log(`  GET  /web/html/inicio.html`);
+    console.log(`  GET  /web/html/historia.html`);
+    console.log(`  GET  /web/html/tutorial.html`);
+    console.log(`  GET  /web/html/estadisticas.html`);
+    console.log(`  GET  /web/html/creditos.html`);
+    console.log(`  GET  /web/html/jugar.html`);
+    console.log(`  GET  /api/leaderboard/cards`);
+    console.log(`  GET  /api/leaderboard/secrets`);
+    console.log(`  GET  /api/leaderboard/playtime`);
+    console.log(`  GET  /api/admin/dashboard\n`);
     console.log(`========================================\n`);
 });
