@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Vista embebida para lanzar el juego principal dentro del portal web. -->
 <html lang="es">
 
 <head>
@@ -14,6 +15,7 @@
     <link rel="stylesheet" href="../css/styles.css">
 
     <style>
+        /* Ajustes locales para que el iframe del juego ocupe casi toda la pantalla. */
         body.play-page {
             min-height: 100vh;
             height: auto;
@@ -88,6 +90,7 @@
 
 <body class="play-page">
 
+    <!-- Navegacion superior compartida del portal. -->
     <div id="headerContainer" class="d-flex justify-content-between align-items-center px-5">
 
      <a href="inicio.html" class="logo-link">
@@ -106,6 +109,7 @@
     <h1>|</h1>
     </div>
 
+    <!-- Contenedor del iframe que monta el juego sin salir del portal. -->
     <main class="play-shell">
         <section class="game-embed">
             <iframe

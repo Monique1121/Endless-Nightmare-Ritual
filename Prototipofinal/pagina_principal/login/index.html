@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Login del portal principal; reutiliza la API para autenticar y crear la sesion. -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -7,11 +8,13 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="login-page">
+  <!-- Caja central del formulario de acceso. -->
   <div class="container">
     <div class="login-box">
       <h1>ENDLESS NIGHTMARE RITUAL</h1>
       <p>El ritual te espera... Identificate para jugar</p>
       
+      <!-- Formulario que login.js conecta con /api/login. -->
       <form id="loginForm">
         <div class="input-group">
           <label for="username">Usuario:</label>
@@ -30,6 +33,7 @@
     </div>
   </div>
   
+  <!-- Script que autentica, crea player y prepara el inventario base. -->
   <script src="login.js"></script>
 </body>
 </html>

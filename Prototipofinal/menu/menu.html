@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Menu principal del juego: arranca escena, muestra rol y abre ajustes de musica. -->
 <html>
     <head>
         <title>Endless Nightmare Ritual</title>
@@ -13,13 +14,14 @@
 
         <div id="gameContainer">
 
-        
+        <!-- Canvas decorativo del menu y boot de la logica principal. -->
         <canvas id="canvas"></canvas>
         <script> main(); </script>
 
         <h1 id="title">Endless Nightmare Ritual</h1>
         <p id="roleBadge" class="role-badge"></p>
 
+        <!-- Acciones principales del flujo: nueva partida, continuar y ajustes. -->
         <div id = "menu">
 
             <button class = "button" id="btnNuevaPartida">Nueva partida</button>
@@ -29,6 +31,7 @@
         </div>
 
 
+        <!-- Panel reducido de configuracion para el volumen global del juego. -->
         <div id="config" class="settings">
 
         <h2>Ajustes</h2>

@@ -1,3 +1,4 @@
+/* Estilos del tablero TCG: fondo ritual, marco del canvas y responsividad. */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Press+Start+2P&display=swap');
 
 :root {
@@ -5,10 +6,12 @@
     --shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
 }
 
+/* Base visual del documento. */
 * {
     box-sizing: border-box;
 }
 
+/* Fondo atmosferico del TCG y centrado del canvas. */
 body {
     margin: 0;
     min-height: 100vh;
@@ -25,6 +28,7 @@ body {
         url('../menu/assets/menu.png') center center / cover no-repeat fixed;
 }
 
+    /* Capa superior para oscurecer bordes y dirigir la vista al tablero. */
 body::before {
     content: '';
     position: fixed;
@@ -35,6 +39,7 @@ body::before {
         linear-gradient(180deg, rgba(0, 0, 0, 0.46), transparent 25%, transparent 72%, rgba(0, 0, 0, 0.6));
 }
 
+    /* Canvas responsivo donde se pinta todo el combate. */
 #canvas {
     position: relative;
     z-index: 1;

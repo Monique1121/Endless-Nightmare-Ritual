@@ -63,8 +63,7 @@ const CARD_SPRITE_ALIASES = {
     36: 'pablo.png'
 };
 
-// Aqui github nos ayudo a dejar bien los desbloqueos para que lobby,
-// juego y estadisticas lean lo mismo desde la BD.
+// Recalcula los desbloqueos del jugador segun los runs completados.
 async function normalizePlayerUnlocks(player) {
     const playerId = player.Player_id;
     const [completedRuns] = await pool.query(
@@ -97,12 +96,12 @@ async function normalizePlayerUnlocks(player) {
     };
 }
 
+// Convierte un nombre de archivo de carta en una URL publica del servidor.
 function buildCardSpriteUrl(fileName) {
     return `http://localhost:${PORT}/assets/cards/${fileName}`;
 }
 
-// Esta parte nos ayudo github a empatarla para que rutas viejas y nuevas de sprites
-// siguieran jalando sin romper otras vistas.
+// Normaliza la ruta del sprite para que frontend viejo y nuevo lean el mismo campo.
 function normalizeCardSprite(card) {
     if (!card) {
         return card;
@@ -124,29 +123,33 @@ function normalizeCardSprite(card) {
     return normalizedCard;
 }
 
+// Aplica la normalizacion de sprites a una lista completa de cartas.
 function normalizeCardRows(cards) {
     return cards.map(normalizeCardSprite);
 }
 
+// Homologa el actor del combate para no mezclar opponent con enemy.
 function normalizeCombatActor(actor) {
     return actor === 'opponent' ? 'enemy' : actor;
 }
 
+// Limpia el username antes de comparar o guardar sesion.
 function normalizeUsername(username) {
     return String(username || '').trim().toLowerCase();
 }
 
+// Fuerza que el rol solo quede en los valores permitidos por la API.
 function normalizeUserRole(role) {
     const normalizedRole = String(role || '').trim().toLowerCase();
     return USER_ROLES.has(normalizedRole) ? normalizedRole : DEFAULT_USER_ROLE;
 }
 
+// Marca rapido si un rol ya normalizado pertenece a administrador.
 function isAdminRole(role) {
     return normalizeUserRole(role) === 'admin';
 }
 
-// Aqui github nos echo la mano para mover admin y ejecutivo al rol real en BD
-// y ya no depender del puro nombre del usuario.
+// Resuelve el usuario actual desde query o header y valida que siga activo.
 async function resolveSessionUser(req) {
     const rawUserId = req.query.userId || req.headers['x-user-id'];
     const userId = Number.parseInt(rawUserId, 10);
@@ -172,6 +175,7 @@ async function resolveSessionUser(req) {
     };
 }
 
+// Centraliza la validacion de acceso al panel administrativo.
 async function requireAdminUser(req) {
     const sessionUser = await resolveSessionUser(req);
 
@@ -208,6 +212,7 @@ async function requireAdminUser(req) {
 // ENDPOINTS DE AUTENTICACIÓN
 // =====================================================
 
+// Crea un usuario nuevo y valida el rol cuando se intenta registrar como admin.
 app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
     const requestedRole = String(req.body.userRole || DEFAULT_USER_ROLE).trim().toLowerCase();
@@ -273,6 +278,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+// Inicia sesion y devuelve el rol normalizado del usuario activo.
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -324,6 +330,7 @@ app.post('/api/login', async (req, res) => {
 // ENDPOINTS DE JUGADOR
 // =====================================================
 
+// Obtiene el perfil del jugador asociado a un usuario y recalcula desbloqueos.
 app.get('/api/player/:userId', async (req, res) => {
     const { userId } = req.params;
 
@@ -361,6 +368,7 @@ app.get('/api/player/:userId', async (req, res) => {
     }
 });
 
+// Crea el perfil de jugador inicial si la cuenta aun no lo tiene.
 app.post('/api/player/create', async (req, res) => {
     const { userId, playerName } = req.body;
 
@@ -408,6 +416,7 @@ app.post('/api/player/create', async (req, res) => {
     }
 });
 
+// Actualiza solo los campos de progreso enviados desde el cliente.
 app.put('/api/player/:playerId', async (req, res) => {
     const { playerId } = req.params;
     const updates = req.body;
@@ -479,6 +488,7 @@ app.put('/api/player/:playerId', async (req, res) => {
 // ENDPOINTS DE CARTAS Y DECK
 // =====================================================
 
+// Devuelve el pool completo de cartas disponibles en el juego.
 app.get('/api/cards/pool', async (req, res) => {
     try {
         const [cards] = await pool.query(
@@ -503,6 +513,7 @@ app.get('/api/cards/pool', async (req, res) => {
     }
 });
 
+// Obtiene el deck permanente del jugador junto con los datos de cada carta.
 app.get('/api/player/:playerId/deck', async (req, res) => {
     const { playerId } = req.params;
 
@@ -532,6 +543,7 @@ app.get('/api/player/:playerId/deck', async (req, res) => {
     }
 });
 
+// Entrega el deck inicial del jugador la primera vez que entra al juego.
 app.post('/api/player/:playerId/deck/initialize', async (req, res) => {
     const { playerId } = req.params;
 
@@ -580,6 +592,7 @@ app.post('/api/player/:playerId/deck/initialize', async (req, res) => {
 // ENDPOINTS DE LABERINTO Y RUNS
 // =====================================================
 
+// Carga la configuracion base de un laberinto y su nivel asociado.
 app.get('/api/labyrinth/:labyrinthId', async (req, res) => {
     const { labyrinthId } = req.params;
 
@@ -614,6 +627,7 @@ app.get('/api/labyrinth/:labyrinthId', async (req, res) => {
     }
 });
 
+// Abre o reutiliza el run activo del jugador para un laberinto.
 app.post('/api/run/create', async (req, res) => {
     const playerId = req.body.playerId || req.body.player_id;
     const labyrinthId = req.body.labyrinthId || req.body.labyrinth_id;
@@ -718,6 +732,7 @@ app.put('/api/run/:runId/complete', completeRunHandler);
 // ENDPOINTS DE ENEMIGOS
 // =====================================================
 
+// Obtiene al enemigo del nivel junto con las cartas que puede usar.
 app.get('/api/enemy/level/:levelId', async (req, res) => {
     const { levelId } = req.params;
 
@@ -765,8 +780,7 @@ app.get('/api/enemy/level/:levelId', async (req, res) => {
 // ENDPOINTS DE COMBATE
 // =====================================================
 
-// Aqui github nos ayudo a empatar nombres de campos porque laberinto,
-// web y TCG estaban mandando cosas medio distintas.
+// Crea el registro inicial del combate y acepta nombres de campos legacy o nuevos.
 app.post('/api/combat/start', async (req, res) => {
     const playerId = req.body.playerId || req.body.player_id;
     const enemyId = req.body.enemyId || req.body.enemy_id;
@@ -804,10 +818,9 @@ app.post('/api/combat/start', async (req, res) => {
     }
 });
 
+// Cierra un combate y guarda resultado, turnos, KO y sangre gastada.
 app.put('/api/combat/:combatId/end', async (req, res) => {
     const { combatId } = req.params;
-    // Aqui igual github nos ayudo para aceptar payloads viejos y nuevos
-    // sin romper lo que ya estaba conectado.
     const winner = req.body.winner;
     let result = req.body.result;
     if (!result && winner) {
@@ -850,6 +863,7 @@ app.put('/api/combat/:combatId/end', async (req, res) => {
 // ENDPOINTS DE SECRETOS
 // =====================================================
 
+// Devuelve un secreto individual por su id.
 app.get('/api/secrets/:secretId', async (req, res) => {
     const { secretId } = req.params;
 
@@ -881,6 +895,7 @@ app.get('/api/secrets/:secretId', async (req, res) => {
     }
 });
 
+// Registra que el jugador descubrio un secreto y refresca su contador.
 app.post('/api/player/:playerId/secrets', async (req, res) => {
     const { playerId } = req.params;
     const { secretId } = req.body;
@@ -918,6 +933,7 @@ app.post('/api/player/:playerId/secrets', async (req, res) => {
 // ENDPOINTS DE COFRES
 // =====================================================
 
+// Lista los cofres de un laberinto con su carta asociada si existe.
 app.get('/api/chest/labyrinth/:labyrinthId', async (req, res) => {
     const { labyrinthId } = req.params;
 
@@ -946,6 +962,7 @@ app.get('/api/chest/labyrinth/:labyrinthId', async (req, res) => {
     }
 });
 
+// Marca un cofre como abierto y devuelve su contenido.
 app.post('/api/chest/:chestId/open', async (req, res) => {
     const { chestId } = req.params;
     const { playerId, runId } = req.body;
@@ -985,6 +1002,7 @@ app.post('/api/chest/:chestId/open', async (req, res) => {
 // LEADERBOARDS
 // =====================================================
 
+// Ranking de jugadores por cantidad de cartas obtenidas.
 app.get('/api/leaderboard/cards', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
@@ -1005,6 +1023,7 @@ app.get('/api/leaderboard/cards', async (req, res) => {
     }
 });
 
+// Ranking de jugadores por secretos descubiertos.
 app.get('/api/leaderboard/secrets', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
@@ -1024,6 +1043,7 @@ app.get('/api/leaderboard/secrets', async (req, res) => {
     }
 });
 
+// Ranking de jugadores por tiempo total acumulado.
 app.get('/api/leaderboard/playtime', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
@@ -1303,7 +1323,7 @@ app.post('/api/run/:runId/card/collect', async (req, res) => {
     }
 });
 
-// Helper: desbloquea la siguiente area segun el laberinto recien completado
+// Desbloquea la siguiente zona persistente cuando el jugador termina un laberinto.
 async function unlockNextArea(conn, playerId, labyrinthId) {
     if (labyrinthId == 1) {
         await conn.query('UPDATE Player SET Laboratory_unlocked = TRUE WHERE Player_id = ?', [playerId]);
@@ -1312,6 +1332,7 @@ async function unlockNextArea(conn, playerId, labyrinthId) {
     }
 }
 
+// Cierra un run exitoso, consolida cartas temporales y actualiza progreso.
 async function completeRunHandler(req, res) {
     const { runId } = req.params;
     const {
@@ -1407,6 +1428,7 @@ app.post('/api/run/:runId/fail', async (req, res) => {
 // ENDPOINTS EXTRA DE COMBATE (turnos y acciones)
 // =====================================================
 
+// Guarda el resumen de un turno del combate para estadisticas y replay.
 app.post('/api/combat/:combatId/turn', async (req, res) => {
     const { combatId } = req.params;
     const { turn_number, active_player, blood_spent } = req.body;
@@ -1423,6 +1445,7 @@ app.post('/api/combat/:combatId/turn', async (req, res) => {
     }
 });
 
+// Guarda una accion puntual de carta dentro del turno actual.
 app.post('/api/combat/:combatId/action', async (req, res) => {
     const { combatId } = req.params;
     const {
@@ -1445,6 +1468,7 @@ app.post('/api/combat/:combatId/action', async (req, res) => {
     }
 });
 
+// Reconstruye el log completo del combate con turnos, acciones y resumen.
 app.get('/api/combat/:combatId/log', async (req, res) => {
     const { combatId } = req.params;
 
@@ -1564,6 +1588,7 @@ app.get('/api/combat/:combatId/log', async (req, res) => {
     }
 });
 
+// Devuelve estadisticas agregadas de combate por nivel, enemigo y tipo de accion.
 app.get('/api/combat/stats', async (req, res) => {
     const playerId = req.query.playerId || null;
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
@@ -1682,8 +1707,7 @@ app.get('/api/combat/stats', async (req, res) => {
     }
 });
 
-// Esta consulta grande del dashboard la armamos con ayuda de github,
-// pero luego la fuimos corrigiendo nosotros para que si cuadrara con los datos reales.
+// Arma el dashboard administrativo con resumen general, ranking y tablas de gestion.
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
         const viewerUser = await resolveSessionUser(req);
@@ -1851,6 +1875,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
     }
 });
 
+// Desactiva usuarios no administradores desde el panel de administracion.
 app.delete('/api/admin/users/:userId', async (req, res) => {
     try {
         const adminUser = await requireAdminUser(req);
@@ -1903,6 +1928,7 @@ app.delete('/api/admin/users/:userId', async (req, res) => {
 // ENDPOINT DE TEST
 // =====================================================
 
+// Verifica rapido si la API esta viva.
 app.get('/api/test', (req, res) => {
     res.json({ 
         success: true, 

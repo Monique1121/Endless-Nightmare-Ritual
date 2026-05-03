@@ -511,6 +511,7 @@ INSERT INTO Deck (Player_id, Card_id, Card_gained) VALUES
 
 DELIMITER $$
 
+-- Cuenta cuantos runs completados tiene un jugador.
 CREATE FUNCTION fn_total_completed_runs(p_player_id INT)
 RETURNS INT
 DETERMINISTIC
@@ -526,6 +527,7 @@ BEGIN
     RETURN v_total;
 END$$
 
+-- Calcula el porcentaje de victorias del jugador en combate.
 CREATE FUNCTION fn_player_combat_win_rate(p_player_id INT)
 RETURNS DECIMAL(5,2)
 DETERMINISTIC
@@ -546,6 +548,7 @@ BEGIN
     RETURN ROUND((COALESCE(v_total_wins, 0) / v_total_combats) * 100, 2);
 END$$
 
+-- Recalcula nivel y desbloqueos del jugador segun sus runs completados.
 CREATE PROCEDURE sp_refresh_player_unlocks(IN p_player_id INT)
 BEGIN
     UPDATE Player
@@ -573,6 +576,7 @@ BEGIN
     WHERE Player_id = p_player_id;
 END$$
 
+-- Cierra un run, guarda sus metricas y refresca el progreso del jugador.
 CREATE PROCEDURE sp_finalize_run(
     IN p_run_id INT,
     IN p_completed BOOLEAN,
@@ -614,6 +618,7 @@ BEGIN
     COMMIT;
 END$$
 
+-- Normaliza el rol del usuario antes de insertarlo en la tabla Users.
 CREATE TRIGGER trg_normalize_user_role_before_insert
 BEFORE INSERT ON Users
 FOR EACH ROW
@@ -624,6 +629,7 @@ BEGIN
     END;
 END$$
 
+-- Vuelve a normalizar el rol cuando un usuario es actualizado.
 CREATE TRIGGER trg_normalize_user_role_before_update
 BEFORE UPDATE ON Users
 FOR EACH ROW
@@ -634,6 +640,7 @@ BEGIN
     END;
 END$$
 
+-- Marca la fecha de ultimo acceso cuando se crea el perfil del jugador.
 CREATE TRIGGER trg_update_last_login
 AFTER INSERT ON Player
 FOR EACH ROW
@@ -643,6 +650,7 @@ BEGIN
     WHERE User_id = NEW.User_id;
 END$$
 
+-- Mantiene la sangre del jugador dentro del rango valido antes de guardar.
 CREATE TRIGGER trg_validate_player_blood
 BEFORE UPDATE ON Player
 FOR EACH ROW
@@ -656,6 +664,7 @@ BEGIN
     END IF;
 END$$
 
+-- Suma al jugador la duracion real del combate cuando este termina.
 CREATE TRIGGER trg_update_playtime
 AFTER UPDATE ON Combat
 FOR EACH ROW

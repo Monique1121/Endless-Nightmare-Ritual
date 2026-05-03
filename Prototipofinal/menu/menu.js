@@ -1,13 +1,11 @@
 "use strict";
 
-// Este menu ya es como el puente rapido antes de entrar al lobby.
-// Aqui dejamos solo lo importante para no meter opciones de mas.
-
+// Redirige a otra pantalla del juego.
 function navigateGame(url) {
   window.location.href = url;
 }
 
-// Leemos el rol guardado para pintar la etiqueta sin pedirlo otra vez a la API.
+// Resuelve el rol guardado para pintar la etiqueta del usuario en el menu.
 function getStoredUserRole() {
   const storedRole = String(localStorage.getItem('userRole') || '').trim().toLowerCase();
   if (storedRole === 'admin') {
@@ -21,6 +19,7 @@ function getStoredUserRole() {
   return 'ejecutivo';
 }
 
+// Inicializa musica, botones y flujo de nueva partida o continuar.
 function main() {
   // Ajustar canvas a pantalla completa
   const canvas = document.getElementById('canvas');
@@ -63,8 +62,7 @@ function main() {
         }
 
         try {
-          // Aqui se resetea desde servidor para arrancar limpio y con cartas base nuevas.
-          // Resetear jugador en el servidor (borra todo y da 5 cartas nuevas)
+          // Pide al backend limpiar el progreso pero conservar la cuenta actual.
           const response = await fetch(`http://localhost:3000/api/player/${playerId}/reset`, {
             method: 'POST'
           });
@@ -75,16 +73,16 @@ function main() {
             console.log('Cartas iniciales:', data.initialCards);
             console.log('Progreso guardado automaticamente - puedes continuar con estas cartas');
             
-            // Resetear GameState (limpiar localStorage)
+            // Limpia cache local para que el lobby recargue todo desde servidor.
             if (typeof GameState !== 'undefined') {
               GameState.reset();
               console.log('Cache local limpiado');
             }
             
-            // Guardar flag de que es nueva partida para que el lobby lo sepa
+            // Marca que se trata de una partida nueva para el flujo del lobby.
             localStorage.setItem('isNewGame', 'true');
             
-            // Redirigir al lobby (alli se cargaran los datos del servidor)
+            // El lobby vuelve a consultar progreso, cartas y desbloqueos.
             navigateGame('../lobby/lobbyV1.html');
           } else {
             alert('ERROR - No se pudo resetear');
@@ -106,7 +104,7 @@ function main() {
           return;
         }
         
-        // Simplemente ir al lobby - el lobby cargara los datos del servidor automaticamente
+        // El lobby recupera el progreso actual directamente desde la API.
         console.log('Continuando partida guardada...');
         navigateGame('../lobby/lobbyV1.html');
       });

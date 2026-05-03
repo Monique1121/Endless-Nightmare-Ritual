@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Pantalla de acceso del juego base; aqui login.js autentica y prepara la sesion. -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -7,11 +8,13 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="login-page">
+  <!-- Contenedor centrado del formulario de inicio de sesion. -->
   <div class="container">
     <div class="login-box">
       <h1>ENDLESS NIGHTMARE RITUAL</h1>
       <p>El ritual te espera... Identificate para jugar</p>
       
+      <!-- Formulario principal que envia usuario y contrasena al backend. -->
       <form id="loginForm">
         <div class="input-group">
           <label for="username">Usuario:</label>
@@ -31,6 +34,7 @@
     </div>
   </div>
   
+  <!-- La logica de autenticacion y creacion del player vive en login.js. -->
   <script src="login.js"></script>
 </body>
 </html>

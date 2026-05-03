@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Panel especializado para consultar estadisticas y timeline de combates. -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+    <!-- Cabecera del modulo con estado de la API y descripcion del reporte. -->
     <div class="page-shell">
         <header class="hero">
             <div>
@@ -20,6 +22,7 @@
             </div>
         </header>
 
+        <!-- Controles para filtrar por jugador o abrir un combate en especifico. -->
         <section class="control-panel panel">
             <div class="control-group">
                 <label for="player-id">Filtrar por jugador</label>
@@ -37,6 +40,7 @@
 
         <section id="feedback" class="feedback hidden"></section>
 
+        <!-- Resumen rapido de metricas globales de combate. -->
         <section class="summary-grid" id="summary-grid">
             <article class="metric-card panel">
                 <span class="metric-label">Combates</span>
@@ -64,6 +68,7 @@
             </article>
         </section>
 
+        <!-- Graficas y tabla reciente que app.js llena desde la API. -->
         <section class="dashboard-grid">
             <article class="panel chart-panel">
                 <div class="panel-heading">

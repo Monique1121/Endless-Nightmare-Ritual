@@ -1,15 +1,18 @@
 <!DOCTYPE html>
+<!-- Redireccion corta hacia la pagina real de inicio del portal principal. -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirigiendo a Inicio</title>
     <meta http-equiv="refresh" content="0; url=../login/html/inicio.html">
+    <!-- Refuerzo por script para navegadores que no tomen el refresh meta. -->
     <script>
         window.location.replace('../login/html/inicio.html');
     </script>
 </head>
 <body>
+    <!-- Fallback visible por si la redireccion automatica tarda o falla. -->
     <p>Redirigiendo a la pagina de inicio...</p>
     <a href="../login/html/inicio.html">Continuar</a>
 </body>

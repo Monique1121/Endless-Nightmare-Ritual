@@ -1,3 +1,4 @@
+/* Estilos del modulo de reportes de combate: paneles, graficas y timeline. */
 :root {
     --bg: #08110f;
     --bg-soft: #0f1d19;
@@ -12,10 +13,12 @@
     --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
 }
 
+/* Base general del modulo. */
 * {
     box-sizing: border-box;
 }
 
+/* Fondo y tipografia general del panel de reportes. */
 body {
     margin: 0;
     min-height: 100vh;
@@ -27,12 +30,14 @@ body {
         linear-gradient(180deg, #08110f 0%, #0d1714 100%);
 }
 
+    /* Contenedor maximo donde viven hero, resumenes y timeline. */
 .page-shell {
     width: min(1280px, calc(100% - 32px));
     margin: 0 auto;
     padding: 32px 0 56px;
 }
 
+/* Hero superior con estado de API y descripcion. */
 .hero {
     display: grid;
     grid-template-columns: 1.7fr 0.9fr;

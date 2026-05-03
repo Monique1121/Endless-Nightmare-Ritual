@@ -1,10 +1,12 @@
 "use strict";
 
+// Encapsula la musica global para compartir volumen entre todas las escenas.
 (function setupBackgroundMusicScope() {
   const MUSIC_VOLUME_KEY = "musicVolume";
   const MUSIC_VOLUME_EVENT = "background-music-volume-change";
   const DEFAULT_VOLUME_PERCENT = 45;
 
+  // Fuerza el volumen a un porcentaje valido entre 0 y 100.
   function clampPercent(value) {
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) {
@@ -23,6 +25,7 @@
     return clampPercent(storedValue);
   }
 
+  // Guarda el volumen en localStorage y avisa a las escenas activas.
   function setStoredMusicVolume(value) {
     const safeValue = clampPercent(value);
     localStorage.setItem(MUSIC_VOLUME_KEY, String(safeValue));
@@ -32,6 +35,7 @@
     return safeValue;
   }
 
+  // Crea el audio de la escena actual y lo sincroniza con el volumen global.
   function createSceneMusic(audioPath) {
     const audio = new Audio(audioPath);
     audio.loop = true;
@@ -95,6 +99,7 @@
     return controller;
   }
 
+  // Conecta el slider del menu con el volumen compartido del juego.
   function bindMusicSlider(slider, valueLabel) {
     if (!slider) {
       return null;

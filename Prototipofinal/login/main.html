@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Portada publica del juego base con CTA de entrada y top 5 resumidos. -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="main-page">
+  <!-- Hero principal que manda al usuario al login o al menu si ya tiene sesion. -->
   <div class="main-container">
     <div class="welcome-section">
       <h1>ENDLESS NIGHTMARE RITUAL</h1>
@@ -15,6 +17,7 @@
       <p id="welcome-status" class="welcome-status">Primero identifica tu usuario para entrar al menú del juego.</p>
     </div>
     
+    <!-- Mini leaderboards que se llenan desde main.js al cargar la pagina. -->
     <div class="stats-section">
       <div class="stats-header">
         <h2>Registro del Ritual - Top 5</h2>
@@ -45,6 +48,7 @@
     </div>
   </div>
   
+  <!-- main.js carga rankings y decide si el boton entra a login o al menu. -->
   <script src="main.js"></script>
 </body>
 </html>

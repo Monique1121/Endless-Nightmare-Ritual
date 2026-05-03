@@ -1,7 +1,9 @@
+/* Estilos del menu principal: fondo, botones, rol y panel de ajustes. */
 *{
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
+/* Base de pantalla completa para superponer el menu sobre el canvas. */
 body {
     background-color: black;
     width: 100vw;
@@ -19,6 +21,7 @@ h1{
     margin: 0px;
 }
 
+/* Fondo visual del menu. */
 canvas {
     background-image: url("assets/menu.png");
     background-size: cover;
@@ -26,6 +29,7 @@ canvas {
     filter: brightness(0.9) contrast(1.1);
 }
 
+/* Canvas fijo que ocupa toda la ventana. */
 #canvas {
     width: 100vw;
     height: 100vh;
@@ -39,6 +43,7 @@ canvas {
     left: 0;
 }
 
+/* Wrapper general para titulo, botones y paneles flotantes. */
 #gameContainer {
     position: relative;
     width: 100vw;
@@ -46,6 +51,7 @@ canvas {
     filter: drop-shadow(0 0 30px rgba(180, 0, 0, 0.3));
 }
 
+/* Titulo principal del menu. */
 #title {
     position: absolute;
     top: 30px;

@@ -130,10 +130,12 @@ const TCG_THEME = {
   }
 };
 
+// Revisa si un click cae dentro de un rectangulo del canvas.
 function isPointInsideRect(x, y, rect) {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
 }
 
+// Calcula el rectangulo real de un slot del banco segun su indice.
 function getBenchSlotRect(layout, index) {
   return {
     x: layout.x + index * layout.spacing,
@@ -143,6 +145,7 @@ function getBenchSlotRect(layout, index) {
   };
 }
 
+// Ajusta el espacio entre cartas de la mano para que no se salgan del area.
 function getHandSpread(cardCount) {
   const { hand } = TCG_LAYOUT;
 
@@ -158,6 +161,7 @@ function getHandSpread(cardCount) {
   return { startX, spacing };
 }
 
+// Devuelve la posicion exacta de una carta de la mano en pantalla.
 function getHandCardRect(index, cardCount) {
   const { hand } = TCG_LAYOUT;
   const { startX, spacing } = getHandSpread(cardCount);
@@ -171,6 +175,7 @@ function getHandCardRect(index, cardCount) {
 }
  
 
+// Modelo base de una carta con stats, sprite e identidad unica en combate.
 class Card {
   constructor(id, name, cost, atk, hp, sprite = null) {
     this.id        = id;
@@ -189,6 +194,7 @@ class Card {
     }
   }
  
+  // Crea una copia jugable de la carta para no mutar el template original.
   cloneCard(instanceId) {
     const card = new Card(this.id, this.name, this.cost, this.atk, this.hp, this.sprite);
     card.instanceId = instanceId;
@@ -201,6 +207,7 @@ class Card {
 }
  
 
+// Representa el estado de un jugador dentro del combate de TCG.
 class Player {
   constructor(maxBlood = 100, playerName = 'Jugador') {
     this.blood      = maxBlood;
@@ -214,23 +221,28 @@ class Player {
     this.sacrificeUsedThisTurn = false;
   }
  
+  // Revisa si la sangre actual alcanza para pagar un costo.
   canAfford(cost) {
     return this.blood >= cost;
   }
  
+  // Descuenta sangre al jugar cartas o usar sacrificio.
   spend(amount) {
     this.blood -= amount;
   }
  
+  // Regenera sangre al terminar el turno contrario.
   regen(amount = 2) {
     this.blood = Math.min(this.maxBlood, this.blood + amount);
   }
  
+  // Limpia los limites por turno del jugador actual.
   resetTurnState() {
     this.cardsPlayedThisTurn   = 0;
     this.sacrificeUsedThisTurn = false;
   }
  
+  // Roba cartas aleatorias del pool hasta el limite permitido.
   drawCards(cardPool, idCounter, count = 2, maxHand = 10) {
     for (let i = 0; i < count && this.hand.length < maxHand; i++) {
       const base = cardPool[Math.floor(Math.random() * cardPool.length)];
@@ -238,6 +250,7 @@ class Player {
     }
   }
  
+  // Sube automaticamente una carta del banco cuando la activa cae.
   promoteFromBench() {
     const i = this.bench.findIndex(c => c !== null);
     if (i === -1) return;
@@ -248,6 +261,7 @@ class Player {
     log(`${prefix} Promocion: ${this.activeCard.name}`);
   }
  
+  // Compacta el banco para evitar huecos despues de mover o sacrificar cartas.
   compactBench() {
     const cards = this.bench.filter(c => c !== null);
     this.bench.fill(null);
@@ -256,11 +270,13 @@ class Player {
 }
  
 
+// IA simple que juega cartas, a veces sacrifica y decide si atacar.
 class AIPlayer extends Player {
   constructor(maxBlood = 50, enemyName = 'Enemigo') {
     super(maxBlood, enemyName);
   }
  
+  // Ejecuta el turno enemigo con reglas basicas de juego y agresion.
   takeTurn(game) {
     log('[ENEMIGO] Turno iniciado');
  
@@ -334,6 +350,7 @@ class AIPlayer extends Player {
   }
 }
  
+// Estado global de una partida de TCG en memoria.
 class GameState {
   constructor(cardPool, enemyBlood = 50, playerBlood = 100, playerName = 'Jugador', enemyName = 'Enemigo', knockoutsToWin = 6) {
     this.cardPool     = cardPool;
@@ -352,6 +369,7 @@ class GameState {
 }
  
 
+// Renderer del TCG basado en canvas para tablero, UI y log visual.
 class Draw {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
@@ -360,10 +378,12 @@ class Draw {
     this.canvas.height = 900;
   }
 
+  // Construye una fuente consistente para todos los textos del canvas.
   font(size, family = TCG_THEME.fonts.body, weight = 700) {
     return `${weight} ${size}px ${family}`;
   }
 
+  // Dibuja un panel base con relleno y bordes reutilizable.
   drawPanel(x, y, width, height, fillStyle, strokeStyle, lineWidth = 2, innerStrokeStyle = null) {
     const ctx = this.ctx;
     ctx.save();
@@ -381,6 +401,7 @@ class Draw {
     ctx.restore();
   }
 
+  // Reduce el tamano del texto hasta que quepa en el ancho indicado.
   drawFittedText(text, centerX, y, maxWidth, maxSize, minSize, family = TCG_THEME.fonts.body, weight = 700, color = TCG_THEME.colors.parchment) {
     const ctx = this.ctx;
     let size = maxSize;
@@ -397,6 +418,7 @@ class Draw {
 
     ctx.font = this.font(size, family, weight);
     ctx.fillText(text, centerX, y);
+      // Elige color y fuente segun el tipo de mensaje del log de combate.
     ctx.restore();
   }
 
@@ -456,6 +478,7 @@ class Draw {
     };
   }
 
+  // Parte palabras demasiado largas para que no rompan el cuadro del log.
   splitCombatLogToken(token, maxWidth) {
     const ctx = this.ctx;
     const parts = [];
@@ -478,6 +501,7 @@ class Draw {
     return parts;
   }
 
+  // Envuelve un mensaje del log en varias lineas sin salirse del panel.
   wrapCombatLogMessage(text, maxWidth, font) {
     const ctx = this.ctx;
     const tokens = String(text || '').split(/\s+/).filter(Boolean);
@@ -520,6 +544,7 @@ class Draw {
     return lines.length > 0 ? lines : [''];
   }
 
+  // Calcula cuantas entradas del log caben realmente en el espacio visible.
   getVisibleCombatLogEntries(logs, maxWidth, lineCapacity, maxLogs) {
     const recentLogs = logs.slice(-maxLogs);
     const visibleEntries = [];
@@ -554,8 +579,7 @@ class Draw {
     };
   }
 
-  // Aqui github nos ayudo con el recorte porque varios sprites eran la carta completa
-  // y se veian medio chuecos dentro del espacio del arte.
+  // Recorta sprites altos para que el arte central de la carta quede bien encuadrado.
   drawCardArtwork(image, x, y, width, height) {
     if (!image) return;
 
@@ -603,8 +627,7 @@ class Draw {
     ctx.restore();
   }
  
-  // Esta parte tambien la pulimos con github para que el click no se moviera
-  // cuando el canvas dejaba margenes negros por el ajuste de pantalla.
+  // Convierte el click de pantalla a coordenadas reales del canvas escalado.
   toCanvasCoords(event) {
     const rect         = this.canvas.getBoundingClientRect();
     const canvasRatio  = this.canvas.width / this.canvas.height;
@@ -630,6 +653,7 @@ class Draw {
     };
   }
  
+  // Limpia y vuelve a dibujar el fondo base del tablero.
   clear() {
     const ctx = this.ctx;
 
@@ -674,6 +698,7 @@ class Draw {
     ctx.restore();
   }
  
+  // Renderiza toda la escena actual del combate.
   render(state, selectedCard, combatLogs = []) {
     this.clear();
     this.drawGameInfo(state);
@@ -684,6 +709,7 @@ class Draw {
     if (state.gameOver) this.drawGameOver(state);
   }
  
+  // Dibuja sangre, KO y estado del turno en la cabecera.
   drawGameInfo(state) {
     const ctx = this.ctx;
     const { header } = TCG_LAYOUT;
@@ -716,6 +742,7 @@ class Draw {
     ctx.textAlign = 'left';
   }
  
+  // Dibuja la mano del jugador y resalta seleccion o falta de sangre.
   drawPlayerHand(state, selectedCard) {
     const ctx = this.ctx;
     const numCards = state.player.hand.length;
@@ -768,6 +795,7 @@ class Draw {
  
   }
  
+  // Dibuja el campo enemigo con carta activa y banca.
   drawOppField(state) {
     const ctx = this.ctx;
     const opponent = state.opponent;
@@ -850,6 +878,7 @@ class Draw {
     }
   }
  
+  // Dibuja el campo del jugador, sus slots y botones de accion.
   drawPlayerField(state, selectedCard) {
     const ctx      = this.ctx;
     const player   = state.player;
@@ -943,6 +972,7 @@ class Draw {
     this.drawButton('SACRIFICIO', buttons.sacrifice.x, buttons.sacrifice.y, buttons.sacrifice.width, buttons.sacrifice.height);
   }
  
+  // Dibuja un boton reutilizable del tablero principal.
   drawButton(text, x, y, width, height) {
     const ctx = this.ctx;
     const gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -963,6 +993,7 @@ class Draw {
     ctx.textBaseline = 'alphabetic';
   }
  
+  // Muestra la pantalla final de victoria o derrota.
   drawGameOver(state) {
     const ctx = this.ctx;
     const won = state.winner === 'player';
@@ -987,6 +1018,7 @@ class Draw {
     ctx.textAlign = 'left';
   }
 
+  // Pinta el historial visible del combate y recorta el exceso de texto.
   drawCombatLog(logs) {
     const ctx = this.ctx;
     const { combatLog } = TCG_LAYOUT;
@@ -1076,12 +1108,14 @@ class Draw {
 }
  
 
+// Encapsula la conversion de clicks del canvas hacia acciones del juego.
 class InputHandler {
   constructor(canvas, game) {
     this.game = game;
     canvas.addEventListener('click', e => this.handleClick(e));
   }
  
+  // Traduce el click del navegador a coordenadas del tablero.
   handleClick(event) {
     const { x, y } = this.game.renderer.toCanvasCoords(event);
     this.game.handleClick(x, y);
@@ -1089,6 +1123,7 @@ class InputHandler {
 }
  
 
+// Controlador principal del combate: turno, render, reglas y persistencia.
 class Game {
   constructor(cardPool, enemyBlood = 50, combatData = null, playerBlood = 100, playerName = 'Jugador', enemyName = 'Enemigo', knockoutsToWin = 6) {
     this.cardPool       = cardPool;
@@ -1103,6 +1138,7 @@ class Game {
     this.combatLogs     = [];  // Array de logs del combate
   }
  
+  // Reparte las cartas iniciales y arranca el combate.
   init() {
     this.state.player.drawCards(this.cardPool, this.idCounter, 5);
     this.state.opponent.drawCards(this.cardPool, this.idCounter, 5);
@@ -1110,12 +1146,14 @@ class Game {
     log('Cartas iniciales robadas');
   }
  
+  // Mantiene vivo el loop principal de render y logica.
   gameLoop() {
     this.update();
     this.renderer.render(this.state, this.selectedCard, this.combatLogs);
     requestAnimationFrame(() => this.gameLoop());
   }
  
+  // Actualiza IA y salida al lobby cuando el combate ya termino.
   update() {
     this.checkGameOver();
  
@@ -1135,12 +1173,14 @@ class Game {
     }
   }
  
+  // Guarda la carta de la mano que el jugador quiere colocar.
   selectHandCard(card) {
     if (this.state.turn !== 'player' || this.state.phase !== 'main') return;
     this.selectedCard = card;
     log('Carta seleccionada: ' + card.name);
   }
  
+  // Coloca la carta seleccionada en activa o banca y registra la jugada.
   playCardToField(zone, index) {
     const player = this.state.player;
     if (!this.selectedCard) return;
@@ -1175,6 +1215,7 @@ class Game {
     }
   }
  
+  // Fuerza el inicio del combate cuando el jugador presiona atacar.
   manualAttack() {
     if (this.state.turn !== 'player' || this.state.phase !== 'main') return;
     if (!this.state.player.activeCard) { log('No tienes carta activa'); return; }
@@ -1183,6 +1224,7 @@ class Game {
     this.performBattle();
   }
  
+  // Resuelve el intercambio de dano entre las dos cartas activas.
   performBattle() {
     const player   = this.state.player;
     const opponent = this.state.opponent;
@@ -1226,12 +1268,14 @@ class Game {
     this.endTurn();
   }
  
+  // Cierra manualmente el turno del jugador.
   manualEndTurn() {
     if (this.state.turn !== 'player' || this.state.phase !== 'main') return;
     log('Pasas el turno');
     this.endTurn();
   }
  
+  // Sacrifica una carta del banco para potenciar la carta activa del jugador.
   sacrificeForPower() {
     const { state } = this;
     const player    = state.player;
@@ -1256,6 +1300,7 @@ class Game {
     log('Tu carta activa gana +3 ATK y +2 HP');
   }
  
+  // Cambia el turno, regenera sangre y dispara el registro en BD.
   async endTurn() {
     const { state } = this;
     const player    = state.player;
@@ -1282,13 +1327,13 @@ class Game {
     }
   }
 
+  // Registra el turno actual en la API para estadisticas de combate.
   async registerTurn(activePlayer) {
     if (!this.combatData || !this.combatData.combat_id) {
       console.warn('No se puede registrar turno - Sin datos de combate');
       return;
     }
 
-    // Aqui github nos ayudo a bajar cada turno a BD sin mover la logica principal del combate.
     try {
       const bloodSpent = activePlayer === 'player' ? 
         (this.state.player.maxBlood - this.state.player.blood) : 
@@ -1318,14 +1363,13 @@ class Game {
     }
   }
 
+  // Registra cada jugada importante de una carta dentro del turno actual.
   async registerAction(cardId, actionType, usedBy, bloodSpent, damageDealt, hpBefore, hpAfter, cardDead) {
     if (!this.combatData || !this.combatData.combat_id || !this.currentTurnId) {
       console.warn('No se puede registrar accion - Sin datos de combate o turno');
       return;
     }
 
-    // Igual esta parte nos echo la mano github para guardar jugadas, dano
-    // y si una carta quedo fuera durante el TCG.
     try {
       const response = await fetch(`http://localhost:3000/api/combat/${this.combatData.combat_id}/action`, {
         method: 'POST',
@@ -1360,6 +1404,7 @@ class Game {
     }
   }
  
+  // Revisa si algun jugador ya alcanzo los KO necesarios para ganar.
   checkGameOver() {
     if (this.state.gameOver) return;
  
@@ -1380,6 +1425,7 @@ class Game {
     }
   }
 
+  // Cierra el combate en la API y persiste el resultado final.
   async endCombat() {
     if (!this.combatData || !this.combatData.combat_id) {
       console.warn('Sin datos de combate para registrar');
@@ -1410,6 +1456,7 @@ class Game {
     }
   }
  
+  // Interpreta clicks del jugador sobre mano, campo y botones.
   handleClick(x, y) {
     const { state } = this;
     if (state.gameOver) return;
@@ -1455,6 +1502,7 @@ class Game {
 
 let globalGame = null; // Referencia global al juego para la función log
 
+// Guarda mensajes en consola y en el historial visual del combate.
 function log(msg) {
   console.log(msg);
   if (globalGame && globalGame.combatLogs) {
@@ -1470,6 +1518,7 @@ function log(msg) {
 
 const API_URL = "http://localhost:3000/api";
 
+// Mezcla deck permanente y cartas temporales del run para armar el pool del combate.
 async function loadPlayerDeck() {
     const playerId = localStorage.getItem("playerId");
     const runId = localStorage.getItem("runId");
@@ -1481,8 +1530,6 @@ async function loadPlayerDeck() {
 
     let finalCards = [];
 
-    // Aqui github nos ayudo a juntar el deck fijo con las cartas temporales del run
-    // para que no se perdieran al entrar al combate.
     // 1. Load permanent deck cards
     const deckRes = await fetch(`${API_URL}/player/${playerId}/deck`);
     const deckData = await deckRes.json();
@@ -1524,6 +1571,7 @@ async function loadPlayerDeck() {
     );
 }
 
+  // Inicializa musica, deck, datos del jugador y arranque del combate.
 window.onload = async function () {
   BackgroundMusic.createSceneMusic('../musica/Dark%20Drone.flac');
 

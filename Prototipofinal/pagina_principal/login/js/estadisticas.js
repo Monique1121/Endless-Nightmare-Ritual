@@ -29,19 +29,23 @@ const elements = {
 	usersManagementList: document.getElementById('users-management-list')
 };
 
+// Lee el username guardado para etiquetar la sesion actual.
 function getStoredUsername() {
 	return String(localStorage.getItem('username') || '').trim();
 }
 
+// Lee el userId activo para consultar el dashboard con permisos correctos.
 function getStoredUserId() {
 	const value = Number.parseInt(localStorage.getItem('userId'), 10);
 	return Number.isInteger(value) && value > 0 ? value : null;
 }
 
+// Formatea numeros para mostrarlos con separadores locales.
 function formatNumber(value) {
 	return Number(value || 0).toLocaleString('es-MX');
 }
 
+// Formatea los valores del eje para que no se vean demasiado largos.
 function formatChartTick(value) {
 	const numericValue = Number(value || 0);
 	if (Number.isInteger(numericValue)) {
@@ -50,8 +54,8 @@ function formatChartTick(value) {
 	return numericValue.toFixed(1).replace(/\.0$/, '');
 }
 
+// Recorta etiquetas largas para que las graficas no se encimen.
 function formatChartLabel(label) {
-	// Aqui recortamos etiquetas largas para que la grafica no se vea toda amontonada.
 	const normalizedLabel = String(label || '').trim().toLowerCase();
 	const shortLabels = {
 		'perfiles creados': 'Perfiles',
@@ -94,6 +98,7 @@ function formatCountLabel(value, singularLabel, pluralLabel = `${singularLabel}s
 	return `${formatNumber(numericValue)} ${unitLabel}`;
 }
 
+// Convierte segundos a un formato corto de minutos y segundos.
 function formatMinutes(seconds) {
 	const totalSeconds = Math.max(Math.round(Number(valueOrZero(seconds))), 0);
 	const minutes = Math.floor(totalSeconds / 60);
@@ -111,22 +116,26 @@ function formatHours(seconds) {
 	return `${hours}h ${minutes}m`;
 }
 
+// Evita repetir parseos y deja 0 cuando no hay dato numerico.
 function valueOrZero(value) {
 	return Number(value || 0);
 }
 
+// Muestra el estado bloqueado del panel cuando la carga falla.
 function showError(message) {
 	elements.sessionLabel.textContent = message;
 	elements.locked.classList.remove('hidden');
 	elements.dashboard.classList.add('hidden');
 }
 
+// Muestra el dashboard principal cuando los datos cargan bien.
 function showDashboard(message) {
 	elements.sessionLabel.textContent = message;
 	elements.locked.classList.add('hidden');
 	elements.dashboard.classList.remove('hidden');
 }
 
+// Rellena los numeros grandes del resumen superior.
 function renderSummary(overview) {
 	elements.activeUsers.textContent = formatNumber(overview.active_users);
 	elements.players.textContent = formatNumber(overview.total_players);
@@ -136,6 +145,7 @@ function renderSummary(overview) {
 	elements.winRate.textContent = `${formatNumber(overview.combat_win_rate)}%`;
 }
 
+// Genera las marcas del eje vertical segun el valor maximo visible.
 function buildChartTicks(maxValue, tickCount = 5) {
 	return Array.from({ length: tickCount + 1 }, (_, index) => {
 		const tickValue = (maxValue / tickCount) * (tickCount - index);
@@ -151,6 +161,7 @@ function buildAxisLabels(ticks) {
 	`;
 }
 
+// Construye el bloque reutilizable de notas o detalles debajo de cada grafica.
 function buildDetailCards(rows, palette, detailBuilder, options = {}) {
 	if (typeof detailBuilder !== 'function') {
 		return '';
@@ -175,6 +186,7 @@ function buildDetailCards(rows, palette, detailBuilder, options = {}) {
 	`;
 }
 
+// Calcula el porcentaje relativo de una porcion dentro del total.
 function formatChartShare(value, total) {
 	const safeTotal = valueOrZero(total);
 	if (safeTotal <= 0) {
@@ -185,6 +197,7 @@ function formatChartShare(value, total) {
 	return `${share.toFixed(1).replace(/\.0$/, '')}%`;
 }
 
+// Genera el relleno conico que usa la grafica de dona.
 function buildDonutFill(rows, valueKey, palette) {
 	const totalValue = rows.reduce((sum, row) => sum + valueOrZero(row[valueKey]), 0);
 	if (totalValue <= 0) {
@@ -206,6 +219,7 @@ function buildDonutFill(rows, valueKey, palette) {
 	return `conic-gradient(${segments.join(', ')})`;
 }
 
+// Renderiza una grafica de barras simples para totales por categoria.
 function renderBarList(container, rows, valueKey, detailBuilder, options = {}) {
 	container.innerHTML = '';
 
@@ -250,6 +264,7 @@ function renderBarList(container, rows, valueKey, detailBuilder, options = {}) {
 	container.appendChild(chart);
 }
 
+// Renderiza una grafica tipo embudo para mostrar avance por etapas.
 function renderFunnelChart(container, rows, valueKey, detailBuilder, options = {}) {
 	container.innerHTML = '';
 
@@ -297,6 +312,7 @@ function renderFunnelChart(container, rows, valueKey, detailBuilder, options = {
 	container.appendChild(chart);
 }
 
+// Renderiza una dona para distribuciones porcentuales del dashboard.
 function renderDonutChart(container, rows, valueKey, detailBuilder, options = {}) {
 	container.innerHTML = '';
 
@@ -349,6 +365,7 @@ function renderDonutChart(container, rows, valueKey, detailBuilder, options = {}
 	container.appendChild(chart);
 }
 
+// Renderiza barras agrupadas para comparar varias series por nivel.
 function renderGroupedBarChart(container, rows, series, detailBuilder, options = {}) {
 	container.innerHTML = '';
 
@@ -412,6 +429,7 @@ function renderGroupedBarChart(container, rows, series, detailBuilder, options =
 	container.appendChild(chart);
 }
 
+// Renderiza rankings horizontales para top jugadores u otros lideres.
 function renderRankingChart(container, rows, valueKey, detailBuilder, options = {}) {
 	container.innerHTML = '';
 
@@ -459,6 +477,7 @@ function renderRankingChart(container, rows, valueKey, detailBuilder, options = 
 	container.appendChild(chart);
 }
 
+// Escapa HTML dinamico antes de insertarlo en plantillas.
 function escapeHtml(value) {
 	return String(value ?? '')
 		.replace(/&/g, '&amp;')
@@ -468,6 +487,7 @@ function escapeHtml(value) {
 		.replace(/'/g, '&#39;');
 }
 
+// Formatea fechas del servidor para la lista de usuarios.
 function formatDate(dateString) {
 	if (!dateString) {
 		return 'Sin fecha';
@@ -479,6 +499,7 @@ function formatDate(dateString) {
 	});
 }
 
+// Dibuja la lista de usuarios y conecta el borrado cuando el visor es admin.
 function renderUsersList(rows, canDeleteUsers, viewerUserId) {
 	elements.usersManagementList.innerHTML = '';
 	elements.usersManagementCaption.textContent = canDeleteUsers
@@ -549,6 +570,7 @@ function renderUsersList(rows, canDeleteUsers, viewerUserId) {
 	}
 }
 
+// Carga el dashboard desde la API y reparte cada bloque a su grafica correspondiente.
 async function loadAdminDashboard() {
 	if (dashboardRequestInFlight) {
 		return;
@@ -640,6 +662,7 @@ async function loadAdminDashboard() {
 	}
 }
 
+// Activa la recarga automatica del dashboard mientras la pestaña siga abierta.
 function startDashboardAutoRefresh() {
 	if (dashboardRefreshTimer) {
 		return;
@@ -652,6 +675,7 @@ function startDashboardAutoRefresh() {
 	}, DASHBOARD_REFRESH_INTERVAL_MS);
 }
 
+// Detiene el temporizador cuando la vista ya no se necesita.
 function stopDashboardAutoRefresh() {
 	if (!dashboardRefreshTimer) {
 		return;
