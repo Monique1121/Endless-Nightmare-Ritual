@@ -18,7 +18,7 @@ Estado actual del proyecto:
 - La base de datos está modelada y disponible en base_datos/.
 - El juego cuenta con música y assets propios organizados en musica/ y assets/.
 
-Requisitos (herramienta y versión recomendada:
+Requisitos (herramienta y versión recomendada):
 Node.js - 18 o superior
 npm - 9 o superior
 MySQL - 8 o superior
@@ -145,7 +145,7 @@ Segunda opción:
 
 mysql -u tu_usuario -p < ../base_datos/endless-schema.sql
 
-> El esquema de la base de datos se encuentra en `Codigo/base_datos/endless-schem
+El esquema de la base de datos se encuentra en "Codigo/base_datos/endless-schema.sql"
 
 5. Crea tu archivo .env a partir del ejemplo:
 
